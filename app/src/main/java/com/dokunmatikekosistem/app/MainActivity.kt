@@ -1,6 +1,8 @@
 package com.dokunmatikekosistem.app
 
 import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -29,15 +31,25 @@ import androidx.compose.ui.unit.dp
 import com.dokunmatikekosistem.app.bluetooth.BluetoothHidManager
 import com.dokunmatikekosistem.app.bluetooth.ConnectionState
 
+private const val DISCOVERABLE_DURATION_SECONDS = 300
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var viewModel: MainViewModel
+
+    private val requestDiscoverable = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        // Regardless of the result code (duration granted or cancelled), proceed:
+        // registerApp() itself doesn't require discoverability, only pairing does.
+        viewModel.onConnectClicked()
+    }
 
     private val requestBluetoothConnect = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            viewModel.onConnectClicked()
+            requestDiscoverableAndConnect()
         }
     }
 
@@ -53,6 +65,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun connectWithPermissionCheck() {
+        if (viewModel.connectionState.value != ConnectionState.DISCONNECTED &&
+            viewModel.connectionState.value != ConnectionState.ERROR
+        ) {
+            return
+        }
+
         val needsRuntimePermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         val alreadyGranted = !needsRuntimePermission ||
             ContextCompat.checkSelfPermission(
@@ -61,10 +79,17 @@ class MainActivity : ComponentActivity() {
             ) == PackageManager.PERMISSION_GRANTED
 
         if (alreadyGranted) {
-            viewModel.onConnectClicked()
+            requestDiscoverableAndConnect()
         } else {
             requestBluetoothConnect.launch(Manifest.permission.BLUETOOTH_CONNECT)
         }
+    }
+
+    private fun requestDiscoverableAndConnect() {
+        val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION_SECONDS)
+        }
+        requestDiscoverable.launch(discoverableIntent)
     }
 }
 
