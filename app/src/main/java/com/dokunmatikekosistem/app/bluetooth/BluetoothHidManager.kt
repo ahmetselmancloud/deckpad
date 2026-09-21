@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.Executor
 
-enum class ConnectionState { DISCONNECTED, REGISTERING, CONNECTED, ERROR }
+enum class ConnectionState { DISCONNECTED, REGISTERING, REGISTERED, CONNECTED, ERROR }
 
 private const val TAG = "BluetoothHidManager"
 
@@ -39,7 +39,9 @@ class BluetoothHidManager(private val context: Context) : com.dokunmatikekosiste
     private val callback = object : BluetoothHidDevice.Callback() {
         override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
             Log.d(TAG, "onAppStatusChanged: registered=$registered pluggedDevice=$pluggedDevice")
-            if (!registered) {
+            if (registered) {
+                _connectionState.value = ConnectionState.REGISTERED
+            } else {
                 _connectionState.value = ConnectionState.ERROR
             }
         }

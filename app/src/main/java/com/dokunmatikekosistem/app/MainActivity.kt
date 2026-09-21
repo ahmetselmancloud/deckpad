@@ -66,7 +66,8 @@ class MainActivity : ComponentActivity() {
 
     private fun connectWithPermissionCheck() {
         if (viewModel.connectionState.value != ConnectionState.DISCONNECTED &&
-            viewModel.connectionState.value != ConnectionState.ERROR
+            viewModel.connectionState.value != ConnectionState.ERROR &&
+            viewModel.connectionState.value != ConnectionState.REGISTERING
         ) {
             return
         }
@@ -111,9 +112,19 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                     .padding(top = 16.dp)
                     .background(Color.DarkGray)
                     .pointerInput(Unit) {
+                        var residualX = 0f
+                        var residualY = 0f
                         detectDragGestures { change, dragAmount ->
                             change.consume()
-                            viewModel.onDrag(dragAmount.x.toInt(), dragAmount.y.toInt())
+                            residualX += dragAmount.x
+                            residualY += dragAmount.y
+                            val dx = residualX.toInt()
+                            val dy = residualY.toInt()
+                            residualX -= dx
+                            residualY -= dy
+                            if (dx != 0 || dy != 0) {
+                                viewModel.onDrag(dx, dy)
+                            }
                         }
                     }
                     .pointerInput(Unit) {
@@ -127,6 +138,7 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
 private fun ConnectionState.label(): String = when (this) {
     ConnectionState.DISCONNECTED -> "Bağlı değil"
     ConnectionState.REGISTERING -> "Eşleştiriliyor"
+    ConnectionState.REGISTERED -> "Kayıtlı, bağlantı bekleniyor"
     ConnectionState.CONNECTED -> "Bağlı"
     ConnectionState.ERROR -> "Hata"
 }

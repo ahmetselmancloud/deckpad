@@ -31,3 +31,7 @@ Faz 1'e geçmeden önce not edilecekler:
 - `ACTION_REQUEST_DISCOVERABLE` ve runtime izin akışı, Faz 1'in asıl mimarisine (Hilt/Clean Architecture) taşınırken korunmalı.
 - Dokunmatik alanın dikey (portrait) yerleşimi bilinçli değildi — gerçek touchpad oranı/yatay düzen Faz 4/5 kapsamında ele alınacak.
 - Tekrar-tıklama koruması ve eski-eşleşme-kaldırma ihtiyacı, kullanıcı deneyimi için ileride (Faz 4/5, "Eşleşmiş cihaz yönetimi") daha sağlam ele alınmalı.
+- Kod incelemesinde bulunan `onTap()` hatası düzeltildi: artık sadece basma değil, basma+bırakma (press+release) gönderiyor; öncesinde sol tık host'ta sürükleme raporuna kadar takılı kalabiliyordu.
+- REGISTERING durumunda sonsuza kadar takılma ihtimaline karşı `REGISTERED` state'i eklendi ve REGISTERING'de tekrar deneme artık mümkün — ama bu geçici bir önlem: `register()`'ın kendisinin idempotent olması Faz 1'in `BluetoothManager`'ında bir invariant olarak garanti altına alınmalı, retry guard'ının Activity'de kalması kırılgan.
+- Config change (ekran döndürme vb.) sırasında Activity yeniden oluşturulup HID oturumunun sıfırlanmaması için `android:configChanges` eklendi; bu Faz 0 kapsamında ucuz bir geçici çözüm, gerçek çözüm Faz 1'de Hilt/ViewModelProvider ile manager'ı doğru scope'ta tutmaktan geçecek.
+- Sürüklemede alt-piksel kalıntı (residual) birikimi eklendi — yavaş/hassas parmak hareketlerinde `.toInt()` kesmesinden dolayı kaybolan deltaların önüne geçildi; bu Faz 4'teki ivme kalibrasyonundan ayrı, bağımsız bir doğruluk düzeltmesiydi.

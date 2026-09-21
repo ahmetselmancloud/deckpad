@@ -26,5 +26,6 @@ class MainViewModel(private val hidManager: HidManager) : ViewModel() {
 
     fun onTap() {
         hidManager.sendMouseReport(dx = 0, dy = 0, leftButtonPressed = true)
+        hidManager.sendMouseReport(dx = 0, dy = 0, leftButtonPressed = false)
     }
 }

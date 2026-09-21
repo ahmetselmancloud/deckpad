@@ -14,10 +14,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TouchpadEkosistem">
+        <!-- Faz 0 stopgap: avoid Activity recreation (and the resulting lost HID
+             registration/callback + reset report counter) on rotation. The real
+             fix is holding BluetoothHidManager at Application/ViewModelProvider
+             scope, planned for Faz 1's Hilt-based rewrite. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:theme="@style/Theme.TouchpadEkosistem">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

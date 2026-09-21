@@ -398,6 +398,7 @@ private class FakeHidManager : HidManager {
     var registerCalled = false
     var lastDrag: Pair<Int, Int>? = null
     var lastButton: Boolean? = null
+    val allReports = mutableListOf<Triple<Int, Int, Boolean>>()
 
     override fun register() {
         registerCalled = true
@@ -406,6 +407,7 @@ private class FakeHidManager : HidManager {
     override fun sendMouseReport(dx: Int, dy: Int, leftButtonPressed: Boolean) {
         lastDrag = dx to dy
         lastButton = leftButtonPressed
+        allReports.add(Triple(dx, dy, leftButtonPressed))
         reportsSent.value = reportsSent.value + 1
     }
 }
@@ -434,14 +436,19 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `onTap sends a zero-delta report with left button pressed`() {
+    fun `onTap sends a press followed by a release`() {
         val fake = FakeHidManager()
         val viewModel = MainViewModel(fake)
 
         viewModel.onTap()
 
-        assertEquals(0 to 0, fake.lastDrag)
-        assertEquals(true, fake.lastButton)
+        assertEquals(
+            listOf(
+                Triple(0, 0, true),
+                Triple(0, 0, false)
+            ),
+            fake.allReports
+        )
     }
 
     @Test
@@ -493,6 +500,7 @@ class MainViewModel(private val hidManager: HidManager) : ViewModel() {
 
     fun onTap() {
         hidManager.sendMouseReport(dx = 0, dy = 0, leftButtonPressed = true)
+        hidManager.sendMouseReport(dx = 0, dy = 0, leftButtonPressed = false)
     }
 }
 ```
