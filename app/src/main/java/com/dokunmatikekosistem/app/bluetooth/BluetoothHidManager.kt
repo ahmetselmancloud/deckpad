@@ -14,13 +14,13 @@ import java.util.concurrent.Executor
 
 enum class ConnectionState { DISCONNECTED, REGISTERING, CONNECTED, ERROR }
 
-class BluetoothHidManager(private val context: Context) {
+class BluetoothHidManager(private val context: Context) : com.dokunmatikekosistem.app.HidManager {
 
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
-    val connectionState: StateFlow<ConnectionState> = _connectionState
+    override val connectionState: StateFlow<ConnectionState> = _connectionState
 
     private val _reportsSent = MutableStateFlow(0)
-    val reportsSent: StateFlow<Int> = _reportsSent
+    override val reportsSent: StateFlow<Int> = _reportsSent
 
     private var hidDevice: BluetoothHidDevice? = null
     private var connectedDevice: BluetoothDevice? = null
@@ -50,7 +50,7 @@ class BluetoothHidManager(private val context: Context) {
         }
     }
 
-    fun register() {
+    override fun register() {
         _connectionState.value = ConnectionState.REGISTERING
         val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val executor = Executor { command -> command.run() }
@@ -71,7 +71,7 @@ class BluetoothHidManager(private val context: Context) {
         )
     }
 
-    fun sendMouseReport(dx: Int, dy: Int, leftButtonPressed: Boolean) {
+    override fun sendMouseReport(dx: Int, dy: Int, leftButtonPressed: Boolean) {
         val device = connectedDevice ?: return
         val report = HidMouseReport.build(dx, dy, leftButtonPressed)
         val sent = hidDevice?.sendReport(device, HidDescriptor.MOUSE_REPORT_ID.toInt(), report)
