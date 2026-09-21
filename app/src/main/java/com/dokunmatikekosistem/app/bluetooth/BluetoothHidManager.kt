@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothHidDeviceAppSdpSettings
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
+import android.util.Log
 import com.dokunmatikekosistem.app.hid.HidDescriptor
 import com.dokunmatikekosistem.app.hid.HidMouseReport
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.Executor
 
 enum class ConnectionState { DISCONNECTED, REGISTERING, CONNECTED, ERROR }
+
+private const val TAG = "BluetoothHidManager"
 
 class BluetoothHidManager(private val context: Context) : com.dokunmatikekosistem.app.HidManager {
 
@@ -35,12 +38,14 @@ class BluetoothHidManager(private val context: Context) : com.dokunmatikekosiste
 
     private val callback = object : BluetoothHidDevice.Callback() {
         override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
+            Log.d(TAG, "onAppStatusChanged: registered=$registered pluggedDevice=$pluggedDevice")
             if (!registered) {
                 _connectionState.value = ConnectionState.ERROR
             }
         }
 
         override fun onConnectionStateChanged(device: BluetoothDevice?, state: Int) {
+            Log.d(TAG, "onConnectionStateChanged: device=$device state=$state")
             connectedDevice = if (state == BluetoothProfile.STATE_CONNECTED) device else null
             _connectionState.value = when (state) {
                 BluetoothProfile.STATE_CONNECTED -> ConnectionState.CONNECTED
@@ -51,24 +56,39 @@ class BluetoothHidManager(private val context: Context) : com.dokunmatikekosiste
     }
 
     override fun register() {
+        Log.d(TAG, "register() called")
         _connectionState.value = ConnectionState.REGISTERING
         val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val executor = Executor { command -> command.run() }
-        manager.adapter.getProfileProxy(
-            context,
-            object : BluetoothProfile.ServiceListener {
-                override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-                    hidDevice = proxy as BluetoothHidDevice
-                    hidDevice?.registerApp(sdpSettings, null, null, executor, callback)
-                }
+        try {
+            val proxyRequested = manager.adapter.getProfileProxy(
+                context,
+                object : BluetoothProfile.ServiceListener {
+                    override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                        Log.d(TAG, "onServiceConnected: profile=$profile proxy=$proxy")
+                        hidDevice = proxy as BluetoothHidDevice
+                        try {
+                            val registerRequested = hidDevice?.registerApp(sdpSettings, null, null, executor, callback)
+                            Log.d(TAG, "registerApp() called, requested=$registerRequested")
+                        } catch (e: SecurityException) {
+                            Log.e(TAG, "registerApp() threw SecurityException", e)
+                            _connectionState.value = ConnectionState.ERROR
+                        }
+                    }
 
-                override fun onServiceDisconnected(profile: Int) {
-                    hidDevice = null
-                    _connectionState.value = ConnectionState.DISCONNECTED
-                }
-            },
-            BluetoothProfile.HID_DEVICE
-        )
+                    override fun onServiceDisconnected(profile: Int) {
+                        Log.d(TAG, "onServiceDisconnected: profile=$profile")
+                        hidDevice = null
+                        _connectionState.value = ConnectionState.DISCONNECTED
+                    }
+                },
+                BluetoothProfile.HID_DEVICE
+            )
+            Log.d(TAG, "getProfileProxy() called, requested=$proxyRequested")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "getProfileProxy() threw SecurityException", e)
+            _connectionState.value = ConnectionState.ERROR
+        }
     }
 
     override fun sendMouseReport(dx: Int, dy: Int, leftButtonPressed: Boolean) {
