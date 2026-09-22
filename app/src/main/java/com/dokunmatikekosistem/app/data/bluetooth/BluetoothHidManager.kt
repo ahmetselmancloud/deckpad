@@ -108,19 +108,29 @@ class BluetoothHidManager @Inject constructor(
         }
     }
 
-    override fun sendMouseReport(dx: Int, dy: Int, leftButtonPressed: Boolean) {
+    override fun sendMouseReport(dx: Int, dy: Int, wheelDelta: Int, panDelta: Int, leftButtonPressed: Boolean, rightButtonPressed: Boolean) {
         val device = connectedDevice ?: return
-        val report = com.dokunmatikekosistem.app.data.hid.HidMouseReport.build(
-            dx = dx,
-            dy = dy,
-            wheelDelta = 0,
-            panDelta = 0,
-            leftButtonPressed = leftButtonPressed,
-            rightButtonPressed = false
-        )
+        val report = com.dokunmatikekosistem.app.data.hid.HidMouseReport.build(dx, dy, wheelDelta, panDelta, leftButtonPressed, rightButtonPressed)
         val sent = hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.MOUSE_REPORT_ID.toInt(), report)
         if (sent == true) {
             _reportsSent.value = _reportsSent.value + 1
         }
+    }
+
+    override fun sendKeyboardReport(modifierBits: Int, usageCode: Int) {
+        val device = connectedDevice ?: return
+        val report = com.dokunmatikekosistem.app.data.hid.HidKeyboardReport.build(
+            com.dokunmatikekosistem.app.domain.HidKeyChord(modifierBits, usageCode)
+        )
+        val sent = hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.KEYBOARD_REPORT_ID.toInt(), report)
+        if (sent == true) {
+            _reportsSent.value = _reportsSent.value + 1
+        }
+    }
+
+    override fun releaseKeyboardReport() {
+        val device = connectedDevice ?: return
+        val report = com.dokunmatikekosistem.app.data.hid.HidKeyboardReport.release()
+        hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.KEYBOARD_REPORT_ID.toInt(), report)
     }
 }

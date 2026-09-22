@@ -11,14 +11,25 @@ private class FakeHidManager : HidManager {
     override val reportsSent = MutableStateFlow(0)
     var registerCalled = false
     val allReports = mutableListOf<Triple<Int, Int, Boolean>>()
+    val allKeyPresses = mutableListOf<Pair<Int, Int>>()
+    var releaseKeyboardCalled = false
 
     override fun register() {
         registerCalled = true
     }
 
-    override fun sendMouseReport(dx: Int, dy: Int, leftButtonPressed: Boolean) {
+    override fun sendMouseReport(dx: Int, dy: Int, wheelDelta: Int, panDelta: Int, leftButtonPressed: Boolean, rightButtonPressed: Boolean) {
         allReports.add(Triple(dx, dy, leftButtonPressed))
         reportsSent.value = reportsSent.value + 1
+    }
+
+    override fun sendKeyboardReport(modifierBits: Int, usageCode: Int) {
+        allKeyPresses.add(modifierBits to usageCode)
+        reportsSent.value = reportsSent.value + 1
+    }
+
+    override fun releaseKeyboardReport() {
+        releaseKeyboardCalled = true
     }
 }
 

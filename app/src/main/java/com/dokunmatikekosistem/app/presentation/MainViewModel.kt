@@ -20,11 +20,11 @@ class MainViewModel @Inject constructor(
     }
 
     fun onDrag(dx: Int, dy: Int) {
-        hidManager.sendMouseReport(dx, dy, leftButtonPressed = false)
+        hidManager.sendMouseReport(dx, dy, wheelDelta = 0, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)
     }
 
     fun onTap() {
-        hidManager.sendMouseReport(dx = 0, dy = 0, leftButtonPressed = true)
-        hidManager.sendMouseReport(dx = 0, dy = 0, leftButtonPressed = false)
+        hidManager.sendMouseReport(dx = 0, dy = 0, wheelDelta = 0, panDelta = 0, leftButtonPressed = true, rightButtonPressed = false)
+        hidManager.sendMouseReport(dx = 0, dy = 0, wheelDelta = 0, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)
     }
 }
