@@ -149,23 +149,30 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
     }
 }
 
+private val virtualKeyboardShiftMap: Map<Char, Char> =
+    mapOf('ç' to 'Ç', 'ğ' to 'Ğ', 'ı' to 'I', 'ö' to 'Ö', 'ş' to 'Ş', 'ü' to 'Ü', 'i' to 'İ') +
+        ('a'..'z').associateWith { it.uppercaseChar() }
+
 @Composable
 private fun VirtualKeyboard(onKeyTyped: (Char) -> Unit) {
     val rows = listOf(
         "1234567890",
-        "qwertyuıop",
-        "asdfghjklş",
+        "qwertyuıopğü",
+        "asdfghjklşi",
         "zxcvbnmöç"
     )
+    var shiftActive by remember { mutableStateOf(false) }
     Column(modifier = Modifier.padding(top = 8.dp)) {
         for (row in rows) {
             Row {
                 for (char in row) {
-                    Button(onClick = { onKeyTyped(char) }) { Text(char.toString()) }
+                    val displayChar = if (shiftActive) virtualKeyboardShiftMap[char] ?: char else char
+                    Button(onClick = { onKeyTyped(displayChar) }) { Text(displayChar.toString()) }
                 }
             }
         }
         Row {
+            Button(onClick = { shiftActive = !shiftActive }) { Text(if (shiftActive) "⇧ Aktif" else "Shift") }
             Button(onClick = { onKeyTyped(' ') }) { Text("Boşluk") }
             Button(onClick = { onKeyTyped('\n') }) { Text("Enter") }
             Button(onClick = { onKeyTyped('\b') }) { Text("Sil") }
