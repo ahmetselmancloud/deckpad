@@ -11,10 +11,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -24,11 +24,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.dokunmatikekosistem.app.data.gesture.GestureRecognizer
+import com.dokunmatikekosistem.app.data.gesture.RawTouchEvent
 import com.dokunmatikekosistem.app.domain.ConnectionState
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -91,13 +97,19 @@ class MainActivity : ComponentActivity() {
 fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
     val connectionState by viewModel.connectionState.collectAsState()
     val reportsSent by viewModel.reportsSent.collectAsState()
+    val activeLayout by viewModel.activeLayout.collectAsState()
+    var keyboardVisible by remember { mutableStateOf(false) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             Text("Durum: ${connectionState.label()}")
             Text("Gönderilen rapor: $reportsSent")
-            Button(onClick = onConnectRequested) {
-                Text("Eşleştir/Bağlan")
+            Row {
+                Button(onClick = onConnectRequested) { Text("Eşleştir/Bağlan") }
+                Button(onClick = { keyboardVisible = !keyboardVisible }) { Text("Klavye") }
+                Button(onClick = { viewModel.onLayoutToggleClicked() }) {
+                    Text(if (activeLayout is com.dokunmatikekosistem.app.data.keyboard.TurkishQLayout) "TR Q" else "EN US")
+                }
             }
             Box(
                 modifier = Modifier
@@ -105,25 +117,58 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                     .padding(top = 16.dp)
                     .background(Color.DarkGray)
                     .pointerInput(Unit) {
-                        var residualX = 0f
-                        var residualY = 0f
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            residualX += dragAmount.x
-                            residualY += dragAmount.y
-                            val dx = residualX.toInt()
-                            val dy = residualY.toInt()
-                            residualX -= dx
-                            residualY -= dy
-                            if (dx != 0 || dy != 0) {
-                                viewModel.onDrag(dx, dy)
+                        val recognizer = GestureRecognizer()
+                        awaitEachGesture {
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val timeMs = System.currentTimeMillis()
+                                for (change in event.changes) {
+                                    val raw: RawTouchEvent? = when {
+                                        change.pressed && change.previousPressed.not() ->
+                                            RawTouchEvent.PointerDown(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
+                                        change.pressed && change.previousPressed ->
+                                            RawTouchEvent.PointerMove(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
+                                        !change.pressed && change.previousPressed ->
+                                            RawTouchEvent.PointerUp(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
+                                        else -> null
+                                    }
+                                    if (raw != null) {
+                                        change.consume()
+                                        recognizer.onEvent(raw)?.let { viewModel.onGesture(it) }
+                                    }
+                                }
+                                if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) break
                             }
                         }
                     }
-                    .pointerInput(Unit) {
-                        detectTapGestures { viewModel.onTap() }
-                    }
             )
+            if (keyboardVisible) {
+                VirtualKeyboard(onKeyTyped = { viewModel.onKeyTyped(it) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun VirtualKeyboard(onKeyTyped: (Char) -> Unit) {
+    val rows = listOf(
+        "1234567890",
+        "qwertyuıop",
+        "asdfghjklş",
+        "zxcvbnmöç"
+    )
+    Column(modifier = Modifier.padding(top = 8.dp)) {
+        for (row in rows) {
+            Row {
+                for (char in row) {
+                    Button(onClick = { onKeyTyped(char) }) { Text(char.toString()) }
+                }
+            }
+        }
+        Row {
+            Button(onClick = { onKeyTyped(' ') }) { Text("Boşluk") }
+            Button(onClick = { onKeyTyped('\n') }) { Text("Enter") }
+            Button(onClick = { onKeyTyped('\b') }) { Text("Sil") }
         }
     }
 }
