@@ -110,7 +110,14 @@ class BluetoothHidManager @Inject constructor(
 
     override fun sendMouseReport(dx: Int, dy: Int, leftButtonPressed: Boolean) {
         val device = connectedDevice ?: return
-        val report = com.dokunmatikekosistem.app.data.hid.HidMouseReport.build(dx, dy, leftButtonPressed)
+        val report = com.dokunmatikekosistem.app.data.hid.HidMouseReport.build(
+            dx = dx,
+            dy = dy,
+            wheelDelta = 0,
+            panDelta = 0,
+            leftButtonPressed = leftButtonPressed,
+            rightButtonPressed = false
+        )
         val sent = hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.MOUSE_REPORT_ID.toInt(), report)
         if (sent == true) {
             _reportsSent.value = _reportsSent.value + 1
