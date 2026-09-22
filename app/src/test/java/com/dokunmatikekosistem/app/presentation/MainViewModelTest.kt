@@ -1,8 +1,8 @@
-package com.dokunmatikekosistem.app
+package com.dokunmatikekosistem.app.presentation
 
-import com.dokunmatikekosistem.app.bluetooth.ConnectionState
+import com.dokunmatikekosistem.app.domain.ConnectionState
+import com.dokunmatikekosistem.app.domain.HidManager
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -10,8 +10,6 @@ private class FakeHidManager : HidManager {
     override val connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
     override val reportsSent = MutableStateFlow(0)
     var registerCalled = false
-    var lastDrag: Pair<Int, Int>? = null
-    var lastButton: Boolean? = null
     val allReports = mutableListOf<Triple<Int, Int, Boolean>>()
 
     override fun register() {
@@ -19,8 +17,6 @@ private class FakeHidManager : HidManager {
     }
 
     override fun sendMouseReport(dx: Int, dy: Int, leftButtonPressed: Boolean) {
-        lastDrag = dx to dy
-        lastButton = leftButtonPressed
         allReports.add(Triple(dx, dy, leftButtonPressed))
         reportsSent.value = reportsSent.value + 1
     }
@@ -45,8 +41,7 @@ class MainViewModelTest {
 
         viewModel.onDrag(dx = 5, dy = -3)
 
-        assertEquals(5 to -3, fake.lastDrag)
-        assertEquals(false, fake.lastButton)
+        assertEquals(listOf(Triple(5, -3, false)), fake.allReports)
     }
 
     @Test
@@ -57,10 +52,7 @@ class MainViewModelTest {
         viewModel.onTap()
 
         assertEquals(
-            listOf(
-                Triple(0, 0, true),
-                Triple(0, 0, false)
-            ),
+            listOf(Triple(0, 0, true), Triple(0, 0, false)),
             fake.allReports
         )
     }

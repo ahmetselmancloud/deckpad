@@ -1,17 +1,16 @@
-package com.dokunmatikekosistem.app
+package com.dokunmatikekosistem.app.presentation
 
 import androidx.lifecycle.ViewModel
-import com.dokunmatikekosistem.app.bluetooth.ConnectionState
+import com.dokunmatikekosistem.app.domain.ConnectionState
+import com.dokunmatikekosistem.app.domain.HidManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
 
-interface HidManager {
-    val connectionState: StateFlow<ConnectionState>
-    val reportsSent: StateFlow<Int>
-    fun register()
-    fun sendMouseReport(dx: Int, dy: Int, leftButtonPressed: Boolean)
-}
-
-class MainViewModel(private val hidManager: HidManager) : ViewModel() {
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    private val hidManager: HidManager
+) : ViewModel() {
 
     val connectionState: StateFlow<ConnectionState> = hidManager.connectionState
     val reportsSent: StateFlow<Int> = hidManager.reportsSent
