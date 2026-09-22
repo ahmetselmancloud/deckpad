@@ -150,8 +150,8 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
 }
 
 private val virtualKeyboardShiftMap: Map<Char, Char> =
-    mapOf('ç' to 'Ç', 'ğ' to 'Ğ', 'ı' to 'I', 'ö' to 'Ö', 'ş' to 'Ş', 'ü' to 'Ü', 'i' to 'İ') +
-        ('a'..'z').associateWith { it.uppercaseChar() }
+    ('a'..'z').associateWith { it.uppercaseChar() } +
+        mapOf('ç' to 'Ç', 'ğ' to 'Ğ', 'ı' to 'I', 'ö' to 'Ö', 'ş' to 'Ş', 'ü' to 'Ü', 'i' to 'İ')
 
 @Composable
 private fun VirtualKeyboard(onKeyTyped: (Char) -> Unit) {
