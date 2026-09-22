@@ -58,4 +58,36 @@ class GestureRecognizerTest {
         val released = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 120f, y = 100f, timeMs = 500))
         assertEquals(RecognizedGesture.DragLockReleased, released)
     }
+
+    @Test
+    fun `two finger tap outside the down-window is not RightClick`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 100f, timeMs = 190))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 195))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 200f, y = 100f, timeMs = 350))
+        assertNull(result)
+    }
+
+    @Test
+    fun `a third finger moving during an active drag lock does not produce Scroll`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 80))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 100f, y = 100f, timeMs = 200))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 100f, y = 100f, timeMs = 360)) // engages drag lock
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 300f, y = 100f, timeMs = 400))
+        val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 2, x = 300f, y = 140f, timeMs = 420))
+        assertTrue(result !is RecognizedGesture.Scroll)
+    }
+
+    @Test
+    fun `a quick second tap that never engages drag lock produces LeftClick`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 80))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 100f, y = 100f, timeMs = 200))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 101f, y = 100f, timeMs = 260))
+        assertEquals(RecognizedGesture.LeftClick, result)
+    }
 }

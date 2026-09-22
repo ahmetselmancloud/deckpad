@@ -1,6 +1,5 @@
 package com.dokunmatikekosistem.app.data.gesture
 
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 private const val TAP_MAX_MOVEMENT_PX = 10f
@@ -45,6 +44,7 @@ class GestureRecognizer {
     // after all pointers were previously up, until all pointers are up again.
     private var sessionMaxPointers = 0
     private var sessionAllTapsSoFar = true
+    private var firstDownTimeMsInSession: Long? = null
 
     fun onEvent(event: RawTouchEvent): RecognizedGesture? {
         return when (event) {
@@ -63,6 +63,15 @@ class GestureRecognizer {
         val gap = lastTapUpTimeMs?.let { event.timeMs - it }
         if (active.size == 1 && gap != null && gap in 0..DRAG_LOCK_TAP_GAP_MS) {
             dragLockPointerId = event.id
+        }
+
+        if (active.size == 1) {
+            firstDownTimeMsInSession = event.timeMs
+        } else if (active.size == 2) {
+            val downGap = event.timeMs - (firstDownTimeMsInSession ?: event.timeMs)
+            if (downGap > TWO_FINGER_DOWN_WINDOW_MS) {
+                sessionAllTapsSoFar = false
+            }
         }
         return null
     }
@@ -91,7 +100,7 @@ class GestureRecognizer {
             return RecognizedGesture.DragMove(dx.roundToInt(), dy.roundToInt())
         }
 
-        if (active.size == 2) {
+        if (active.size == 2 && dragLockPointerId == null) {
             val other = active.entries.first { it.key != event.id }.value
             if (other.totalMovement > TAP_MAX_MOVEMENT_PX && pointer.totalMovement > TAP_MAX_MOVEMENT_PX) {
                 return RecognizedGesture.Scroll(vDelta = dy.roundToInt(), hDelta = dx.roundToInt())
@@ -115,8 +124,12 @@ class GestureRecognizer {
             val wasEngaged = dragLockEngagedSent
             dragLockPointerId = null
             dragLockEngagedSent = false
-            if (active.isEmpty()) { sessionMaxPointers = 0; sessionAllTapsSoFar = true }
-            return if (wasEngaged) RecognizedGesture.DragLockReleased else null
+            if (active.isEmpty()) { sessionMaxPointers = 0; sessionAllTapsSoFar = true; firstDownTimeMsInSession = null }
+            return when {
+                wasEngaged -> RecognizedGesture.DragLockReleased
+                isTap -> { lastTapUpTimeMs = event.timeMs; RecognizedGesture.LeftClick }
+                else -> null
+            }
         }
 
         if (active.isNotEmpty()) return null
@@ -132,6 +145,7 @@ class GestureRecognizer {
         }
         sessionMaxPointers = 0
         sessionAllTapsSoFar = true
+        firstDownTimeMsInSession = null
         return result
     }
 }
