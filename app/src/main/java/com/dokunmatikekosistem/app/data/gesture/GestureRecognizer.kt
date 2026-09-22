@@ -7,6 +7,7 @@ private const val TAP_MAX_DURATION_MS = 200L
 private const val TWO_FINGER_DOWN_WINDOW_MS = 150L
 private const val DRAG_LOCK_TAP_GAP_MS = 300L
 private const val DRAG_LOCK_HOLD_MS = 150L
+private const val SCROLL_PX_PER_UNIT = 24f
 
 sealed interface RawTouchEvent {
     val id: Int
@@ -31,8 +32,18 @@ sealed interface RecognizedGesture {
 
 private class ActivePointer(var lastX: Float, var lastY: Float, val downX: Float, val downY: Float, val downTimeMs: Long) {
     var totalMovement = 0f
+    var residualX = 0f
+    var residualY = 0f
 }
 
+/**
+ * Classifies raw multi-touch pointer events into recognized gestures.
+ *
+ * Call [reset] if the caller detects that touch input was interrupted
+ * without a matching PointerUp for every currently-down pointer (e.g. a
+ * Compose gesture cancellation) — otherwise a "stuck" pointer entry would
+ * corrupt classification for the rest of this instance's lifetime.
+ */
 class GestureRecognizer {
 
     private val active = mutableMapOf<Int, ActivePointer>()
@@ -46,6 +57,20 @@ class GestureRecognizer {
     private var sessionAllTapsSoFar = true
     private var firstDownTimeMsInSession: Long? = null
 
+    // Pixel-to-detent accumulation for two-finger scroll, shared across
+    // whichever pointer is currently the canonical (lowest-id) reporter.
+    private var scrollResidualV = 0f
+    private var scrollResidualH = 0f
+
+    /** Clears all tracked pointer/session/drag-lock state. Safe to call at any time. */
+    fun reset() {
+        active.clear()
+        lastTapUpTimeMs = null
+        dragLockPointerId = null
+        dragLockEngagedSent = false
+        resetSession()
+    }
+
     fun onEvent(event: RawTouchEvent): RecognizedGesture? {
         return when (event) {
             is RawTouchEvent.PointerDown -> onDown(event)
@@ -58,19 +83,24 @@ class GestureRecognizer {
         active[event.id] = ActivePointer(event.x, event.y, event.x, event.y, event.timeMs)
         sessionMaxPointers = maxOf(sessionMaxPointers, active.size)
 
-        // Drag-lock candidate: a second down shortly after the previous tap's up,
-        // and this is the only pointer down right now (not part of a 2-finger session).
-        val gap = lastTapUpTimeMs?.let { event.timeMs - it }
-        if (active.size == 1 && gap != null && gap in 0..DRAG_LOCK_TAP_GAP_MS) {
-            dragLockPointerId = event.id
-        }
-
         if (active.size == 1) {
             firstDownTimeMsInSession = event.timeMs
+            // Drag-lock candidate: a second down shortly after the previous tap's up.
+            val gap = lastTapUpTimeMs?.let { event.timeMs - it }
+            if (gap != null && gap in 0..DRAG_LOCK_TAP_GAP_MS) {
+                dragLockPointerId = event.id
+            }
         } else if (active.size == 2) {
-            val downGap = event.timeMs - (firstDownTimeMsInSession ?: event.timeMs)
-            if (downGap > TWO_FINGER_DOWN_WINDOW_MS) {
+            val gap = event.timeMs - (firstDownTimeMsInSession ?: event.timeMs)
+            if (gap > TWO_FINGER_DOWN_WINDOW_MS) {
                 sessionAllTapsSoFar = false
+            }
+            // A second finger arriving turns this into a two-finger gesture
+            // (scroll or tap) rather than a drag — but never interrupt a
+            // drag-lock that has ALREADY engaged (a stray extra contact
+            // shouldn't cancel an in-progress drag).
+            if (!dragLockEngagedSent) {
+                dragLockPointerId = null
             }
         }
         return null
@@ -78,9 +108,9 @@ class GestureRecognizer {
 
     private fun onMove(event: RawTouchEvent.PointerMove): RecognizedGesture? {
         val pointer = active[event.id] ?: return null
-        val dx = (event.x - pointer.lastX)
-        val dy = (event.y - pointer.lastY)
-        pointer.totalMovement += kotlin.math.hypot(dx, dy)
+        val rawDx = event.x - pointer.lastX
+        val rawDy = event.y - pointer.lastY
+        pointer.totalMovement += kotlin.math.hypot(rawDx, rawDy)
         pointer.lastX = event.x
         pointer.lastY = event.y
 
@@ -97,21 +127,45 @@ class GestureRecognizer {
                 }
                 return null
             }
-            return RecognizedGesture.DragMove(dx.roundToInt(), dy.roundToInt())
+            return emitResidualMove(pointer, rawDx, rawDy) { dx, dy -> RecognizedGesture.DragMove(dx, dy) }
         }
 
         if (active.size == 2 && dragLockPointerId == null) {
             val other = active.entries.first { it.key != event.id }.value
             if (other.totalMovement > TAP_MAX_MOVEMENT_PX && pointer.totalMovement > TAP_MAX_MOVEMENT_PX) {
-                return RecognizedGesture.Scroll(vDelta = dy.roundToInt(), hDelta = dx.roundToInt())
+                // Only the canonical (lowest-id) pointer emits Scroll, so a
+                // two-finger move doesn't fire twice per frame.
+                val canonicalId = active.keys.min()
+                if (event.id != canonicalId) return null
+                scrollResidualV += rawDy
+                scrollResidualH += rawDx
+                val vUnits = (scrollResidualV / SCROLL_PX_PER_UNIT).toInt()
+                val hUnits = (scrollResidualH / SCROLL_PX_PER_UNIT).toInt()
+                if (vUnits == 0 && hUnits == 0) return null
+                scrollResidualV -= vUnits * SCROLL_PX_PER_UNIT
+                scrollResidualH -= hUnits * SCROLL_PX_PER_UNIT
+                return RecognizedGesture.Scroll(vDelta = vUnits, hDelta = hUnits)
             }
             return null
         }
 
-        if (active.size == 1) {
-            return RecognizedGesture.CursorMove(dx.roundToInt(), dy.roundToInt())
+        if (active.size == 1 && sessionMaxPointers <= 1) {
+            return emitResidualMove(pointer, rawDx, rawDy) { dx, dy -> RecognizedGesture.CursorMove(dx, dy) }
         }
+        // A lone remaining pointer from what WAS a multi-touch session (e.g.
+        // the tail end of a two-finger scroll after one finger lifted) must
+        // not suddenly start moving the cursor.
         return null
+    }
+
+    private inline fun emitResidualMove(pointer: ActivePointer, rawDx: Float, rawDy: Float, build: (Int, Int) -> RecognizedGesture): RecognizedGesture? {
+        pointer.residualX += rawDx
+        pointer.residualY += rawDy
+        val dx = pointer.residualX.roundToInt()
+        val dy = pointer.residualY.roundToInt()
+        pointer.residualX -= dx
+        pointer.residualY -= dy
+        return if (dx != 0 || dy != 0) build(dx, dy) else null
     }
 
     private fun onUp(event: RawTouchEvent.PointerUp): RecognizedGesture? {
@@ -124,10 +178,13 @@ class GestureRecognizer {
             val wasEngaged = dragLockEngagedSent
             dragLockPointerId = null
             dragLockEngagedSent = false
-            if (active.isEmpty()) { sessionMaxPointers = 0; sessionAllTapsSoFar = true; firstDownTimeMsInSession = null }
+            if (active.isEmpty()) resetSession()
             return when {
                 wasEngaged -> RecognizedGesture.DragLockReleased
-                isTap -> { lastTapUpTimeMs = event.timeMs; RecognizedGesture.LeftClick }
+                isTap -> {
+                    lastTapUpTimeMs = event.timeMs
+                    RecognizedGesture.LeftClick
+                }
                 else -> null
             }
         }
@@ -136,16 +193,22 @@ class GestureRecognizer {
 
         // All pointers are now up: decide what this session was.
         val result = when {
-            sessionMaxPointers >= 2 && sessionAllTapsSoFar -> RecognizedGesture.RightClick
+            sessionMaxPointers == 2 && sessionAllTapsSoFar -> RecognizedGesture.RightClick
             sessionMaxPointers == 1 && isTap -> {
                 lastTapUpTimeMs = event.timeMs
                 RecognizedGesture.LeftClick
             }
             else -> null
         }
+        resetSession()
+        return result
+    }
+
+    private fun resetSession() {
         sessionMaxPointers = 0
         sessionAllTapsSoFar = true
         firstDownTimeMsInSession = null
-        return result
+        scrollResidualV = 0f
+        scrollResidualH = 0f
     }
 }
