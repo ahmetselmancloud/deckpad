@@ -80,6 +80,9 @@ class BluetoothHidManager @Inject constructor(
                         try {
                             val registerRequested = hidDevice?.registerApp(sdpSettings, null, null, executor, callback)
                             Log.d(TAG, "registerApp() called, requested=$registerRequested")
+                            if (registerRequested != true) {
+                                _connectionState.value = ConnectionState.ERROR
+                            }
                         } catch (e: SecurityException) {
                             Log.e(TAG, "registerApp() threw SecurityException", e)
                             _connectionState.value = ConnectionState.ERROR
@@ -96,6 +99,9 @@ class BluetoothHidManager @Inject constructor(
                 BluetoothProfile.HID_DEVICE
             )
             Log.d(TAG, "getProfileProxy() called, requested=$proxyRequested")
+            if (!proxyRequested) {
+                _connectionState.value = ConnectionState.ERROR
+            }
         } catch (e: SecurityException) {
             Log.e(TAG, "getProfileProxy() threw SecurityException", e)
             _connectionState.value = ConnectionState.ERROR
