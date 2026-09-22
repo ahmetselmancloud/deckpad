@@ -22,6 +22,10 @@ abstract class AppModule {
     @Singleton
     abstract fun bindHidManager(impl: BluetoothHidManager): HidManager
 
+    @Binds
+    @Singleton
+    abstract fun bindHaptics(impl: com.dokunmatikekosistem.app.data.haptics.HapticManager): com.dokunmatikekosistem.app.domain.Haptics
+
     companion object {
         @Provides
         @Singleton
