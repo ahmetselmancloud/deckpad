@@ -63,3 +63,15 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
+// A transitive dependency (Hilt/KSP) pulls in kotlin-stdlib 2.2.20, whose
+// metadata (2.2.0) is incompatible with this project's Kotlin compiler
+// (2.0.21, expects metadata 2.0.0). Force every configuration to resolve
+// kotlin-stdlib at the project's actual Kotlin version to avoid the mismatch.
+configurations.all {
+    resolutionStrategy {
+        force("org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
+        force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.0.21")
+        force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.21")
+    }
+}
