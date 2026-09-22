@@ -1,8 +1,8 @@
 package com.dokunmatikekosistem.app.data.hid
 
 /**
- * Composite HID report descriptor: Report ID 1 = relative mouse (buttons + X/Y),
- * Report ID 2 = standard boot keyboard (modifier byte + 6-key array).
+ * Composite HID report descriptor: Report ID 1 = relative mouse (buttons + X/Y +
+ * wheel + AC Pan), Report ID 2 = standard boot keyboard (modifier byte + 6-key array).
  */
 object HidDescriptor {
     const val MOUSE_REPORT_ID: Byte = 1
@@ -34,6 +34,19 @@ object HidDescriptor {
         0x25, 0x7F,             //   Logical Maximum (127)
         0x75, 0x08,             //   Report Size (8)
         0x95.toByte(), 0x02,    //   Report Count (2)
+        0x81.toByte(), 0x06,    //   Input (Data,Var,Rel)
+        0x09, 0x38,             //   Usage (Wheel)
+        0x15, 0x81.toByte(),    //   Logical Minimum (-127)
+        0x25, 0x7F,             //   Logical Maximum (127)
+        0x75, 0x08,             //   Report Size (8)
+        0x95.toByte(), 0x01,    //   Report Count (1)
+        0x81.toByte(), 0x06,    //   Input (Data,Var,Rel)
+        0x05, 0x0C,             //   Usage Page (Consumer)
+        0x0A, 0x38, 0x02,       //   Usage (AC Pan)
+        0x15, 0x81.toByte(),    //   Logical Minimum (-127)
+        0x25, 0x7F,             //   Logical Maximum (127)
+        0x75, 0x08,             //   Report Size (8)
+        0x95.toByte(), 0x01,    //   Report Count (1)
         0x81.toByte(), 0x06,    //   Input (Data,Var,Rel)
         0xC0.toByte(),          // End Collection (Physical)
         0xC0.toByte(),          // End Collection (Application)
