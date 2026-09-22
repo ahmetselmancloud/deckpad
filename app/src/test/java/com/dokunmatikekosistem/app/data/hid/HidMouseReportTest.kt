@@ -1,4 +1,4 @@
-package com.dokunmatikekosistem.app.hid
+package com.dokunmatikekosistem.app.data.hid
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Test

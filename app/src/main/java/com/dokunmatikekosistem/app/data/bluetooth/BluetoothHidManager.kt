@@ -1,4 +1,4 @@
-package com.dokunmatikekosistem.app.bluetooth
+package com.dokunmatikekosistem.app.data.bluetooth
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothHidDevice
@@ -7,17 +7,25 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.util.Log
-import com.dokunmatikekosistem.app.hid.HidDescriptor
-import com.dokunmatikekosistem.app.hid.HidMouseReport
+import com.dokunmatikekosistem.app.domain.ConnectionState
+import com.dokunmatikekosistem.app.domain.HidManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.Executor
-
-enum class ConnectionState { DISCONNECTED, REGISTERING, REGISTERED, CONNECTED, ERROR }
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private const val TAG = "BluetoothHidManager"
 
-class BluetoothHidManager(private val context: Context) : com.dokunmatikekosistem.app.HidManager {
+/** Pure guard: register() may only start a new registration from these states. */
+internal fun shouldAttemptRegister(currentState: ConnectionState): Boolean =
+    currentState == ConnectionState.DISCONNECTED || currentState == ConnectionState.ERROR
+
+@Singleton
+class BluetoothHidManager @Inject constructor(
+    @ApplicationContext private val context: Context
+) : HidManager {
 
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
     override val connectionState: StateFlow<ConnectionState> = _connectionState
@@ -30,20 +38,16 @@ class BluetoothHidManager(private val context: Context) : com.dokunmatikekosiste
 
     private val sdpSettings = BluetoothHidDeviceAppSdpSettings(
         "TouchpadEkosistem",
-        "Dokunmatik Ekosistem Faz 0 Prototip",
+        "Dokunmatik Ekosistem",
         "DokunmatikEkosistem",
         BluetoothHidDevice.SUBCLASS1_COMBO,
-        HidDescriptor.DESCRIPTOR
+        com.dokunmatikekosistem.app.data.hid.HidDescriptor.DESCRIPTOR
     )
 
     private val callback = object : BluetoothHidDevice.Callback() {
         override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
             Log.d(TAG, "onAppStatusChanged: registered=$registered pluggedDevice=$pluggedDevice")
-            if (registered) {
-                _connectionState.value = ConnectionState.REGISTERED
-            } else {
-                _connectionState.value = ConnectionState.ERROR
-            }
+            _connectionState.value = if (registered) ConnectionState.REGISTERED else ConnectionState.ERROR
         }
 
         override fun onConnectionStateChanged(device: BluetoothDevice?, state: Int) {
@@ -58,6 +62,10 @@ class BluetoothHidManager(private val context: Context) : com.dokunmatikekosiste
     }
 
     override fun register() {
+        if (!shouldAttemptRegister(_connectionState.value)) {
+            Log.d(TAG, "register() ignored, already ${_connectionState.value}")
+            return
+        }
         Log.d(TAG, "register() called")
         _connectionState.value = ConnectionState.REGISTERING
         val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -81,6 +89,7 @@ class BluetoothHidManager(private val context: Context) : com.dokunmatikekosiste
                     override fun onServiceDisconnected(profile: Int) {
                         Log.d(TAG, "onServiceDisconnected: profile=$profile")
                         hidDevice = null
+                        connectedDevice = null
                         _connectionState.value = ConnectionState.DISCONNECTED
                     }
                 },
@@ -95,8 +104,8 @@ class BluetoothHidManager(private val context: Context) : com.dokunmatikekosiste
 
     override fun sendMouseReport(dx: Int, dy: Int, leftButtonPressed: Boolean) {
         val device = connectedDevice ?: return
-        val report = HidMouseReport.build(dx, dy, leftButtonPressed)
-        val sent = hidDevice?.sendReport(device, HidDescriptor.MOUSE_REPORT_ID.toInt(), report)
+        val report = com.dokunmatikekosistem.app.data.hid.HidMouseReport.build(dx, dy, leftButtonPressed)
+        val sent = hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.MOUSE_REPORT_ID.toInt(), report)
         if (sent == true) {
             _reportsSent.value = _reportsSent.value + 1
         }

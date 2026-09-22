@@ -1,10 +1,8 @@
-package com.dokunmatikekosistem.app.hid
+package com.dokunmatikekosistem.app.data.hid
 
 /**
  * Composite HID report descriptor: Report ID 1 = relative mouse (buttons + X/Y),
  * Report ID 2 = standard boot keyboard (modifier byte + 6-key array).
- * Faz 0 only sends mouse reports; the keyboard section exists so Windows is
- * tested against the same composite descriptor the final product will use.
  */
 object HidDescriptor {
     const val MOUSE_REPORT_ID: Byte = 1
@@ -40,7 +38,7 @@ object HidDescriptor {
         0xC0.toByte(),          // End Collection (Physical)
         0xC0.toByte(),          // End Collection (Application)
 
-        // Keyboard (Report ID 2) - boot format, not populated with real data in Faz 0
+        // Keyboard (Report ID 2) - boot format, not populated with real data yet
         0x05, 0x01,             // Usage Page (Generic Desktop)
         0x09, 0x06,             // Usage (Keyboard)
         0xA1.toByte(), 0x01,    // Collection (Application)

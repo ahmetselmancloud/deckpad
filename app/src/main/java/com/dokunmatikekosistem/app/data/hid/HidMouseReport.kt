@@ -1,4 +1,4 @@
-package com.dokunmatikekosistem.app.hid
+package com.dokunmatikekosistem.app.data.hid
 
 /** Builds the 3-byte relative-mouse HID report: [buttons, dx, dy]. */
 object HidMouseReport {
