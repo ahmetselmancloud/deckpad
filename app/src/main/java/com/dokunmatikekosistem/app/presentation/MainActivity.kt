@@ -147,17 +147,19 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                     }
             )
             if (keyboardVisible) {
-                VirtualKeyboard(
-                    layout = activeLayout,
-                    modifierState = modifierState,
-                    onKeyTyped = { viewModel.onKeyTyped(it) },
-                    onShiftClicked = { viewModel.onShiftClicked() },
-                    onCapsLockClicked = { viewModel.onCapsLockClicked() },
-                    onCtrlClicked = { viewModel.onCtrlClicked() },
-                    onAltClicked = { viewModel.onAltClicked() },
-                    onWinClicked = { viewModel.onWinClicked() },
-                    onCtrlAltDelClicked = { viewModel.onCtrlAltDelClicked() }
-                )
+                Box(modifier = Modifier.weight(1f)) {
+                    VirtualKeyboard(
+                        layout = activeLayout,
+                        modifierState = modifierState,
+                        onKeyTyped = { viewModel.onKeyTyped(it) },
+                        onShiftClicked = { viewModel.onShiftClicked() },
+                        onCapsLockClicked = { viewModel.onCapsLockClicked() },
+                        onCtrlClicked = { viewModel.onCtrlClicked() },
+                        onAltClicked = { viewModel.onAltClicked() },
+                        onWinClicked = { viewModel.onWinClicked() },
+                        onCtrlAltDelClicked = { viewModel.onCtrlAltDelClicked() }
+                    )
+                }
             }
         }
     }

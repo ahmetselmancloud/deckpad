@@ -1,12 +1,17 @@
 package com.dokunmatikekosistem.app.presentation.keyboard
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dokunmatikekosistem.app.domain.KeyboardLayout
 import com.dokunmatikekosistem.app.domain.KeyboardModifierState
@@ -26,28 +31,51 @@ fun VirtualKeyboard(
 ) {
     val upper = modifierState.isUpperCaseEffective()
 
-    Column(modifier = Modifier.padding(top = 8.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         for (row in layout.displayRows()) {
-            Row {
+            KeyRow {
                 for (baseChar in row) {
                     val displayChar = if (upper) layout.shiftedChar(baseChar) else baseChar
-                    Button(onClick = { onKeyTyped(displayChar) }) { Text(displayChar.toString()) }
+                    KeyButton(label = displayChar.toString(), onClick = { onKeyTyped(displayChar) })
                 }
             }
         }
-        Row {
-            Button(onClick = onShiftClicked) { Text(shiftLabel(modifierState.shiftState)) }
-            Button(onClick = onCapsLockClicked) { Text(if (modifierState.capsLockActive) "Caps ●" else "Caps") }
-            Button(onClick = { onKeyTyped(' ') }) { Text("Boşluk") }
-            Button(onClick = { onKeyTyped('\n') }) { Text("Enter") }
-            Button(onClick = { onKeyTyped('\b') }) { Text("Sil") }
+        KeyRow {
+            KeyButton(label = shiftLabel(modifierState.shiftState), onClick = onShiftClicked)
+            KeyButton(label = if (modifierState.capsLockActive) "Caps ●" else "Caps", onClick = onCapsLockClicked)
+            KeyButton(label = "Boşluk", onClick = { onKeyTyped(' ') })
+            KeyButton(label = "Enter", onClick = { onKeyTyped('\n') })
+            KeyButton(label = "Sil", onClick = { onKeyTyped('\b') })
         }
-        Row {
-            Button(onClick = onCtrlClicked) { Text(if (modifierState.ctrlActive) "Ctrl ●" else "Ctrl") }
-            Button(onClick = onAltClicked) { Text(if (modifierState.altActive) "Alt ●" else "Alt") }
-            Button(onClick = onWinClicked) { Text(if (modifierState.winActive) "Win ●" else "Win") }
-            Button(onClick = onCtrlAltDelClicked) { Text("Ctrl+Alt+Del") }
+        KeyRow {
+            KeyButton(label = if (modifierState.ctrlActive) "Ctrl ●" else "Ctrl", onClick = onCtrlClicked)
+            KeyButton(label = if (modifierState.altActive) "Alt ●" else "Alt", onClick = onAltClicked)
+            KeyButton(label = if (modifierState.winActive) "Win ●" else "Win", onClick = onWinClicked)
+            KeyButton(label = "Ctrl+Alt+Del", onClick = onCtrlAltDelClicked)
         }
+    }
+}
+
+/** A key row that always fits the screen width — children divide it evenly via [KeyButton]'s weight. */
+@Composable
+private fun KeyRow(content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), content = content)
+}
+
+/** A compact keyboard key that shrinks to share its row's width instead of overflowing the screen. */
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.KeyButton(label: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.weight(1f).padding(1.dp),
+        contentPadding = PaddingValues(horizontal = 2.dp, vertical = 8.dp)
+    ) {
+        Text(label, maxLines = 1, overflow = TextOverflow.Clip)
     }
 }
 
