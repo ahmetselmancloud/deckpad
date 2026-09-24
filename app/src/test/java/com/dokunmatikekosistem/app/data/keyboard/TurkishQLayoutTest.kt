@@ -82,4 +82,37 @@ class TurkishQLayoutTest {
     fun `dotless uppercase I maps to usage 0x0C with shift`() {
         assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_SHIFT, usageCode = 0x0C), layout.mapChar('I'))
     }
+
+    @Test
+    fun `display rows show turkish letters in their physical positions`() {
+        assertEquals(
+            listOf(
+                "1234567890".toList(),
+                "qwertyuıopğü".toList(),
+                "asdfghjklşi".toList(),
+                "zxcvbnmöç".toList()
+            ),
+            layout.displayRows()
+        )
+    }
+
+    @Test
+    fun `shiftedChar maps dotless i to dotless I`() {
+        assertEquals('I', layout.shiftedChar('ı'))
+    }
+
+    @Test
+    fun `shiftedChar maps dotted i to dotted I`() {
+        assertEquals('İ', layout.shiftedChar('i'))
+    }
+
+    @Test
+    fun `shiftedChar maps g breve to uppercase g breve`() {
+        assertEquals('Ğ', layout.shiftedChar('ğ'))
+    }
+
+    @Test
+    fun `shiftedChar falls back to english uppercasing for regular letters`() {
+        assertEquals('Q', layout.shiftedChar('q'))
+    }
 }

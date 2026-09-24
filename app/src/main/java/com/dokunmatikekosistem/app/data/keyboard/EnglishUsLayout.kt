@@ -26,4 +26,13 @@ class EnglishUsLayout : KeyboardLayout {
             else -> null
         }
     }
+
+    override fun displayRows(): List<List<Char>> = listOf(
+        "1234567890".toList(),
+        "qwertyuiop".toList(),
+        "asdfghjkl".toList(),
+        "zxcvbnm".toList()
+    )
+
+    override fun shiftedChar(baseChar: Char): Char = baseChar.uppercaseChar()
 }

@@ -32,4 +32,22 @@ class EnglishUsLayoutTest {
     fun `turkish character returns null on english layout`() {
         assertEquals(null, layout.mapChar('ğ'))
     }
+
+    @Test
+    fun `display rows are the four physical QWERTY rows`() {
+        assertEquals(
+            listOf(
+                "1234567890".toList(),
+                "qwertyuiop".toList(),
+                "asdfghjkl".toList(),
+                "zxcvbnm".toList()
+            ),
+            layout.displayRows()
+        )
+    }
+
+    @Test
+    fun `shiftedChar uppercases a regular letter`() {
+        assertEquals('A', layout.shiftedChar('a'))
+    }
 }

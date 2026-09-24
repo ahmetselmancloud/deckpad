@@ -44,4 +44,17 @@ class TurkishQLayout : KeyboardLayout {
         // physically unchanged from English US.
         return base.mapChar(char)
     }
+
+    private val turkishShiftMap: Map<Char, Char> = mapOf(
+        'ğ' to 'Ğ', 'ü' to 'Ü', 'ş' to 'Ş', 'i' to 'İ', 'ö' to 'Ö', 'ç' to 'Ç', 'ı' to 'I'
+    )
+
+    override fun displayRows(): List<List<Char>> = listOf(
+        "1234567890".toList(),
+        "qwertyuıopğü".toList(),
+        "asdfghjklşi".toList(),
+        "zxcvbnmöç".toList()
+    )
+
+    override fun shiftedChar(baseChar: Char): Char = turkishShiftMap[baseChar] ?: base.shiftedChar(baseChar)
 }
