@@ -819,6 +819,10 @@ Mevcut cihaz test prosedürünü kullan (Faz 2'de kurulmuş): `./gradlew install
 4. Ctrl'e bas (aktif görünüyor), C'ye bas → Windows'ta Ctrl+C tetikleniyor, Ctrl otomatik kapanıyor.
 5. Ctrl+Alt+Del butonuna bas → Windows güvenli masaüstü/Görev Yöneticisi ekranı açılıyor.
 6. EN US'a geç → ekrandaki tuş etiketleri İngilizce karakterlere dönüyor (ğ/ü/ş/ı/ö/ç görünmüyor); TR Q'ya geri dön → Türkçe etiketler geri geliyor.
+7. **(Final review fix, 2cce8b5)** Caps açıkken Ctrl'e bas, C'ye bas → Windows'ta sade Ctrl+C tetikleniyor (Ctrl+Shift+C DEĞİL — bu, final review'da bulunup düzeltilen bir bug'dı; cihazda da doğrulanmalı).
+8. **(Final review, bilinen kapsam dışı davranış — bug değil)** Shift açıkken bir rakama bas → sembol üretilmiyor (örn. Shift+1 için "!" yok), sadece rakamın kendisi yazılıyor. Beklenen davranış, ileride ayrı bir işe bırakıldı.
+9. **(Final review, cihazda doğrulanacak varsayım)** Windows'un fiziksel CapsLock durumu ile uygulamanın ekran CapsLock'u birbirinden bağımsız — PC'de fiziksel CapsLock açıksa, uygulamanın gönderdiği Shift tabanlı büyütme tersine dönebilir. Cihazda hem PC CapsLock kapalı hem açıkken test et.
+10. **(Final review, cihazda doğrulanacak varsayım)** Modifier ve tuş aynı HID raporunda gönderilip hemen ardından anında bırakılıyor (modifier önce ayrı bir raporda gönderilmiyor). Windows'ta normal çalışması bekleniyor; RDP oturumu veya bazı oyunlar gibi modifier'ın tuştan önce ayrı gelmesini bekleyen uygulamalarda sorun çıkabilir — böyle bir hedef uygulamayla test ediliyorsa ayrıca doğrula.
 
 - [ ] **Step 3: Memory'yi güncelle**
 
