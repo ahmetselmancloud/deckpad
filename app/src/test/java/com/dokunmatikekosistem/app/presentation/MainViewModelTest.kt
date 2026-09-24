@@ -335,6 +335,52 @@ class MainViewModelTest {
     }
 
     @Test
+    fun `onKeyTyped strips CapsLock-derived shift bit when a sticky modifier is active`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        // CapsLock on (no real Shift) makes the caller pass the uppercase char, same as
+        // VirtualKeyboard does via isUpperCaseEffective() -> layout.shiftedChar().
+        viewModel.onCapsLockClicked()
+        viewModel.onCtrlClicked()
+        viewModel.onKeyTyped('C')
+
+        assertEquals(
+            listOf(HidKeyboardReport.MODIFIER_CTRL to 0x06),
+            fake.allKeyPresses
+        )
+    }
+
+    @Test
+    fun `onKeyTyped keeps CapsLock-derived shift bit when no sticky modifier is active`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        viewModel.onCapsLockClicked()
+        viewModel.onKeyTyped('C')
+
+        assertEquals(
+            listOf(HidKeyboardReport.MODIFIER_SHIFT to 0x06),
+            fake.allKeyPresses
+        )
+    }
+
+    @Test
+    fun `onKeyTyped keeps shift bit alongside sticky ctrl when real shift is active`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        viewModel.onShiftClicked(atMillis = 0L)
+        viewModel.onCtrlClicked()
+        viewModel.onKeyTyped('C')
+
+        assertEquals(
+            listOf((HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_SHIFT) to 0x06),
+            fake.allKeyPresses
+        )
+    }
+
+    @Test
     fun `onCtrlAltDelClicked sends ctrl+alt+delete and does not touch sticky state`() {
         val fake = FakeHidManager()
         val viewModel = MainViewModel(fake, FakeHaptics())

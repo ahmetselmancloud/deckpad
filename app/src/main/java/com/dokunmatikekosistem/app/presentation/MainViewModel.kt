@@ -80,7 +80,13 @@ class MainViewModel @Inject constructor(
     fun onKeyTyped(char: Char) {
         val state = _modifierState.value
         val chord = _activeLayout.value.mapChar(char) ?: return
-        val modifierBits = chord.modifierBits or state.stickyHidModifierBits()
+        val stickyBits = state.stickyHidModifierBits()
+        var modifierBits = chord.modifierBits or stickyBits
+        if (stickyBits != 0 && state.shiftState == ShiftState.Off) {
+            // CapsLock (not real Shift) added the Shift bit purely so the host renders an
+            // uppercase letter; a real CapsLock key never combines with Ctrl/Alt/Win like that.
+            modifierBits = modifierBits and HidKeyboardReport.MODIFIER_SHIFT.inv()
+        }
         hidManager.sendKeyboardReport(modifierBits, chord.usageCode)
         hidManager.releaseKeyboardReport()
         _modifierState.value = state.copy(
