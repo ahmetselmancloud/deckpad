@@ -1,11 +1,14 @@
 package com.dokunmatikekosistem.app.presentation
 
 import com.dokunmatikekosistem.app.data.gesture.RecognizedGesture
+import com.dokunmatikekosistem.app.data.hid.HidKeyboardReport
 import com.dokunmatikekosistem.app.data.keyboard.EnglishUsLayout
 import com.dokunmatikekosistem.app.data.keyboard.TurkishQLayout
 import com.dokunmatikekosistem.app.domain.ConnectionState
 import com.dokunmatikekosistem.app.domain.Haptics
 import com.dokunmatikekosistem.app.domain.HidManager
+import com.dokunmatikekosistem.app.domain.KeyboardModifierState
+import com.dokunmatikekosistem.app.domain.ShiftState
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -205,5 +208,145 @@ class MainViewModelTest {
 
         assertEquals(emptyList<Pair<Int, Int>>(), fake.allKeyPresses)
         assertEquals(false, fake.releaseKeyboardCalled)
+    }
+
+    @Test
+    fun `modifierState starts as default (all off)`() {
+        val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
+
+        assertEquals(KeyboardModifierState(), viewModel.modifierState.value)
+    }
+
+    @Test
+    fun `onShiftClicked toggles Off to OneShot`() {
+        val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
+
+        viewModel.onShiftClicked(atMillis = 0L)
+
+        assertEquals(ShiftState.OneShot, viewModel.modifierState.value.shiftState)
+    }
+
+    @Test
+    fun `onShiftClicked toggles OneShot back to Off when taps are far apart`() {
+        val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
+
+        viewModel.onShiftClicked(atMillis = 0L)
+        viewModel.onShiftClicked(atMillis = 1000L)
+
+        assertEquals(ShiftState.Off, viewModel.modifierState.value.shiftState)
+    }
+
+    @Test
+    fun `onShiftClicked twice within 300ms locks shift`() {
+        val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
+
+        viewModel.onShiftClicked(atMillis = 0L)
+        viewModel.onShiftClicked(atMillis = 200L)
+
+        assertEquals(ShiftState.Locked, viewModel.modifierState.value.shiftState)
+    }
+
+    @Test
+    fun `onShiftClicked while locked unlocks to Off`() {
+        val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
+
+        viewModel.onShiftClicked(atMillis = 0L)
+        viewModel.onShiftClicked(atMillis = 200L)
+        viewModel.onShiftClicked(atMillis = 400L)
+
+        assertEquals(ShiftState.Off, viewModel.modifierState.value.shiftState)
+    }
+
+    @Test
+    fun `onCapsLockClicked toggles independently of shift`() {
+        val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
+
+        viewModel.onCapsLockClicked()
+
+        assertEquals(true, viewModel.modifierState.value.capsLockActive)
+        assertEquals(ShiftState.Off, viewModel.modifierState.value.shiftState)
+    }
+
+    @Test
+    fun `onCtrlClicked onAltClicked onWinClicked toggle sticky state`() {
+        val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
+
+        viewModel.onCtrlClicked()
+        viewModel.onAltClicked()
+        viewModel.onWinClicked()
+
+        assertEquals(true, viewModel.modifierState.value.ctrlActive)
+        assertEquals(true, viewModel.modifierState.value.altActive)
+        assertEquals(true, viewModel.modifierState.value.winActive)
+    }
+
+    @Test
+    fun `onKeyTyped combines sticky ctrl and alt bits with the chord's own modifier bits`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        viewModel.onCtrlClicked()
+        viewModel.onAltClicked()
+        viewModel.onKeyTyped('a')
+
+        assertEquals(
+            listOf((HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_ALT) to 0x04),
+            fake.allKeyPresses
+        )
+    }
+
+    @Test
+    fun `onKeyTyped clears one-shot shift and sticky ctrl alt win but keeps caps lock`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        viewModel.onShiftClicked(atMillis = 0L)
+        viewModel.onCapsLockClicked()
+        viewModel.onCtrlClicked()
+        viewModel.onKeyTyped('a')
+
+        val state = viewModel.modifierState.value
+        assertEquals(ShiftState.Off, state.shiftState)
+        assertEquals(true, state.capsLockActive)
+        assertEquals(false, state.ctrlActive)
+    }
+
+    @Test
+    fun `onKeyTyped keeps locked shift after typing`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        viewModel.onShiftClicked(atMillis = 0L)
+        viewModel.onShiftClicked(atMillis = 200L)
+        viewModel.onKeyTyped('a')
+
+        assertEquals(ShiftState.Locked, viewModel.modifierState.value.shiftState)
+    }
+
+    @Test
+    fun `onKeyTyped with unmapped character does not touch modifier state`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        viewModel.onCtrlClicked()
+        viewModel.onKeyTyped('#')
+
+        assertEquals(true, viewModel.modifierState.value.ctrlActive)
+    }
+
+    @Test
+    fun `onCtrlAltDelClicked sends ctrl+alt+delete and does not touch sticky state`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        viewModel.onCtrlAltDelClicked()
+
+        assertEquals(
+            listOf((HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_ALT) to 0x4C),
+            fake.allKeyPresses
+        )
+        assertEquals(true, fake.releaseKeyboardCalled)
+        assertEquals(false, viewModel.modifierState.value.ctrlActive)
+        assertEquals(false, viewModel.modifierState.value.altActive)
     }
 }

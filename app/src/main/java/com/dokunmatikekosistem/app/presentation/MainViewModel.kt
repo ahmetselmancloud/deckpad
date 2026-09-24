@@ -2,16 +2,22 @@ package com.dokunmatikekosistem.app.presentation
 
 import androidx.lifecycle.ViewModel
 import com.dokunmatikekosistem.app.data.gesture.RecognizedGesture
+import com.dokunmatikekosistem.app.data.hid.HidKeyboardReport
 import com.dokunmatikekosistem.app.data.keyboard.EnglishUsLayout
 import com.dokunmatikekosistem.app.data.keyboard.TurkishQLayout
 import com.dokunmatikekosistem.app.domain.ConnectionState
 import com.dokunmatikekosistem.app.domain.Haptics
 import com.dokunmatikekosistem.app.domain.HidManager
 import com.dokunmatikekosistem.app.domain.KeyboardLayout
+import com.dokunmatikekosistem.app.domain.KeyboardModifierState
+import com.dokunmatikekosistem.app.domain.ShiftState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
+
+private const val SHIFT_DOUBLE_TAP_WINDOW_MS = 300L
+private const val DELETE_FORWARD_USAGE_CODE = 0x4C
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -24,6 +30,11 @@ class MainViewModel @Inject constructor(
 
     private val _activeLayout = MutableStateFlow<KeyboardLayout>(TurkishQLayout())
     val activeLayout: StateFlow<KeyboardLayout> = _activeLayout
+
+    private val _modifierState = MutableStateFlow(KeyboardModifierState())
+    val modifierState: StateFlow<KeyboardModifierState> = _modifierState
+
+    private var lastShiftClickMillis = Long.MIN_VALUE
 
     fun onConnectClicked() {
         hidManager.register()
@@ -67,8 +78,59 @@ class MainViewModel @Inject constructor(
     }
 
     fun onKeyTyped(char: Char) {
+        val state = _modifierState.value
         val chord = _activeLayout.value.mapChar(char) ?: return
-        hidManager.sendKeyboardReport(chord.modifierBits, chord.usageCode)
+        val modifierBits = chord.modifierBits or state.stickyHidModifierBits()
+        hidManager.sendKeyboardReport(modifierBits, chord.usageCode)
+        hidManager.releaseKeyboardReport()
+        _modifierState.value = state.copy(
+            shiftState = if (state.shiftState == ShiftState.OneShot) ShiftState.Off else state.shiftState,
+            ctrlActive = false,
+            altActive = false,
+            winActive = false
+        )
+    }
+
+    fun onShiftClicked(atMillis: Long = System.currentTimeMillis()) {
+        val state = _modifierState.value
+        val isDoubleTap = state.shiftState == ShiftState.OneShot &&
+            (atMillis - lastShiftClickMillis) <= SHIFT_DOUBLE_TAP_WINDOW_MS
+        lastShiftClickMillis = atMillis
+        _modifierState.value = state.copy(
+            shiftState = when {
+                isDoubleTap -> ShiftState.Locked
+                state.shiftState == ShiftState.Off -> ShiftState.OneShot
+                else -> ShiftState.Off
+            }
+        )
+    }
+
+    fun onCapsLockClicked() {
+        _modifierState.value = _modifierState.value.let { it.copy(capsLockActive = !it.capsLockActive) }
+    }
+
+    fun onCtrlClicked() {
+        _modifierState.value = _modifierState.value.let { it.copy(ctrlActive = !it.ctrlActive) }
+    }
+
+    fun onAltClicked() {
+        _modifierState.value = _modifierState.value.let { it.copy(altActive = !it.altActive) }
+    }
+
+    fun onWinClicked() {
+        _modifierState.value = _modifierState.value.let { it.copy(winActive = !it.winActive) }
+    }
+
+    fun onCtrlAltDelClicked() {
+        hidManager.sendKeyboardReport(HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_ALT, DELETE_FORWARD_USAGE_CODE)
         hidManager.releaseKeyboardReport()
     }
+}
+
+private fun KeyboardModifierState.stickyHidModifierBits(): Int {
+    var bits = 0
+    if (ctrlActive) bits = bits or HidKeyboardReport.MODIFIER_CTRL
+    if (altActive) bits = bits or HidKeyboardReport.MODIFIER_ALT
+    if (winActive) bits = bits or HidKeyboardReport.MODIFIER_WIN
+    return bits
 }
