@@ -37,6 +37,7 @@ import androidx.core.content.ContextCompat
 import com.dokunmatikekosistem.app.data.gesture.GestureRecognizer
 import com.dokunmatikekosistem.app.data.gesture.RawTouchEvent
 import com.dokunmatikekosistem.app.domain.ConnectionState
+import com.dokunmatikekosistem.app.presentation.keyboard.VirtualKeyboard
 import dagger.hilt.android.AndroidEntryPoint
 
 private const val DISCOVERABLE_DURATION_SECONDS = 300
@@ -99,6 +100,7 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
     val connectionState by viewModel.connectionState.collectAsState()
     val reportsSent by viewModel.reportsSent.collectAsState()
     val activeLayout by viewModel.activeLayout.collectAsState()
+    val modifierState by viewModel.modifierState.collectAsState()
     var keyboardVisible by remember { mutableStateOf(false) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -145,39 +147,18 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                     }
             )
             if (keyboardVisible) {
-                VirtualKeyboard(onKeyTyped = { viewModel.onKeyTyped(it) })
+                VirtualKeyboard(
+                    layout = activeLayout,
+                    modifierState = modifierState,
+                    onKeyTyped = { viewModel.onKeyTyped(it) },
+                    onShiftClicked = { viewModel.onShiftClicked() },
+                    onCapsLockClicked = { viewModel.onCapsLockClicked() },
+                    onCtrlClicked = { viewModel.onCtrlClicked() },
+                    onAltClicked = { viewModel.onAltClicked() },
+                    onWinClicked = { viewModel.onWinClicked() },
+                    onCtrlAltDelClicked = { viewModel.onCtrlAltDelClicked() }
+                )
             }
-        }
-    }
-}
-
-private val virtualKeyboardShiftMap: Map<Char, Char> =
-    ('a'..'z').associateWith { it.uppercaseChar() } +
-        mapOf('ç' to 'Ç', 'ğ' to 'Ğ', 'ı' to 'I', 'ö' to 'Ö', 'ş' to 'Ş', 'ü' to 'Ü', 'i' to 'İ')
-
-@Composable
-private fun VirtualKeyboard(onKeyTyped: (Char) -> Unit) {
-    val rows = listOf(
-        "1234567890",
-        "qwertyuıopğü",
-        "asdfghjklşi",
-        "zxcvbnmöç"
-    )
-    var shiftActive by remember { mutableStateOf(false) }
-    Column(modifier = Modifier.padding(top = 8.dp)) {
-        for (row in rows) {
-            Row {
-                for (char in row) {
-                    val displayChar = if (shiftActive) virtualKeyboardShiftMap[char] ?: char else char
-                    Button(onClick = { onKeyTyped(displayChar) }) { Text(displayChar.toString()) }
-                }
-            }
-        }
-        Row {
-            Button(onClick = { shiftActive = !shiftActive }) { Text(if (shiftActive) "⇧ Aktif" else "Shift") }
-            Button(onClick = { onKeyTyped(' ') }) { Text("Boşluk") }
-            Button(onClick = { onKeyTyped('\n') }) { Text("Enter") }
-            Button(onClick = { onKeyTyped('\b') }) { Text("Sil") }
         }
     }
 }
