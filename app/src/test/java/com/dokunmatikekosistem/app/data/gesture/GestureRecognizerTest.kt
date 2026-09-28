@@ -96,17 +96,39 @@ class GestureRecognizerTest {
     }
 
     @Test
-    fun `tap then hold-and-drag engages drag lock then moves then releases`() {
+    fun `tap then hold-and-drag engages drag lock only once held long enough and moved enough, then moves then releases`() {
         val recognizer = GestureRecognizer()
         recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
         recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 80))
         recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 100f, y = 100f, timeMs = 200))
-        val engaged = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 100f, y = 100f, timeMs = 360))
+        val notYetEngaged = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 100f, y = 100f, timeMs = 300))
+        assertNull(notYetEngaged)
+        val engaged = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 120f, y = 100f, timeMs = 360))
         assertEquals(RecognizedGesture.DragLockEngaged, engaged)
-        val moved = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 120f, y = 100f, timeMs = 400))
+        val moved = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 140f, y = 100f, timeMs = 400))
         assertEquals(RecognizedGesture.DragMove(dx = 20, dy = 0), moved)
-        val released = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 120f, y = 100f, timeMs = 500))
+        val released = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 140f, y = 100f, timeMs = 500))
         assertEquals(RecognizedGesture.DragLockReleased, released)
+    }
+
+    @Test
+    fun `holding still past the hold-time threshold never engages drag lock without movement`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 80))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 100f, y = 100f, timeMs = 200))
+        val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 100f, y = 100f, timeMs = 400))
+        assertNull(result)
+    }
+
+    @Test
+    fun `moving past the movement threshold before the hold-time elapses does not engage drag lock early`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 80))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 100f, y = 100f, timeMs = 200))
+        val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 130f, y = 100f, timeMs = 210))
+        assertNull(result)
     }
 
     @Test
@@ -125,7 +147,7 @@ class GestureRecognizerTest {
         recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
         recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 80))
         recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 100f, y = 100f, timeMs = 200))
-        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 100f, y = 100f, timeMs = 360)) // engages drag lock
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 120f, y = 100f, timeMs = 360)) // engages drag lock
         recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 300f, y = 100f, timeMs = 400))
         val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 2, x = 300f, y = 140f, timeMs = 420))
         assertTrue(result !is RecognizedGesture.Scroll)

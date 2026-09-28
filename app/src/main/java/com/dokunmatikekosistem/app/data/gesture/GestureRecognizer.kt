@@ -121,7 +121,11 @@ class GestureRecognizer {
         if (event.id == dragLockPointerId) {
             val heldMs = event.timeMs - pointer.downTimeMs
             if (!dragLockEngagedSent) {
-                if (heldMs >= DRAG_LOCK_HOLD_MS) {
+                // Require real movement, not just elapsed time, before sending the mouse
+                // button-down to the host: engaging on a near-stationary hold lets Windows'
+                // own double-click detection mistake a fast, tiny drag for a second click
+                // (e.g. un-maximizing a snapped window instead of dragging it).
+                if (heldMs >= DRAG_LOCK_HOLD_MS && pointer.totalMovement > TAP_MAX_MOVEMENT_PX) {
                     dragLockEngagedSent = true
                     return RecognizedGesture.DragLockEngaged
                 }
