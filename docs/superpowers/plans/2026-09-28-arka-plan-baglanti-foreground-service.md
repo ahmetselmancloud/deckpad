@@ -209,7 +209,7 @@ class HidForegroundService : Service() {
             .launchIn(scope)
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_NOT_STICKY
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         stopSelf()
