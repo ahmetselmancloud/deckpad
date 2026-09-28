@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.IBinder
+import android.os.Process
 import androidx.core.app.ServiceCompat
 import com.dokunmatikekosistem.app.data.notification.HID_SERVICE_NOTIFICATION_ID
 import com.dokunmatikekosistem.app.data.notification.NotificationHelper
@@ -52,8 +53,15 @@ class HidForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_NOT_STICKY
 
     override fun onTaskRemoved(rootIntent: Intent?) {
+        // The app has no way to reset a HidManager singleton left mid-teardown (e.g. the
+        // Bluetooth stack reporting onAppStatusChanged(registered=false) as the host
+        // disconnects, which BluetoothHidManager surfaces as ConnectionState.ERROR) — so
+        // when the user explicitly removes the app from recents, kill this process outright
+        // instead of leaving it running. The next launch then starts from a real, clean
+        // DISCONNECTED state rather than an ERROR left over from the previous session.
         stopSelf()
         super.onTaskRemoved(rootIntent)
+        Process.killProcess(Process.myPid())
     }
 
     override fun onDestroy() {
