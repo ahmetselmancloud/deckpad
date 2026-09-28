@@ -36,8 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.dokunmatikekosistem.app.data.gesture.GestureRecognizer
 import com.dokunmatikekosistem.app.data.gesture.RawTouchEvent
-import com.dokunmatikekosistem.app.domain.ConnectionState
+import com.dokunmatikekosistem.app.data.notification.NotificationHelper
 import com.dokunmatikekosistem.app.presentation.keyboard.VirtualKeyboard
+import com.dokunmatikekosistem.app.presentation.service.HidForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 
 private const val DISCOVERABLE_DURATION_SECONDS = 300
@@ -53,12 +54,17 @@ class MainActivity : ComponentActivity() {
         // Regardless of the result code (duration granted or cancelled), proceed:
         // registerApp() itself doesn't require discoverability, only pairing does.
         viewModel.onConnectClicked()
+        ContextCompat.startForegroundService(this, Intent(this, HidForegroundService::class.java))
     }
 
-    private val requestBluetoothConnect = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
+    private val requestPermissions = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        // POST_NOTIFICATIONS being denied only means the persistent notification stays
+        // hidden — it doesn't block starting the foreground service, so only
+        // BLUETOOTH_CONNECT gates whether we proceed to connect.
+        val bluetoothGranted = results[Manifest.permission.BLUETOOTH_CONNECT] ?: true
+        if (bluetoothGranted) {
             requestDiscoverableAndConnect()
         }
     }
@@ -73,17 +79,22 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun connectWithPermissionCheck() {
-        val needsRuntimePermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-        val alreadyGranted = !needsRuntimePermission ||
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) == PackageManager.PERMISSION_GRANTED
+        val permissionsToRequest = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionsToRequest += Manifest.permission.BLUETOOTH_CONNECT
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionsToRequest += Manifest.permission.POST_NOTIFICATIONS
+        }
 
-        if (alreadyGranted) {
+        if (permissionsToRequest.isEmpty()) {
             requestDiscoverableAndConnect()
         } else {
-            requestBluetoothConnect.launch(Manifest.permission.BLUETOOTH_CONNECT)
+            requestPermissions.launch(permissionsToRequest.toTypedArray())
         }
     }
 
@@ -105,7 +116,7 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            Text("Durum: ${connectionState.label()}")
+            Text("Durum: ${NotificationHelper.titleFor(connectionState)}")
             Text("Gönderilen rapor: $reportsSent")
             Row {
                 Button(onClick = onConnectRequested) { Text("Eşleştir/Bağlan") }
@@ -163,12 +174,4 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
             }
         }
     }
-}
-
-private fun ConnectionState.label(): String = when (this) {
-    ConnectionState.DISCONNECTED -> "Bağlı değil"
-    ConnectionState.REGISTERING -> "Eşleştiriliyor"
-    ConnectionState.REGISTERED -> "Kayıtlı, bağlantı bekleniyor"
-    ConnectionState.CONNECTED -> "Bağlı"
-    ConnectionState.ERROR -> "Hata"
 }
