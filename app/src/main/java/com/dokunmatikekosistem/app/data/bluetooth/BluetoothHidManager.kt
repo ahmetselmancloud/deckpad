@@ -131,6 +131,11 @@ class BluetoothHidManager @Inject constructor(
     override fun releaseKeyboardReport() {
         val device = connectedDevice ?: return
         val report = com.dokunmatikekosistem.app.data.hid.HidKeyboardReport.release()
-        hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.KEYBOARD_REPORT_ID.toInt(), report)
+        val sent = hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.KEYBOARD_REPORT_ID.toInt(), report)
+        if (sent == true) {
+            _reportsSent.value = _reportsSent.value + 1
+        } else {
+            Log.w(TAG, "releaseKeyboardReport() sendReport failed or hidDevice is null")
+        }
     }
 }
