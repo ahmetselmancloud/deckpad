@@ -2,6 +2,7 @@ package com.dokunmatikekosistem.app.presentation
 
 import androidx.lifecycle.ViewModel
 import com.dokunmatikekosistem.app.data.gesture.RecognizedGesture
+import com.dokunmatikekosistem.app.data.gesture.SwipeDirection
 import com.dokunmatikekosistem.app.data.hid.HidKeyboardReport
 import com.dokunmatikekosistem.app.data.keyboard.EnglishUsLayout
 import com.dokunmatikekosistem.app.data.keyboard.TurkishQLayout
@@ -18,6 +19,12 @@ import javax.inject.Inject
 
 private const val SHIFT_DOUBLE_TAP_WINDOW_MS = 300L
 private const val DELETE_FORWARD_USAGE_CODE = 0x4C
+private const val TAB_USAGE_CODE = 0x2B
+private const val D_USAGE_CODE = 0x07
+private const val S_USAGE_CODE = 0x16
+private const val N_USAGE_CODE = 0x11
+private const val LEFT_ARROW_USAGE_CODE = 0x50
+private const val RIGHT_ARROW_USAGE_CODE = 0x4F
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -70,6 +77,24 @@ class MainViewModel @Inject constructor(
 
             RecognizedGesture.DragLockReleased ->
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false)
+
+            is RecognizedGesture.ThreeFingerSwipe -> when (gesture.direction) {
+                SwipeDirection.UP -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, TAB_USAGE_CODE)
+                SwipeDirection.DOWN -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, D_USAGE_CODE)
+                SwipeDirection.LEFT -> sendShortcut(HidKeyboardReport.MODIFIER_ALT, TAB_USAGE_CODE)
+                SwipeDirection.RIGHT -> sendShortcut(HidKeyboardReport.MODIFIER_ALT or HidKeyboardReport.MODIFIER_SHIFT, TAB_USAGE_CODE)
+            }
+
+            RecognizedGesture.ThreeFingerTap -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, S_USAGE_CODE)
+
+            is RecognizedGesture.FourFingerSwipe -> when (gesture.direction) {
+                SwipeDirection.UP -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, TAB_USAGE_CODE)
+                SwipeDirection.DOWN -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, D_USAGE_CODE)
+                SwipeDirection.LEFT -> sendShortcut(HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_WIN, RIGHT_ARROW_USAGE_CODE)
+                SwipeDirection.RIGHT -> sendShortcut(HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_WIN, LEFT_ARROW_USAGE_CODE)
+            }
+
+            RecognizedGesture.FourFingerTap -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, N_USAGE_CODE)
         }
     }
 
@@ -129,6 +154,11 @@ class MainViewModel @Inject constructor(
 
     fun onCtrlAltDelClicked() {
         hidManager.sendKeyboardReport(HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_ALT, DELETE_FORWARD_USAGE_CODE)
+        hidManager.releaseKeyboardReport()
+    }
+
+    private fun sendShortcut(modifierBits: Int, usageCode: Int) {
+        hidManager.sendKeyboardReport(modifierBits, usageCode)
         hidManager.releaseKeyboardReport()
     }
 }

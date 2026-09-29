@@ -1,5 +1,7 @@
 package com.dokunmatikekosistem.app.data.gesture
 
+import kotlin.math.abs
+import kotlin.math.hypot
 import kotlin.math.roundToInt
 
 private const val TAP_MAX_MOVEMENT_PX = 10f
@@ -8,6 +10,9 @@ private const val TWO_FINGER_DOWN_WINDOW_MS = 150L
 private const val DRAG_LOCK_TAP_GAP_MS = 300L
 private const val DRAG_LOCK_HOLD_MS = 150L
 private const val SCROLL_PX_PER_UNIT = 24f
+private const val SWIPE_MIN_DISTANCE_PX = 60f
+
+enum class SwipeDirection { UP, DOWN, LEFT, RIGHT }
 
 sealed interface RawTouchEvent {
     val id: Int
@@ -28,6 +33,10 @@ sealed interface RecognizedGesture {
     object DragLockEngaged : RecognizedGesture
     data class DragMove(val dx: Int, val dy: Int) : RecognizedGesture
     object DragLockReleased : RecognizedGesture
+    data class ThreeFingerSwipe(val direction: SwipeDirection) : RecognizedGesture
+    object ThreeFingerTap : RecognizedGesture
+    data class FourFingerSwipe(val direction: SwipeDirection) : RecognizedGesture
+    object FourFingerTap : RecognizedGesture
 }
 
 private class ActivePointer(var lastX: Float, var lastY: Float, val downX: Float, val downY: Float, val downTimeMs: Long) {
@@ -57,6 +66,12 @@ class GestureRecognizer {
     private var sessionAllTapsSoFar = true
     private var firstDownTimeMsInSession: Long? = null
 
+    // Net displacement of the very first finger down this session, used to
+    // classify 3/4-finger swipe direction once the session ends.
+    private var sessionFirstPointerId: Int? = null
+    private var sessionFirstNetDx = 0f
+    private var sessionFirstNetDy = 0f
+
     // Pixel-to-detent accumulation for two-finger scroll, shared across
     // whichever pointer is currently the canonical (lowest-id) reporter.
     private var scrollResidualV = 0f
@@ -85,6 +100,7 @@ class GestureRecognizer {
 
         if (active.size == 1) {
             firstDownTimeMsInSession = event.timeMs
+            sessionFirstPointerId = event.id
             // Drag-lock candidate: a second down shortly after the previous tap's up.
             val gap = lastTapUpTimeMs?.let { event.timeMs - it }
             if (gap != null && gap in 0..DRAG_LOCK_TAP_GAP_MS) {
@@ -110,9 +126,14 @@ class GestureRecognizer {
         val pointer = active[event.id] ?: return null
         val rawDx = event.x - pointer.lastX
         val rawDy = event.y - pointer.lastY
-        pointer.totalMovement += kotlin.math.hypot(rawDx, rawDy)
+        pointer.totalMovement += hypot(rawDx, rawDy)
         pointer.lastX = event.x
         pointer.lastY = event.y
+
+        if (event.id == sessionFirstPointerId) {
+            sessionFirstNetDx += rawDx
+            sessionFirstNetDy += rawDy
+        }
 
         if (pointer.totalMovement > TAP_MAX_MOVEMENT_PX) {
             sessionAllTapsSoFar = false
@@ -196,7 +217,12 @@ class GestureRecognizer {
         if (active.isNotEmpty()) return null
 
         // All pointers are now up: decide what this session was.
+        val direction = classifySwipeDirection()
         val result = when {
+            sessionMaxPointers == 4 && sessionAllTapsSoFar -> RecognizedGesture.FourFingerTap
+            sessionMaxPointers == 4 && direction != null -> RecognizedGesture.FourFingerSwipe(direction)
+            sessionMaxPointers == 3 && sessionAllTapsSoFar -> RecognizedGesture.ThreeFingerTap
+            sessionMaxPointers == 3 && direction != null -> RecognizedGesture.ThreeFingerSwipe(direction)
             sessionMaxPointers == 2 && sessionAllTapsSoFar -> RecognizedGesture.RightClick
             sessionMaxPointers == 1 && isTap -> {
                 lastTapUpTimeMs = event.timeMs
@@ -208,11 +234,25 @@ class GestureRecognizer {
         return result
     }
 
+    private fun classifySwipeDirection(): SwipeDirection? {
+        val absDx = abs(sessionFirstNetDx)
+        val absDy = abs(sessionFirstNetDy)
+        if (maxOf(absDx, absDy) < SWIPE_MIN_DISTANCE_PX) return null
+        return if (absDx >= absDy) {
+            if (sessionFirstNetDx > 0) SwipeDirection.RIGHT else SwipeDirection.LEFT
+        } else {
+            if (sessionFirstNetDy > 0) SwipeDirection.DOWN else SwipeDirection.UP
+        }
+    }
+
     private fun resetSession() {
         sessionMaxPointers = 0
         sessionAllTapsSoFar = true
         firstDownTimeMsInSession = null
         scrollResidualV = 0f
         scrollResidualH = 0f
+        sessionFirstPointerId = null
+        sessionFirstNetDx = 0f
+        sessionFirstNetDy = 0f
     }
 }

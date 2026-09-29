@@ -1,6 +1,7 @@
 package com.dokunmatikekosistem.app.presentation
 
 import com.dokunmatikekosistem.app.data.gesture.RecognizedGesture
+import com.dokunmatikekosistem.app.data.gesture.SwipeDirection
 import com.dokunmatikekosistem.app.data.hid.HidKeyboardReport
 import com.dokunmatikekosistem.app.data.keyboard.EnglishUsLayout
 import com.dokunmatikekosistem.app.data.keyboard.TurkishQLayout
@@ -394,5 +395,70 @@ class MainViewModelTest {
         assertEquals(true, fake.releaseKeyboardCalled)
         assertEquals(false, viewModel.modifierState.value.ctrlActive)
         assertEquals(false, viewModel.modifierState.value.altActive)
+    }
+
+    @Test
+    fun `ThreeFingerSwipe UP sends Win+Tab`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.ThreeFingerSwipe(SwipeDirection.UP))
+        assertEquals(listOf(HidKeyboardReport.MODIFIER_WIN to 0x2B), fake.allKeyPresses)
+        assertEquals(true, fake.releaseKeyboardCalled)
+    }
+
+    @Test
+    fun `ThreeFingerSwipe DOWN sends Win+D`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.ThreeFingerSwipe(SwipeDirection.DOWN))
+        assertEquals(listOf(HidKeyboardReport.MODIFIER_WIN to 0x07), fake.allKeyPresses)
+    }
+
+    @Test
+    fun `ThreeFingerSwipe LEFT sends Alt+Tab`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.ThreeFingerSwipe(SwipeDirection.LEFT))
+        assertEquals(listOf(HidKeyboardReport.MODIFIER_ALT to 0x2B), fake.allKeyPresses)
+    }
+
+    @Test
+    fun `ThreeFingerSwipe RIGHT sends Alt+Shift+Tab`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.ThreeFingerSwipe(SwipeDirection.RIGHT))
+        assertEquals(listOf((HidKeyboardReport.MODIFIER_ALT or HidKeyboardReport.MODIFIER_SHIFT) to 0x2B), fake.allKeyPresses)
+    }
+
+    @Test
+    fun `ThreeFingerTap sends Win+S`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.ThreeFingerTap)
+        assertEquals(listOf(HidKeyboardReport.MODIFIER_WIN to 0x16), fake.allKeyPresses)
+    }
+
+    @Test
+    fun `FourFingerSwipe LEFT sends Ctrl+Win+Right for next virtual desktop`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.FourFingerSwipe(SwipeDirection.LEFT))
+        assertEquals(listOf((HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_WIN) to 0x4F), fake.allKeyPresses)
+    }
+
+    @Test
+    fun `FourFingerSwipe RIGHT sends Ctrl+Win+Left for previous virtual desktop`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.FourFingerSwipe(SwipeDirection.RIGHT))
+        assertEquals(listOf((HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_WIN) to 0x50), fake.allKeyPresses)
+    }
+
+    @Test
+    fun `FourFingerTap sends Win+N`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.FourFingerTap)
+        assertEquals(listOf(HidKeyboardReport.MODIFIER_WIN to 0x11), fake.allKeyPresses)
     }
 }

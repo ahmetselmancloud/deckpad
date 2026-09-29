@@ -72,7 +72,7 @@ class GestureRecognizerTest {
     }
 
     @Test
-    fun `three finger tap does not produce RightClick`() {
+    fun `three finger tap produces ThreeFingerTap`() {
         val recognizer = GestureRecognizer()
         recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
         recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 100f, timeMs = 10))
@@ -80,7 +80,7 @@ class GestureRecognizerTest {
         recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 100))
         recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 200f, y = 100f, timeMs = 110))
         val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 2, x = 300f, y = 100f, timeMs = 120))
-        assertNull(result)
+        assertEquals(RecognizedGesture.ThreeFingerTap, result)
     }
 
     @Test
@@ -172,5 +172,114 @@ class GestureRecognizerTest {
         recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 200f, y = 100f, timeMs = 210))
         val moveResult = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 100f, y = 130f, timeMs = 260))
         assertTrue(moveResult !is RecognizedGesture.DragLockEngaged)
+    }
+
+    @Test
+    fun `three finger swipe up produces ThreeFingerSwipe UP`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 300f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 300f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 300f, y = 300f, timeMs = 20))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 200f, timeMs = 50))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 200f, y = 300f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 2, x = 300f, y = 300f, timeMs = 110))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 200f, timeMs = 120))
+        assertEquals(RecognizedGesture.ThreeFingerSwipe(SwipeDirection.UP), result)
+    }
+
+    @Test
+    fun `three finger swipe down produces ThreeFingerSwipe DOWN`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 100f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 300f, y = 100f, timeMs = 20))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 200f, timeMs = 50))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 200f, y = 100f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 2, x = 300f, y = 100f, timeMs = 110))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 200f, timeMs = 120))
+        assertEquals(RecognizedGesture.ThreeFingerSwipe(SwipeDirection.DOWN), result)
+    }
+
+    @Test
+    fun `three finger swipe left produces ThreeFingerSwipe LEFT`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 300f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 300f, y = 200f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 300f, y = 300f, timeMs = 20))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 200f, y = 100f, timeMs = 50))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 300f, y = 200f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 2, x = 300f, y = 300f, timeMs = 110))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 200f, y = 100f, timeMs = 120))
+        assertEquals(RecognizedGesture.ThreeFingerSwipe(SwipeDirection.LEFT), result)
+    }
+
+    @Test
+    fun `three finger swipe right produces ThreeFingerSwipe RIGHT`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 100f, y = 200f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 100f, y = 300f, timeMs = 20))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 200f, y = 100f, timeMs = 50))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 100f, y = 200f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 2, x = 100f, y = 300f, timeMs = 110))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 200f, y = 100f, timeMs = 120))
+        assertEquals(RecognizedGesture.ThreeFingerSwipe(SwipeDirection.RIGHT), result)
+    }
+
+    @Test
+    fun `four finger swipe up produces FourFingerSwipe UP`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 300f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 300f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 300f, y = 300f, timeMs = 20))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 3, x = 400f, y = 300f, timeMs = 30))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 200f, timeMs = 60))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 200f, y = 300f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 2, x = 300f, y = 300f, timeMs = 110))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 3, x = 400f, y = 300f, timeMs = 120))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 200f, timeMs = 130))
+        assertEquals(RecognizedGesture.FourFingerSwipe(SwipeDirection.UP), result)
+    }
+
+    @Test
+    fun `four finger swipe left produces FourFingerSwipe LEFT`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 400f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 400f, y = 200f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 400f, y = 300f, timeMs = 20))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 3, x = 400f, y = 400f, timeMs = 30))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 300f, y = 100f, timeMs = 60))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 400f, y = 200f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 2, x = 400f, y = 300f, timeMs = 110))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 3, x = 400f, y = 400f, timeMs = 120))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 300f, y = 100f, timeMs = 130))
+        assertEquals(RecognizedGesture.FourFingerSwipe(SwipeDirection.LEFT), result)
+    }
+
+    @Test
+    fun `four finger tap produces FourFingerTap`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 100f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 300f, y = 100f, timeMs = 20))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 3, x = 400f, y = 100f, timeMs = 30))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 200f, y = 100f, timeMs = 110))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 2, x = 300f, y = 100f, timeMs = 120))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 3, x = 400f, y = 100f, timeMs = 130))
+        assertEquals(RecognizedGesture.FourFingerTap, result)
+    }
+
+    @Test
+    fun `three finger session with movement below the swipe threshold and above the tap threshold produces nothing`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 100f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 300f, y = 100f, timeMs = 20))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 130f, timeMs = 50))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 200f, y = 100f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 2, x = 300f, y = 100f, timeMs = 110))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 130f, timeMs = 120))
+        assertNull(result)
     }
 }
