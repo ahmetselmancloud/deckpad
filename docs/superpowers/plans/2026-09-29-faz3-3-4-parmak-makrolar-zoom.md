@@ -1012,6 +1012,9 @@ Telefonu Bluetooth HID ile Windows'a bağla (mevcut prosedür).
 9. 2 parmak pinch (uzaklaştırma) bir web sayfasında/Fotoğraflar'da → gerçekten yakınlaştırıyor (zoom in).
 10. 2 parmak pinch (yaklaştırma) → uzaklaştırıyor (zoom out).
 11. Mevcut 2 parmak scroll'un pinch ile karışmadığını doğrula: normal 2 parmak dikey/yatay kaydırma hâlâ scroll olarak çalışıyor, yanlışlıkla zoom tetiklemiyor.
+12. **(Final review'da bulunup düzeltilen bug, 1c1d412)** 2 parmakla kaydırırken bir parmağı kaldırıp farklı bir yere koyarak kaydırmaya devam et → hâlâ scroll olarak çalışmalı, yanlışlıkla zoom'a geçmemeli.
+13. **(Final review, bilinen kapsam dışı davranış)** 2 parmak scroll/pinch sırasında kazara 3. bir parmak değerse (avuç içi vb.) ve sonra bırakılırsa, bazen o oturumun sonunda istenmeyen bir 3/4 parmak makrosu (örn. Alt+Tab) tetiklenebilir — cihazda gözlemlenirse not al, bu turda düzeltilmedi.
+14. **(Final review, bilinen kapsam dışı davranış)** 3 parmak swipe başlarken ilk iki parmak üçüncü değmeden önce belirgin hareket ederse, swipe makrosundan önce birkaç Scroll/zoom-başlangıcı olayı tetiklenebilir — genelde zararsız, cihazda gözlemlenirse not al.
 
 - [ ] **Step 3: Eşik değerlerini gerekirse ayarla**
 
