@@ -282,4 +282,35 @@ class GestureRecognizerTest {
         val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 130f, timeMs = 120))
         assertNull(result)
     }
+
+    @Test
+    fun `pinch apart engages zoom, emits deltas, and ends when a finger lifts`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 150f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 250f, y = 100f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 280f, y = 100f, timeMs = 30))
+        val seeded = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 120f, y = 100f, timeMs = 40))
+        assertNull(seeded)
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 330f, y = 100f, timeMs = 50))
+        val started = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 90f, y = 100f, timeMs = 60))
+        assertEquals(RecognizedGesture.PinchZoomStarted, started)
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 380f, y = 100f, timeMs = 70))
+        val delta = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 40f, y = 100f, timeMs = 80))
+        assertEquals(RecognizedGesture.PinchZoomDelta(units = 8), delta)
+        val ended = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 380f, y = 100f, timeMs = 90))
+        assertEquals(RecognizedGesture.PinchZoomEnded, ended)
+    }
+
+    @Test
+    fun `two fingers moving together in parallel do not trigger pinch zoom`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 100f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 200f, y = 130f, timeMs = 30))
+        val seeded = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 130f, timeMs = 40))
+        assertNull(seeded)
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 200f, y = 160f, timeMs = 50))
+        val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 160f, timeMs = 60))
+        assertTrue(result is RecognizedGesture.Scroll)
+    }
 }

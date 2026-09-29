@@ -461,4 +461,30 @@ class MainViewModelTest {
         viewModel.onGesture(RecognizedGesture.FourFingerTap)
         assertEquals(listOf(HidKeyboardReport.MODIFIER_WIN to 0x11), fake.allKeyPresses)
     }
+
+    @Test
+    fun `PinchZoomStarted holds Ctrl with no key`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.PinchZoomStarted)
+        assertEquals(listOf(HidKeyboardReport.MODIFIER_CTRL to 0), fake.allKeyPresses)
+        assertEquals(false, fake.releaseKeyboardCalled)
+    }
+
+    @Test
+    fun `PinchZoomDelta sends a mouse wheel report with the given units`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.PinchZoomDelta(units = 3))
+        assertEquals(listOf(FakeMouseReport(0, 0, wheelDelta = 3, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)), fake.allReports)
+    }
+
+    @Test
+    fun `PinchZoomEnded releases the keyboard report`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.onGesture(RecognizedGesture.PinchZoomEnded)
+        assertEquals(true, fake.releaseKeyboardCalled)
+        assertEquals(emptyList<Pair<Int, Int>>(), fake.allKeyPresses)
+    }
 }

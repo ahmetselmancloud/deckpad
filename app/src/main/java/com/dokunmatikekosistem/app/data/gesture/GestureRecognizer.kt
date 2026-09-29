@@ -11,6 +11,7 @@ private const val DRAG_LOCK_TAP_GAP_MS = 300L
 private const val DRAG_LOCK_HOLD_MS = 150L
 private const val SCROLL_PX_PER_UNIT = 24f
 private const val SWIPE_MIN_DISTANCE_PX = 60f
+private const val PINCH_PX_PER_UNIT = 12f
 
 enum class SwipeDirection { UP, DOWN, LEFT, RIGHT }
 
@@ -37,6 +38,9 @@ sealed interface RecognizedGesture {
     object ThreeFingerTap : RecognizedGesture
     data class FourFingerSwipe(val direction: SwipeDirection) : RecognizedGesture
     object FourFingerTap : RecognizedGesture
+    object PinchZoomStarted : RecognizedGesture
+    data class PinchZoomDelta(val units: Int) : RecognizedGesture
+    object PinchZoomEnded : RecognizedGesture
 }
 
 private class ActivePointer(var lastX: Float, var lastY: Float, val downX: Float, val downY: Float, val downTimeMs: Long) {
@@ -76,6 +80,12 @@ class GestureRecognizer {
     // whichever pointer is currently the canonical (lowest-id) reporter.
     private var scrollResidualV = 0f
     private var scrollResidualH = 0f
+
+    // Pinch-zoom: sticky once engaged for the rest of this 2-finger session
+    // (mirrors dragLockPointerId's sticky-until-release pattern).
+    private var pinchEngaged = false
+    private var lastPinchDistance = -1f
+    private var pinchResidual = 0f
 
     /** Clears all tracked pointer/session/drag-lock state. Safe to call at any time. */
     fun reset() {
@@ -158,10 +168,46 @@ class GestureRecognizer {
         if (active.size == 2 && dragLockPointerId == null) {
             val other = active.entries.first { it.key != event.id }.value
             if (other.totalMovement > TAP_MAX_MOVEMENT_PX && pointer.totalMovement > TAP_MAX_MOVEMENT_PX) {
-                // Only the canonical (lowest-id) pointer emits Scroll, so a
+                // Only the canonical (lowest-id) pointer emits Scroll/Pinch, so a
                 // two-finger move doesn't fire twice per frame.
                 val canonicalId = active.keys.min()
+
+                // Seed the pinch-distance baseline on the session's first qualifying
+                // frame, regardless of which pointer reports it — a two-finger move
+                // arrives as two separate single-pointer events, and the first one to
+                // cross the movement threshold is not necessarily the canonical
+                // pointer. Deferring the seed to "the canonical pointer's first
+                // qualifying frame" instead of "the session's first qualifying frame"
+                // would silently skip a frame when the non-canonical pointer crosses
+                // first, misclassifying what should be an immediate Scroll as a
+                // pinch-baseline frame. Once seeded, only the canonical pointer's
+                // frames update the baseline (below), so the distance-change compared
+                // against hypot(rawDx, rawDy) — a single pointer's single-frame
+                // movement — spans one full two-finger "frame".
+                if (lastPinchDistance < 0f) {
+                    lastPinchDistance = hypot(pointer.lastX - other.lastX, pointer.lastY - other.lastY)
+                    return null
+                }
+
                 if (event.id != canonicalId) return null
+
+                val distanceNow = hypot(pointer.lastX - other.lastX, pointer.lastY - other.lastY)
+                val distanceChange = distanceNow - lastPinchDistance
+                lastPinchDistance = distanceNow
+
+                if (!pinchEngaged && abs(distanceChange) > hypot(rawDx, rawDy)) {
+                    pinchEngaged = true
+                    return RecognizedGesture.PinchZoomStarted
+                }
+
+                if (pinchEngaged) {
+                    pinchResidual += distanceChange
+                    val units = (pinchResidual / PINCH_PX_PER_UNIT).toInt()
+                    if (units == 0) return null
+                    pinchResidual -= units * PINCH_PX_PER_UNIT
+                    return RecognizedGesture.PinchZoomDelta(units)
+                }
+
                 scrollResidualV += rawDy
                 scrollResidualH += rawDx
                 val vUnits = (scrollResidualV / SCROLL_PX_PER_UNIT).toInt()
@@ -194,6 +240,7 @@ class GestureRecognizer {
     }
 
     private fun onUp(event: RawTouchEvent.PointerUp): RecognizedGesture? {
+        val wasPinching = pinchEngaged && active.size == 2
         val pointer = active.remove(event.id) ?: return null
         val durationMs = event.timeMs - pointer.downTimeMs
         val isTap = pointer.totalMovement <= TAP_MAX_MOVEMENT_PX && durationMs <= TAP_MAX_DURATION_MS
@@ -212,6 +259,14 @@ class GestureRecognizer {
                 }
                 else -> null
             }
+        }
+
+        if (wasPinching) {
+            pinchEngaged = false
+            lastPinchDistance = -1f
+            pinchResidual = 0f
+            if (active.isEmpty()) resetSession()
+            return RecognizedGesture.PinchZoomEnded
         }
 
         if (active.isNotEmpty()) return null
@@ -254,5 +309,8 @@ class GestureRecognizer {
         sessionFirstPointerId = null
         sessionFirstNetDx = 0f
         sessionFirstNetDy = 0f
+        pinchEngaged = false
+        lastPinchDistance = -1f
+        pinchResidual = 0f
     }
 }

@@ -25,6 +25,7 @@ private const val S_USAGE_CODE = 0x16
 private const val N_USAGE_CODE = 0x11
 private const val LEFT_ARROW_USAGE_CODE = 0x50
 private const val RIGHT_ARROW_USAGE_CODE = 0x4F
+private const val NO_KEY_USAGE_CODE = 0
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -95,6 +96,15 @@ class MainViewModel @Inject constructor(
             }
 
             RecognizedGesture.FourFingerTap -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, N_USAGE_CODE)
+
+            RecognizedGesture.PinchZoomStarted ->
+                hidManager.sendKeyboardReport(HidKeyboardReport.MODIFIER_CTRL, NO_KEY_USAGE_CODE)
+
+            is RecognizedGesture.PinchZoomDelta ->
+                hidManager.sendMouseReport(0, 0, wheelDelta = gesture.units, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)
+
+            RecognizedGesture.PinchZoomEnded ->
+                hidManager.releaseKeyboardReport()
         }
     }
 
