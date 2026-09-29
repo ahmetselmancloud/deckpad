@@ -123,6 +123,14 @@ class GestureRecognizer {
                 dragLockPointerId = event.id
             }
         } else if (active.size == 2) {
+            // A new 2-finger pairing is forming via this touch-down (this branch
+            // only runs on a 1->2 transition, since PointerDown never decreases
+            // the count). Whatever pinch baseline existed before belonged to a
+            // different pairing (or none), so it must not leak into this one —
+            // otherwise a finger that lifted and was replaced by a new one (new
+            // pointer id, different position) would get compared against a
+            // stale distance from the old pairing on the next qualifying frame.
+            resetPinchBaseline()
             val gap = event.timeMs - (firstDownTimeMsInSession ?: event.timeMs)
             if (gap > TWO_FINGER_DOWN_WINDOW_MS) {
                 sessionAllTapsSoFar = false
@@ -134,6 +142,12 @@ class GestureRecognizer {
             if (!dragLockEngagedSent) {
                 dragLockPointerId = null
             }
+        } else if (active.size == 3) {
+            // Leaving the 2-finger-exclusive zone from below: a third contact
+            // means the two-finger classification block in onMove won't run
+            // again until we're back down to 2, so the baseline would otherwise
+            // go stale for the rest of this 3-finger detour.
+            resetPinchBaseline()
         }
         return null
     }
@@ -260,6 +274,16 @@ class GestureRecognizer {
     private fun onUp(event: RawTouchEvent.PointerUp): RecognizedGesture? {
         val wasPinching = pinchEngaged && active.size == 2
         val pointer = active.remove(event.id) ?: return null
+
+        // A lift that is NOT the clean "engaged pinch releases" path (handled
+        // below via wasPinching) but that drops the count to 1 means we're
+        // leaving a 2-or-3-finger pairing without ever having engaged pinch.
+        // Clear the baseline so that if a NEW second finger arrives later, it
+        // isn't compared against a stale distance from the finger that just left.
+        if (!wasPinching && active.size == 1) {
+            resetPinchBaseline()
+        }
+
         val durationMs = event.timeMs - pointer.downTimeMs
         val isTap = pointer.totalMovement <= TAP_MAX_MOVEMENT_PX && durationMs <= TAP_MAX_DURATION_MS
         if (!isTap) sessionAllTapsSoFar = false
@@ -307,6 +331,15 @@ class GestureRecognizer {
         }
         resetSession()
         return result
+    }
+
+    // Resets only the pinch-vs-scroll disambiguation baseline — NOT
+    // pinchEngaged/pinchResidual, which have their own correct lifecycle via
+    // the wasPinching release path in onUp and resetSession().
+    private fun resetPinchBaseline() {
+        lastPinchDistance = -1f
+        pinchSeedPointerId = null
+        pinchPartnerSeen = false
     }
 
     private fun classifySwipeDirection(): SwipeDirection? {

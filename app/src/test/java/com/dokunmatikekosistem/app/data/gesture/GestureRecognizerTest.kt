@@ -347,4 +347,51 @@ class GestureRecognizerTest {
         val started = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 40f, y = 100f, timeMs = 80))
         assertEquals(RecognizedGesture.PinchZoomStarted, started)
     }
+
+    @Test
+    fun `a finger swapped mid-scroll for a new one does not misclassify the continued scroll as pinch`() {
+        // Reproduces a real everyday gesture: two-finger scroll, lift one
+        // finger, put a (new-id) finger back down elsewhere, keep scrolling.
+        // Before the fix, the stale pinch-distance baseline from the OLD pair
+        // would get compared against the NEW pair's very different actual
+        // separation on the next qualifying frame, and the resulting huge
+        // "distance change" would spuriously exceed the pinch-engage
+        // threshold even though both fingers are moving in parallel.
+        val recognizer = GestureRecognizer()
+
+        // Establish an ordinary two-finger scroll, exactly like the canonical
+        // "two fingers moving together produce Scroll" case.
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 100f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 130f, timeMs = 50))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 200f, y = 130f, timeMs = 60))
+        val firstScroll = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 160f, timeMs = 70))
+        assertTrue(firstScroll is RecognizedGesture.Scroll)
+
+        // Pinch never engaged above, so this is a plain lift, not the
+        // wasPinching release path.
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 200f, y = 160f, timeMs = 80))
+
+        // A brand-new finger (new, higher pointer id) touches down far from
+        // where the lifted finger was — this is what makes the OLD baseline
+        // distance (~104px, between the original pair) wildly different from
+        // the NEW pair's actual separation (~300px) once both are compared.
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 2, x = 400f, y = 160f, timeMs = 90))
+
+        // Neither finger has re-qualified (moved past the tap threshold) yet,
+        // so these two moves are each swallowed without emitting anything.
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 180f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 2, x = 400f, y = 180f, timeMs = 110))
+
+        // Both fingers now qualify and are moving in parallel (same
+        // direction, ~constant ~300px apart). Without the fix, the canonical
+        // pointer's move here compares the new pair's real distance (~300.7px)
+        // against the stale old-pair baseline (~104.4px), a change of ~196px
+        // that dwarfs this frame's own movement (20px) and spuriously engages
+        // pinch. With the fix, the baseline was reset on the finger swap, this
+        // frame instead seeds fresh at the earlier move, and this is
+        // recognized as the continued Scroll it actually is.
+        val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 200f, timeMs = 120))
+        assertTrue(result is RecognizedGesture.Scroll)
+    }
 }
