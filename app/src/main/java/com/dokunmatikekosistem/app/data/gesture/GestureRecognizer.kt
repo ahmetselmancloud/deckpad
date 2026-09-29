@@ -12,6 +12,13 @@ private const val DRAG_LOCK_HOLD_MS = 150L
 private const val SCROLL_PX_PER_UNIT = 24f
 private const val SWIPE_MIN_DISTANCE_PX = 60f
 private const val PINCH_PX_PER_UNIT = 12f
+// For two fingers moving purely radially (a clean pinch), |distanceChange|
+// approaches the SUM of both fingers' own movement (they add when opposing);
+// for two fingers moving purely in parallel (a clean scroll), it approaches
+// zero (their movement cancels out in the separation axis). A ratio well
+// above 0 and below 1 cleanly separates the two poles despite real-world
+// jitter perturbing the ratio slightly around either end.
+private const val PINCH_RATIO_THRESHOLD = 0.6f
 
 enum class SwipeDirection { UP, DOWN, LEFT, RIGHT }
 
@@ -47,6 +54,12 @@ private class ActivePointer(var lastX: Float, var lastY: Float, val downX: Float
     var totalMovement = 0f
     var residualX = 0f
     var residualY = 0f
+    // Accumulated hypot(dx,dy) since the last pinch-vs-scroll decision (reset
+    // after every decision). Real touch hardware doesn't report both fingers
+    // in lockstep, so a single frame's delta from just the canonical pointer
+    // is a noisy, easily-swamped proxy for "how much the hand actually moved"
+    // — this accumulates both fingers' own movement between decisions instead.
+    var pinchAccumMovement = 0f
 }
 
 /**
@@ -157,6 +170,7 @@ class GestureRecognizer {
         val rawDx = event.x - pointer.lastX
         val rawDy = event.y - pointer.lastY
         pointer.totalMovement += hypot(rawDx, rawDy)
+        pointer.pinchAccumMovement += hypot(rawDx, rawDy)
         pointer.lastX = event.x
         pointer.lastY = event.y
 
@@ -205,6 +219,12 @@ class GestureRecognizer {
                     lastPinchDistance = hypot(pointer.lastX - other.lastX, pointer.lastY - other.lastY)
                     pinchSeedPointerId = event.id
                     pinchPartnerSeen = false
+                    // Movement accumulated before this seed isn't part of the change
+                    // the first real decision will measure (that's always relative to
+                    // the distance captured HERE) — start both fingers' accumulators
+                    // fresh so they line up with what distanceChange will represent.
+                    pointer.pinchAccumMovement = 0f
+                    other.pinchAccumMovement = 0f
                     return null
                 }
 
@@ -227,7 +247,18 @@ class GestureRecognizer {
                 val distanceChange = distanceNow - lastPinchDistance
                 lastPinchDistance = distanceNow
 
-                if (!pinchEngaged && abs(distanceChange) > hypot(rawDx, rawDy)) {
+                // Compare against BOTH fingers' own accumulated movement since the
+                // last decision (not just this single event's delta from one
+                // finger) — real touch hardware doesn't report both fingers in
+                // lockstep, so a lone frame's delta is a noisy proxy for genuine
+                // hand movement and lets ordinary finger jitter during a slow
+                // parallel scroll masquerade as a pinch. A margin factor on top
+                // gives extra headroom against that same jitter.
+                val ownMovement = pointer.pinchAccumMovement + other.pinchAccumMovement
+                pointer.pinchAccumMovement = 0f
+                other.pinchAccumMovement = 0f
+
+                if (!pinchEngaged && abs(distanceChange) > ownMovement * PINCH_RATIO_THRESHOLD) {
                     pinchEngaged = true
                     return RecognizedGesture.PinchZoomStarted
                 }

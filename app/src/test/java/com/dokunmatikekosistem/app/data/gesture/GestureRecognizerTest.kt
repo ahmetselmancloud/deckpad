@@ -394,4 +394,39 @@ class GestureRecognizerTest {
         val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 200f, timeMs = 120))
         assertTrue(result is RecognizedGesture.Scroll)
     }
+
+    @Test
+    fun `a slow jittery two-finger scroll with asymmetric event delivery is not misread as a pinch`() {
+        // Reproduces what real touch hardware does that clean synthetic
+        // coordinates hadn't: the two fingers are never reported in lockstep.
+        // Here the non-canonical finger reports three small moves in a row
+        // (each drifting 1px inward from ordinary hand imprecision) before the
+        // canonical finger reports its own (tiny, slow-scroll) next move.
+        // Before the fix, only that single tiny canonical delta (2px) was
+        // compared against the resulting distance change (~2.5px) and would
+        // have wrongly engaged pinch. The fix compares against BOTH fingers'
+        // accumulated movement since the last decision (~14.4px), which the
+        // small distance change falls well short of. This frame's own scroll
+        // delta (2px) is below the whole-unit emission threshold, so the
+        // correct result here is null (not yet a full Scroll unit) — the
+        // regression this guards against is specifically that it must NOT be
+        // PinchZoomStarted.
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 100f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 112f, timeMs = 20))
+        val seeded = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 200f, y = 112f, timeMs = 30))
+        assertNull(seeded)
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 199f, y = 116f, timeMs = 40))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 198f, y = 120f, timeMs = 50))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 197f, y = 124f, timeMs = 60))
+        val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 114f, timeMs = 70))
+        assertNull(result)
+
+        // Confirm the gesture is genuinely continuing as a scroll (not just
+        // silently stuck): one more ordinary canonical move should now cross
+        // the whole-unit threshold and emit a real Scroll, never a Pinch event.
+        val continued = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 140f, timeMs = 80))
+        assertEquals(RecognizedGesture.Scroll(vDelta = 1, hDelta = 0), continued)
+    }
 }
