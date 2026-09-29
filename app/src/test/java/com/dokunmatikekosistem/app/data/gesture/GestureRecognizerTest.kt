@@ -313,4 +313,38 @@ class GestureRecognizerTest {
         val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 160f, timeMs = 60))
         assertTrue(result is RecognizedGesture.Scroll)
     }
+
+    @Test
+    fun `pinch still engages when the canonical pointer seeds and reports again before its partner`() {
+        // Reversed order from the other pinch test: here the LOWEST-id (canonical)
+        // pointer is the one whose move first makes both fingers qualify, and it
+        // then reports a SECOND move with no event from its partner in between —
+        // exactly the ordering that can happen on real hardware. The canonical
+        // pointer's second move must not be misread as Scroll just because its
+        // own single-frame movement alone can't prove a pinch.
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 150f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 250f, y = 100f, timeMs = 10))
+        // Pointer 1 crosses its own movement threshold first, but pointer 0 hasn't
+        // moved yet, so this alone doesn't qualify as a two-finger frame.
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 270f, y = 100f, timeMs = 20))
+        // Pointer 0 (canonical) now crosses too: the session's first qualifying
+        // frame, seeded by the canonical pointer itself.
+        val seeded = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 120f, y = 100f, timeMs = 40))
+        assertNull(seeded)
+        // Pointer 0 (canonical) reports again immediately, with no pointer-1 event
+        // in between. Its own single-frame movement (-30px) can never exceed
+        // hypot(rawDx, rawDy) of that same movement, so this must defer rather
+        // than fall through to Scroll.
+        val deferred = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 90f, y = 100f, timeMs = 60))
+        assertNull(deferred)
+        // Pointer 1 finally reports, unblocking classification.
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 300f, y = 100f, timeMs = 70))
+        // Pointer 0 (canonical) decides: the full separation change since the
+        // original seed (150px, spanning all the deferred movement) comfortably
+        // exceeds this frame's own single-pointer movement (50px), so this must
+        // be recognized as a pinch, not swallowed as a spurious Scroll.
+        val started = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 40f, y = 100f, timeMs = 80))
+        assertEquals(RecognizedGesture.PinchZoomStarted, started)
+    }
 }

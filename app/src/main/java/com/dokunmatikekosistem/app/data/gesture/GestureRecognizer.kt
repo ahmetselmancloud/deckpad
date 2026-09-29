@@ -86,6 +86,12 @@ class GestureRecognizer {
     private var pinchEngaged = false
     private var lastPinchDistance = -1f
     private var pinchResidual = 0f
+    // Which pointer produced the current unconsumed seed, and whether the
+    // OTHER pointer has reported a qualifying frame since. Guards against the
+    // canonical pointer seeding and then immediately deciding again with zero
+    // frames from its partner in between (see onMove for why that's unsafe).
+    private var pinchSeedPointerId: Int? = null
+    private var pinchPartnerSeen = false
 
     /** Clears all tracked pointer/session/drag-lock state. Safe to call at any time. */
     fun reset() {
@@ -180,16 +186,28 @@ class GestureRecognizer {
                 // qualifying frame" instead of "the session's first qualifying frame"
                 // would silently skip a frame when the non-canonical pointer crosses
                 // first, misclassifying what should be an immediate Scroll as a
-                // pinch-baseline frame. Once seeded, only the canonical pointer's
-                // frames update the baseline (below), so the distance-change compared
-                // against hypot(rawDx, rawDy) — a single pointer's single-frame
-                // movement — spans one full two-finger "frame".
+                // pinch-baseline frame.
                 if (lastPinchDistance < 0f) {
                     lastPinchDistance = hypot(pointer.lastX - other.lastX, pointer.lastY - other.lastY)
+                    pinchSeedPointerId = event.id
+                    pinchPartnerSeen = false
                     return null
                 }
 
+                if (event.id != pinchSeedPointerId) pinchPartnerSeen = true
+
                 if (event.id != canonicalId) return null
+
+                // If the canonical pointer itself produced the seed above, and its
+                // partner hasn't reported a single qualifying frame since, comparing
+                // distance now would only reflect this one pointer's own single-frame
+                // movement — by the triangle inequality that can never exceed
+                // hypot(rawDx, rawDy), so the strict '>' check below could never
+                // engage and would wrongly fall through to Scroll on a real pinch.
+                // Defer without disturbing the baseline, so once the partner does
+                // report, the eventual comparison still spans the full movement since
+                // the original seed.
+                if (!pinchPartnerSeen) return null
 
                 val distanceNow = hypot(pointer.lastX - other.lastX, pointer.lastY - other.lastY)
                 val distanceChange = distanceNow - lastPinchDistance
@@ -265,6 +283,8 @@ class GestureRecognizer {
             pinchEngaged = false
             lastPinchDistance = -1f
             pinchResidual = 0f
+            pinchSeedPointerId = null
+            pinchPartnerSeen = false
             if (active.isEmpty()) resetSession()
             return RecognizedGesture.PinchZoomEnded
         }
@@ -312,5 +332,7 @@ class GestureRecognizer {
         pinchEngaged = false
         lastPinchDistance = -1f
         pinchResidual = 0f
+        pinchSeedPointerId = null
+        pinchPartnerSeen = false
     }
 }
