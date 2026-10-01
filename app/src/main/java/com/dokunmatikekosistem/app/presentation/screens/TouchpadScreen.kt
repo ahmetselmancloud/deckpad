@@ -45,19 +45,26 @@ fun TouchpadScreen(
     val isFullscreen by viewModel.isFullscreen.collectAsState()
     val context = LocalContext.current
 
-    // Immersive system bars control & App Pinning for locked fullscreen
+    // Immersive system bars control, screen brightness dimming & screen timeout prevention
     DisposableEffect(isFullscreen) {
         val activity = context as? Activity
         val window = activity?.window
         if (window != null) {
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+            val params = window.attributes
             if (isFullscreen) {
                 insetsController.hide(WindowInsetsCompat.Type.systemBars())
                 insetsController.systemBarsBehavior =
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                params.screenBrightness = 0.01f
+                window.attributes = params
                 (activity as? MainActivity)?.startLockMode()
             } else {
                 insetsController.show(WindowInsetsCompat.Type.systemBars())
+                window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                params.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                window.attributes = params
                 (activity as? MainActivity)?.stopLockMode()
             }
         }
@@ -67,6 +74,10 @@ fun TouchpadScreen(
             if (window != null) {
                 val insetsController = WindowCompat.getInsetsController(window, window.decorView)
                 insetsController.show(WindowInsetsCompat.Type.systemBars())
+                window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                val params = window.attributes
+                params.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                window.attributes = params
                 (activity as? MainActivity)?.stopLockMode()
             }
         }
