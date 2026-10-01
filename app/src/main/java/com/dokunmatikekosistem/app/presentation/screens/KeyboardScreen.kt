@@ -42,7 +42,7 @@ fun KeyboardScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(top = 4.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Header Bar

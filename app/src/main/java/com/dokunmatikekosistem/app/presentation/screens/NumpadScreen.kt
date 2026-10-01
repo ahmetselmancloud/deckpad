@@ -41,7 +41,7 @@ fun NumpadScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(top = 4.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // Header

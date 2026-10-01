@@ -1,12 +1,12 @@
 package com.dokunmatikekosistem.app.presentation.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dokunmatikekosistem.app.data.hid.HidConsumerReport
@@ -35,118 +37,185 @@ fun MediaPresentationScreen(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = Color(0xFF121214)
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(top = 4.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        // --- 1. MEDYA KONTROLLERİ ---
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            color = Color(0xFF1B1B22),
+            border = BorderStroke(1.dp, Color(0xFF282832))
         ) {
-            // MEDYA KONTROLLERİ
-            Text(
-                text = "MEDYA",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                SimpleButton(title = "Sesi Kıs", modifier = Modifier.weight(1f)) {
-                    viewModel.sendConsumer(HidConsumerReport.VOLUME_DECREMENT)
+                Text(
+                    text = "MEDYA OYNATICI",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.6f)
+                )
+
+                // Oynatma Kontrolleri (Symmetrical 3-Way Split)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MediaButton(
+                        title = "◀ Önceki",
+                        modifier = Modifier.weight(1f),
+                        height = 46.dp
+                    ) {
+                        viewModel.sendConsumer(HidConsumerReport.SCAN_PREV_TRACK)
+                    }
+
+                    MediaButton(
+                        title = "Oynat / Duraklat",
+                        modifier = Modifier.weight(1.2f),
+                        height = 46.dp,
+                        isPrimary = true
+                    ) {
+                        viewModel.sendConsumer(HidConsumerReport.PLAY_PAUSE)
+                    }
+
+                    MediaButton(
+                        title = "Sonraki ▶",
+                        modifier = Modifier.weight(1f),
+                        height = 46.dp
+                    ) {
+                        viewModel.sendConsumer(HidConsumerReport.SCAN_NEXT_TRACK)
+                    }
                 }
-                SimpleButton(title = "Sustur", modifier = Modifier.weight(1f)) {
-                    viewModel.sendConsumer(HidConsumerReport.MUTE)
-                }
-                SimpleButton(title = "Sesi Aç", modifier = Modifier.weight(1f)) {
-                    viewModel.sendConsumer(HidConsumerReport.VOLUME_INCREMENT)
+
+                // Ses Kontrolleri (Symmetrical 3-Way Split)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MediaButton(
+                        title = "Sesi Kıs -",
+                        modifier = Modifier.weight(1f),
+                        height = 42.dp
+                    ) {
+                        viewModel.sendConsumer(HidConsumerReport.VOLUME_DECREMENT)
+                    }
+
+                    MediaButton(
+                        title = "Sustur",
+                        modifier = Modifier.weight(1f),
+                        height = 42.dp
+                    ) {
+                        viewModel.sendConsumer(HidConsumerReport.MUTE)
+                    }
+
+                    MediaButton(
+                        title = "Sesi Aç +",
+                        modifier = Modifier.weight(1f),
+                        height = 42.dp
+                    ) {
+                        viewModel.sendConsumer(HidConsumerReport.VOLUME_INCREMENT)
+                    }
                 }
             }
+        }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        // --- 2. SUNUM (SLAYT) KONTROLLERİ ---
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            color = Color(0xFF1B1B22),
+            border = BorderStroke(1.dp, Color(0xFF282832))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                SimpleButton(title = "Önceki", modifier = Modifier.weight(1f)) {
-                    viewModel.sendConsumer(HidConsumerReport.SCAN_PREV_TRACK)
-                }
-                SimpleButton(
-                    title = "Oynat / Duraklat",
-                    color = MaterialTheme.colorScheme.primary,
-                    textColor = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.weight(1.3f)
+                Text(
+                    text = "SUNUM (SLAYT KONTROLÜ)",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.6f)
+                )
+
+                // Slayt İleri / Geri (Geniş & Ergonomik 50-50 Split)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    viewModel.sendConsumer(HidConsumerReport.PLAY_PAUSE)
-                }
-                SimpleButton(title = "Sonraki", modifier = Modifier.weight(1f)) {
-                    viewModel.sendConsumer(HidConsumerReport.SCAN_NEXT_TRACK)
-                }
-            }
+                    MediaButton(
+                        title = "◀  Önceki Slayt",
+                        modifier = Modifier.weight(1f),
+                        height = 64.dp,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    ) {
+                        viewModel.sendKey(HidUsageCodes.KEY_LEFT_ARROW)
+                    }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // SUNUM MODU
-            Text(
-                text = "SUNUM (POWERPOINT / SLAYT)",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SimpleButton(title = "Başlat (F5)", modifier = Modifier.weight(1f)) {
-                    viewModel.sendKey(HidUsageCodes.KEY_F5)
+                    MediaButton(
+                        title = "Sonraki Slayt  ▶",
+                        modifier = Modifier.weight(1f),
+                        height = 64.dp,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        isPrimary = true
+                    ) {
+                        viewModel.sendKey(HidUsageCodes.KEY_RIGHT_ARROW)
+                    }
                 }
-                SimpleButton(title = "Mevcut Slayt (Shift+F5)", modifier = Modifier.weight(1f)) {
-                    viewModel.sendKey(HidUsageCodes.KEY_F5, HidKeyboardReport.MODIFIER_SHIFT)
-                }
-            }
 
-            Row(
-                modifier = Modifier.fillMaxWidth().height(80.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SimpleButton(
-                    title = "Önceki Slayt (Sol)",
-                    fontSize = 15.sp,
-                    modifier = Modifier.weight(1f)
+                // Sunum Fonksiyonları (Eşit 4'lü Dağılım)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    viewModel.sendKey(HidUsageCodes.KEY_LEFT_ARROW)
-                }
-                SimpleButton(
-                    title = "Sonraki Slayt (Sağ)",
-                    fontSize = 15.sp,
-                    color = Color(0xFF283593),
-                    textColor = Color.White,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    viewModel.sendKey(HidUsageCodes.KEY_RIGHT_ARROW)
-                }
-            }
+                    MediaButton(
+                        title = "Başlat (F5)",
+                        modifier = Modifier.weight(1f),
+                        height = 42.dp,
+                        fontSize = 11.sp
+                    ) {
+                        viewModel.sendKey(HidUsageCodes.KEY_F5)
+                    }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SimpleButton(title = "Siyah Ekran (B)", modifier = Modifier.weight(1f)) {
-                    viewModel.sendKey(HidUsageCodes.KEY_B)
-                }
-                SimpleButton(
-                    title = "Bitir (Esc)",
-                    color = Color(0xFF4E342E),
-                    textColor = Color(0xFFFFCCBC),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    viewModel.sendKey(HidUsageCodes.KEY_ESC)
+                    MediaButton(
+                        title = "Mevcut (⇧F5)",
+                        modifier = Modifier.weight(1f),
+                        height = 42.dp,
+                        fontSize = 11.sp
+                    ) {
+                        viewModel.sendKey(HidUsageCodes.KEY_F5, HidKeyboardReport.MODIFIER_SHIFT)
+                    }
+
+                    MediaButton(
+                        title = "Karart (B)",
+                        modifier = Modifier.weight(1f),
+                        height = 42.dp,
+                        fontSize = 11.sp
+                    ) {
+                        viewModel.sendKey(HidUsageCodes.KEY_B)
+                    }
+
+                    MediaButton(
+                        title = "Bitir (Esc)",
+                        modifier = Modifier.weight(1f),
+                        height = 42.dp,
+                        fontSize = 11.sp,
+                        backgroundColor = Color(0xFF382024),
+                        textColor = Color(0xFFFF8A80)
+                    ) {
+                        viewModel.sendKey(HidUsageCodes.KEY_ESC)
+                    }
                 }
             }
         }
@@ -154,27 +223,34 @@ fun MediaPresentationScreen(
 }
 
 @Composable
-private fun SimpleButton(
+private fun MediaButton(
     title: String,
     modifier: Modifier = Modifier,
-    fontSize: androidx.compose.ui.unit.TextUnit = 13.sp,
-    color: Color = Color(0xFF22222A),
-    textColor: Color = Color.White,
+    height: Dp = 44.dp,
+    fontSize: TextUnit = 13.sp,
+    fontWeight: FontWeight = FontWeight.SemiBold,
+    isPrimary: Boolean = false,
+    backgroundColor: Color? = null,
+    textColor: Color? = null,
     onClick: () -> Unit
 ) {
+    val bgColor = backgroundColor ?: if (isPrimary) MaterialTheme.colorScheme.primary else Color(0xFF262632)
+    val txtColor = textColor ?: if (isPrimary) MaterialTheme.colorScheme.onPrimary else Color.White
+
     Box(
         modifier = modifier
+            .height(height)
             .clip(RoundedCornerShape(8.dp))
-            .background(color)
-            .clickable(onClick = onClick)
-            .padding(vertical = 16.dp, horizontal = 8.dp),
+            .background(bgColor)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = title,
             fontSize = fontSize,
-            fontWeight = FontWeight.SemiBold,
-            color = textColor
+            fontWeight = fontWeight,
+            color = txtColor,
+            maxLines = 1
         )
     }
 }
