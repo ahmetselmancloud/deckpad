@@ -129,83 +129,93 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
     val currentTab by viewModel.currentTab.collectAsState()
+    val isFullscreen by viewModel.isFullscreen.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
     val userSettings by viewModel.userSettings.collectAsState()
     var showSettingsSheet by remember { mutableStateOf(false) }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF121214)) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Top Bar: Connection status & buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val statusText = when (connectionState) {
-                    ConnectionState.CONNECTED -> "Bağlandı"
-                    ConnectionState.REGISTERING -> "Bağlanıyor..."
-                    ConnectionState.REGISTERED -> "Hazır"
-                    ConnectionState.DISCONNECTED -> "Bağlı Değil"
-                    ConnectionState.ERROR -> "Hata"
-                }
-                Text(
-                    text = "Durum: $statusText",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (connectionState == ConnectionState.CONNECTED) Color(0xFF4CAF50) else Color(0xFFE53935)
-                )
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onConnectRequested) {
-                        Text("Eşleştir", fontSize = 12.sp)
-                    }
-                    Button(onClick = { showSettingsSheet = true }) {
-                        Text("Ayarlar", fontSize = 12.sp)
-                    }
-                }
-            }
-
-            // Simple Tab Row (Text only, zero icons, zero animations)
-            Row(
+    Surface(modifier = Modifier.fillMaxSize(), color = if (isFullscreen) Color.Black else Color(0xFF121214)) {
+        if (isFullscreen) {
+            TouchpadScreen(viewModel = viewModel, modifier = Modifier.fillMaxSize())
+        } else {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    .fillMaxSize()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                AppTab.entries.forEach { tab ->
-                    val selected = tab == currentTab
-                    FilledTonalButton(
-                        onClick = { viewModel.selectTab(tab) },
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = if (selected) MaterialTheme.colorScheme.primary else Color(0xFF22222A),
-                            contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White
-                        )
-                    ) {
-                        Text(
-                            text = tab.title,
-                            fontSize = 12.sp,
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                        )
+                // Top Bar: Connection status & buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val statusText = when (connectionState) {
+                        ConnectionState.CONNECTED -> "Bağlandı"
+                        ConnectionState.REGISTERING -> "Bağlanıyor..."
+                        ConnectionState.REGISTERED -> "Hazır"
+                        ConnectionState.DISCONNECTED -> "Bağlı Değil"
+                        ConnectionState.ERROR -> "Hata"
+                    }
+                    Text(
+                        text = "Durum: $statusText",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (connectionState == ConnectionState.CONNECTED) Color(0xFF4CAF50) else Color(0xFFE53935)
+                    )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (currentTab == AppTab.TOUCHPAD) {
+                            Button(onClick = { viewModel.setFullscreen(true) }) {
+                                Text("Tam Ekran", fontSize = 12.sp)
+                            }
+                        }
+                        Button(onClick = onConnectRequested) {
+                            Text("Eşleştir", fontSize = 12.sp)
+                        }
+                        Button(onClick = { showSettingsSheet = true }) {
+                            Text("Ayarlar", fontSize = 12.sp)
+                        }
                     }
                 }
-            }
 
-            // Active Tab Content
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                when (currentTab) {
-                    AppTab.TOUCHPAD -> TouchpadScreen(viewModel = viewModel)
-                    AppTab.NUMPAD -> NumpadScreen(viewModel = viewModel)
-                    AppTab.MEDIA -> MediaPresentationScreen(viewModel = viewModel)
-                    AppTab.KEYBOARD -> KeyboardScreen(viewModel = viewModel)
+                // Simple Tab Row (Text only, zero icons, zero animations)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    AppTab.entries.forEach { tab ->
+                        val selected = tab == currentTab
+                        FilledTonalButton(
+                            onClick = { viewModel.selectTab(tab) },
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = if (selected) MaterialTheme.colorScheme.primary else Color(0xFF22222A),
+                                contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White
+                            )
+                        ) {
+                            Text(
+                                text = tab.title,
+                                fontSize = 12.sp,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+
+                // Active Tab Content
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    when (currentTab) {
+                        AppTab.TOUCHPAD -> TouchpadScreen(viewModel = viewModel)
+                        AppTab.NUMPAD -> NumpadScreen(viewModel = viewModel)
+                        AppTab.MEDIA -> MediaPresentationScreen(viewModel = viewModel)
+                        AppTab.KEYBOARD -> KeyboardScreen(viewModel = viewModel)
+                    }
                 }
             }
         }
