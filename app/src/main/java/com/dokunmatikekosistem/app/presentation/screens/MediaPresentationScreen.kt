@@ -1,5 +1,6 @@
 package com.dokunmatikekosistem.app.presentation.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -37,185 +40,219 @@ fun MediaPresentationScreen(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(top = 4.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // --- 1. MEDYA KONTROLLERİ ---
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            color = Color(0xFF1B1B22),
-            border = BorderStroke(1.dp, Color(0xFF282832))
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    if (isLandscape) {
+        Row(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(top = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                MediaControlsCard(viewModel = viewModel, isLandscape = true)
+            }
+            Box(modifier = Modifier.weight(1.1f).fillMaxHeight()) {
+                PresentationControlsCard(viewModel = viewModel, isLandscape = true)
+            }
+        }
+    } else {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(top = 4.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            MediaControlsCard(viewModel = viewModel, isLandscape = false)
+            PresentationControlsCard(viewModel = viewModel, isLandscape = false)
+        }
+    }
+}
+
+@Composable
+private fun MediaControlsCard(
+    viewModel: MainViewModel,
+    isLandscape: Boolean
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = Color(0xFF1B1B22),
+        border = BorderStroke(1.dp, Color(0xFF282832))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(if (isLandscape) 8.dp else 10.dp)
+        ) {
+            Text(
+                text = "MEDYA OYNATICI",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = if (isLandscape) 11.sp else 12.sp
+            )
+
+            // Oynatma Kontrolleri (Symmetrical 3-Way Split)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(
-                    text = "MEDYA OYNATICI",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White.copy(alpha = 0.6f)
-                )
-
-                // Oynatma Kontrolleri (Symmetrical 3-Way Split)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                MediaButton(
+                    title = "◀ Önceki",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 42.dp else 46.dp
                 ) {
-                    MediaButton(
-                        title = "◀ Önceki",
-                        modifier = Modifier.weight(1f),
-                        height = 46.dp
-                    ) {
-                        viewModel.sendConsumer(HidConsumerReport.SCAN_PREV_TRACK)
-                    }
-
-                    MediaButton(
-                        title = "Oynat / Duraklat",
-                        modifier = Modifier.weight(1.2f),
-                        height = 46.dp,
-                        isPrimary = true
-                    ) {
-                        viewModel.sendConsumer(HidConsumerReport.PLAY_PAUSE)
-                    }
-
-                    MediaButton(
-                        title = "Sonraki ▶",
-                        modifier = Modifier.weight(1f),
-                        height = 46.dp
-                    ) {
-                        viewModel.sendConsumer(HidConsumerReport.SCAN_NEXT_TRACK)
-                    }
+                    viewModel.sendConsumer(HidConsumerReport.SCAN_PREV_TRACK)
                 }
 
-                // Ses Kontrolleri (Symmetrical 3-Way Split)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                MediaButton(
+                    title = "Oynat / Duraklat",
+                    modifier = Modifier.weight(1.2f),
+                    height = if (isLandscape) 42.dp else 46.dp,
+                    isPrimary = true
                 ) {
-                    MediaButton(
-                        title = "Sesi Kıs -",
-                        modifier = Modifier.weight(1f),
-                        height = 42.dp
-                    ) {
-                        viewModel.sendConsumer(HidConsumerReport.VOLUME_DECREMENT)
-                    }
+                    viewModel.sendConsumer(HidConsumerReport.PLAY_PAUSE)
+                }
 
-                    MediaButton(
-                        title = "Sustur",
-                        modifier = Modifier.weight(1f),
-                        height = 42.dp
-                    ) {
-                        viewModel.sendConsumer(HidConsumerReport.MUTE)
-                    }
+                MediaButton(
+                    title = "Sonraki ▶",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 42.dp else 46.dp
+                ) {
+                    viewModel.sendConsumer(HidConsumerReport.SCAN_NEXT_TRACK)
+                }
+            }
 
-                    MediaButton(
-                        title = "Sesi Aç +",
-                        modifier = Modifier.weight(1f),
-                        height = 42.dp
-                    ) {
-                        viewModel.sendConsumer(HidConsumerReport.VOLUME_INCREMENT)
-                    }
+            // Ses Kontrolleri (Symmetrical 3-Way Split)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                MediaButton(
+                    title = "Sesi Kıs -",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 38.dp else 42.dp
+                ) {
+                    viewModel.sendConsumer(HidConsumerReport.VOLUME_DECREMENT)
+                }
+
+                MediaButton(
+                    title = "Sustur",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 38.dp else 42.dp
+                ) {
+                    viewModel.sendConsumer(HidConsumerReport.MUTE)
+                }
+
+                MediaButton(
+                    title = "Sesi Aç +",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 38.dp else 42.dp
+                ) {
+                    viewModel.sendConsumer(HidConsumerReport.VOLUME_INCREMENT)
                 }
             }
         }
+    }
+}
 
-        // --- 2. SUNUM (SLAYT) KONTROLLERİ ---
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            color = Color(0xFF1B1B22),
-            border = BorderStroke(1.dp, Color(0xFF282832))
+@Composable
+private fun PresentationControlsCard(
+    viewModel: MainViewModel,
+    isLandscape: Boolean
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = Color(0xFF1B1B22),
+        border = BorderStroke(1.dp, Color(0xFF282832))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(if (isLandscape) 8.dp else 10.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            Text(
+                text = "SUNUM (SLAYT KONTROLÜ)",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = if (isLandscape) 11.sp else 12.sp
+            )
+
+            // Slayt İleri / Geri (Geniş & Ergonomik 50-50 Split)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(
-                    text = "SUNUM (SLAYT KONTROLÜ)",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White.copy(alpha = 0.6f)
-                )
-
-                // Slayt İleri / Geri (Geniş & Ergonomik 50-50 Split)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                MediaButton(
+                    title = "◀  Önceki Slayt",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 52.dp else 64.dp,
+                    fontSize = if (isLandscape) 13.sp else 14.sp,
+                    fontWeight = FontWeight.Bold
                 ) {
-                    MediaButton(
-                        title = "◀  Önceki Slayt",
-                        modifier = Modifier.weight(1f),
-                        height = 64.dp,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    ) {
-                        viewModel.sendKey(HidUsageCodes.KEY_LEFT_ARROW)
-                    }
-
-                    MediaButton(
-                        title = "Sonraki Slayt  ▶",
-                        modifier = Modifier.weight(1f),
-                        height = 64.dp,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        isPrimary = true
-                    ) {
-                        viewModel.sendKey(HidUsageCodes.KEY_RIGHT_ARROW)
-                    }
+                    viewModel.sendKey(HidUsageCodes.KEY_LEFT_ARROW)
                 }
 
-                // Sunum Fonksiyonları (Eşit 4'lü Dağılım)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                MediaButton(
+                    title = "Sonraki Slayt  ▶",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 52.dp else 64.dp,
+                    fontSize = if (isLandscape) 13.sp else 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    isPrimary = true
                 ) {
-                    MediaButton(
-                        title = "Başlat (F5)",
-                        modifier = Modifier.weight(1f),
-                        height = 42.dp,
-                        fontSize = 11.sp
-                    ) {
-                        viewModel.sendKey(HidUsageCodes.KEY_F5)
-                    }
+                    viewModel.sendKey(HidUsageCodes.KEY_RIGHT_ARROW)
+                }
+            }
 
-                    MediaButton(
-                        title = "Mevcut (⇧F5)",
-                        modifier = Modifier.weight(1f),
-                        height = 42.dp,
-                        fontSize = 11.sp
-                    ) {
-                        viewModel.sendKey(HidUsageCodes.KEY_F5, HidKeyboardReport.MODIFIER_SHIFT)
-                    }
+            // Sunum Fonksiyonları (Eşit 4'lü Dağılım)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                MediaButton(
+                    title = "Başlat (F5)",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 36.dp else 42.dp,
+                    fontSize = 11.sp
+                ) {
+                    viewModel.sendKey(HidUsageCodes.KEY_F5)
+                }
 
-                    MediaButton(
-                        title = "Karart (B)",
-                        modifier = Modifier.weight(1f),
-                        height = 42.dp,
-                        fontSize = 11.sp
-                    ) {
-                        viewModel.sendKey(HidUsageCodes.KEY_B)
-                    }
+                MediaButton(
+                    title = "Mevcut (⇧F5)",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 36.dp else 42.dp,
+                    fontSize = 11.sp
+                ) {
+                    viewModel.sendKey(HidUsageCodes.KEY_F5, HidKeyboardReport.MODIFIER_SHIFT)
+                }
 
-                    MediaButton(
-                        title = "Bitir (Esc)",
-                        modifier = Modifier.weight(1f),
-                        height = 42.dp,
-                        fontSize = 11.sp,
-                        backgroundColor = Color(0xFF382024),
-                        textColor = Color(0xFFFF8A80)
-                    ) {
-                        viewModel.sendKey(HidUsageCodes.KEY_ESC)
-                    }
+                MediaButton(
+                    title = "Karart (B)",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 36.dp else 42.dp,
+                    fontSize = 11.sp
+                ) {
+                    viewModel.sendKey(HidUsageCodes.KEY_B)
+                }
+
+                MediaButton(
+                    title = "Bitir (Esc)",
+                    modifier = Modifier.weight(1f),
+                    height = if (isLandscape) 36.dp else 42.dp,
+                    fontSize = 11.sp,
+                    backgroundColor = Color(0xFF382024),
+                    textColor = Color(0xFFFF8A80)
+                ) {
+                    viewModel.sendKey(HidUsageCodes.KEY_ESC)
                 }
             }
         }

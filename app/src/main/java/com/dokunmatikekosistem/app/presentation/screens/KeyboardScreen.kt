@@ -1,6 +1,7 @@
 package com.dokunmatikekosistem.app.presentation.screens
 
-import androidx.compose.foundation.background
+import android.content.res.Configuration
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,8 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -19,7 +19,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +36,8 @@ fun KeyboardScreen(
 ) {
     val activeLayout by viewModel.activeLayout.collectAsState()
     val modifierState by viewModel.modifierState.collectAsState()
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -42,12 +46,14 @@ fun KeyboardScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 4.dp),
+                .padding(top = 2.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header Bar
+            // Compact Header Bar
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = if (isLandscape) 2.dp else 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -55,31 +61,32 @@ fun KeyboardScreen(
                     text = "SANAL KLAVYE",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White.copy(alpha = 0.5f)
+                    color = Color.White.copy(alpha = 0.5f),
+                    fontSize = if (isLandscape) 11.sp else 12.sp
                 )
 
-                FilledTonalButton(
-                    onClick = { viewModel.onLayoutToggleClicked() },
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Color(0xFF262630),
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFF262632))
+                        .clickable { viewModel.onLayoutToggleClicked() }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = if (activeLayout is TurkishQLayout) "TR Q" else "EN US",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
 
-            // Keyboard Container
+            // Keyboard Container (Takes all remaining height evenly)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.BottomCenter
+                    .weight(1f)
             ) {
                 VirtualKeyboard(
                     layout = activeLayout,
@@ -90,7 +97,8 @@ fun KeyboardScreen(
                     onCtrlClicked = { viewModel.onCtrlClicked() },
                     onAltClicked = { viewModel.onAltClicked() },
                     onWinClicked = { viewModel.onWinClicked() },
-                    onCtrlAltDelClicked = { viewModel.onCtrlAltDelClicked() }
+                    onCtrlAltDelClicked = { viewModel.onCtrlAltDelClicked() },
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }

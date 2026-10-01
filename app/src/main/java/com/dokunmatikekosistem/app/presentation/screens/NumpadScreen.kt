@@ -1,5 +1,6 @@
 package com.dokunmatikekosistem.app.presentation.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -8,10 +9,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -23,7 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dokunmatikekosistem.app.data.hid.HidUsageCodes
@@ -34,42 +39,54 @@ fun NumpadScreen(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier
 ) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val gap = if (isLandscape) 6.dp else 10.dp
+
     Surface(
         modifier = modifier.fillMaxSize(),
         color = Color(0xFF121214)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .widthIn(max = if (isLandscape) 380.dp else Dp.Unspecified)
+                    .fillMaxWidth(if (isLandscape) 0.55f else 1f)
+                    .padding(top = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(gap)
             ) {
-                Text(
-                    text = "NUMERİK KLAVYE (NUMPAD)",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White.copy(alpha = 0.5f)
-                )
-                Text(
-                    text = "Excel & Hesaplama",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "NUMERİK KLAVYE (NUMPAD)",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = if (isLandscape) 11.sp else 12.sp
+                    )
+                    Text(
+                        text = "Excel & Hesaplama",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = if (isLandscape) 10.sp else 11.sp
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
-            // Row 1: NumLock, /, *, Backspace
-            Row(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+                // Row 1: NumLock, /, *, Backspace
+                Row(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(gap)
+                ) {
                 NumpadKey(
                     label = "NumLock",
                     color = Color(0xFF2C2D35),
@@ -106,7 +123,7 @@ fun NumpadScreen(
             // Row 2: 7, 8, 9, -
             Row(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(gap)
             ) {
                 NumpadKey(label = "7", modifier = Modifier.weight(1f)) {
                     viewModel.sendKey(HidUsageCodes.KEYPAD_7)
@@ -129,7 +146,7 @@ fun NumpadScreen(
             // Row 3: 4, 5, 6, +
             Row(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(gap)
             ) {
                 NumpadKey(label = "4", modifier = Modifier.weight(1f)) {
                     viewModel.sendKey(HidUsageCodes.KEYPAD_4)
@@ -152,7 +169,7 @@ fun NumpadScreen(
             // Row 4: 1, 2, 3, Tab
             Row(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(gap)
             ) {
                 NumpadKey(label = "1", modifier = Modifier.weight(1f)) {
                     viewModel.sendKey(HidUsageCodes.KEYPAD_1)
@@ -176,7 +193,7 @@ fun NumpadScreen(
             // Row 5: 0 (span 2), ., Enter
             Row(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(gap)
             ) {
                 NumpadKey(
                     label = "0",
@@ -203,6 +220,7 @@ fun NumpadScreen(
             }
         }
     }
+}
 }
 
 @Composable
