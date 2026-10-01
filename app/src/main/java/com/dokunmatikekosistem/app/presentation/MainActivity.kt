@@ -10,7 +10,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.horizontalScroll
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,18 +35,23 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -88,6 +96,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        ) {
+            viewModel.onConnectClicked()
+            ContextCompat.startForegroundService(this, Intent(this, HidForegroundService::class.java))
+        }
         setContent {
             MaterialTheme {
                 TouchpadScreen(viewModel, onConnectRequested = ::connectWithPermissionCheck)
@@ -134,6 +148,7 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
     val userSettings by viewModel.userSettings.collectAsState()
     var keyboardVisible by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
+    val activeTouches = remember { mutableStateMapOf<Int, Offset>() }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -158,7 +173,9 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(top = 16.dp)
-                    .background(Color.DarkGray)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF1B1B1F))
+                    .border(1.dp, Color(0xFF2E2E36), RoundedCornerShape(16.dp))
                     .pointerInput(zoomEnabled) {
                         val recognizer = GestureRecognizer(zoomEnabled = zoomEnabled)
                         awaitEachGesture {
@@ -167,12 +184,18 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                                 val timeMs = System.currentTimeMillis()
                                 for (change in event.changes) {
                                     val raw: RawTouchEvent? = when {
-                                        change.pressed && change.previousPressed.not() ->
+                                        change.pressed && change.previousPressed.not() -> {
+                                            activeTouches[change.id.value.toInt()] = change.position
                                             RawTouchEvent.PointerDown(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                        change.pressed && change.previousPressed ->
+                                        }
+                                        change.pressed && change.previousPressed -> {
+                                            activeTouches[change.id.value.toInt()] = change.position
                                             RawTouchEvent.PointerMove(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                        !change.pressed && change.previousPressed ->
+                                        }
+                                        !change.pressed && change.previousPressed -> {
+                                            activeTouches.remove(change.id.value.toInt())
                                             RawTouchEvent.PointerUp(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
+                                        }
                                         else -> null
                                     }
                                     if (raw != null) {
@@ -181,11 +204,43 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                                         recognizer.onEvent(raw)?.let { viewModel.onGesture(it) }
                                     }
                                 }
-                                if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) break
+                                if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) {
+                                    activeTouches.clear()
+                                    break
+                                }
                             }
                         }
                     }
-            )
+            ) {
+                Text(
+                    text = "DOKUNMATİK YÜZEY",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White.copy(alpha = 0.12f),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    activeTouches.values.forEach { pos ->
+                        drawCircle(
+                            color = Color(0xFF00ADB5).copy(alpha = 0.15f),
+                            radius = 48.dp.toPx(),
+                            center = pos
+                        )
+                        drawCircle(
+                            color = Color(0xFF00ADB5).copy(alpha = 0.5f),
+                            radius = 28.dp.toPx(),
+                            center = pos,
+                            style = Stroke(width = 2.dp.toPx())
+                        )
+                        drawCircle(
+                            color = Color(0xFF00ADB5).copy(alpha = 0.9f),
+                            radius = 7.dp.toPx(),
+                            center = pos
+                        )
+                    }
+                }
+            }
             if (keyboardVisible) {
                 Box(modifier = Modifier.weight(1f)) {
                     VirtualKeyboard(
@@ -214,6 +269,9 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                 onFourFingerActionSelected = { viewModel.setFourFingerTapAction(it) },
                 onZoomToggled = { viewModel.setZoomEnabled(it) },
                 onTurkishLayoutToggled = { viewModel.setTurkishLayout(it) },
+                onCursorSpeedChanged = { viewModel.setCursorSpeed(it) },
+                onScrollSpeedChanged = { viewModel.setScrollSpeed(it) },
+                onAutoReconnectToggled = { viewModel.setAutoReconnect(it) },
                 onDismiss = { showSettingsSheet = false }
             )
         }
@@ -227,6 +285,9 @@ private fun SettingsSheetContent(
     onFourFingerActionSelected: (TapAction) -> Unit,
     onZoomToggled: (Boolean) -> Unit,
     onTurkishLayoutToggled: (Boolean) -> Unit,
+    onCursorSpeedChanged: (Float) -> Unit,
+    onScrollSpeedChanged: (Float) -> Unit,
+    onAutoReconnectToggled: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
     Column(
@@ -242,6 +303,100 @@ private fun SettingsSheetContent(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
+
+        HorizontalDivider()
+
+        // Cursor Speed Slider
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "İmleç Hızı",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "${"%.2f".format(userSettings.cursorSpeed)}x",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            Text(
+                text = "Fare imlecinin ekrandaki hareket hızı ve hassasiyeti",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            Slider(
+                value = userSettings.cursorSpeed,
+                onValueChange = onCursorSpeedChanged,
+                valueRange = 0.5f..2.5f,
+                steps = 7
+            )
+        }
+
+        HorizontalDivider()
+
+        // Scroll Speed Slider
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Kaydırma (Scroll) Hızı",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "${"%.2f".format(userSettings.scrollSpeed)}x",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            Text(
+                text = "İki parmakla sayfa kaydırma hızı ve adımı",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            Slider(
+                value = userSettings.scrollSpeed,
+                onValueChange = onScrollSpeedChanged,
+                valueRange = 0.5f..2.5f,
+                steps = 7
+            )
+        }
+
+        HorizontalDivider()
+
+        // Auto-reconnect Switch
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Otomatik Yeniden Bağlan",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "Eşleşmiş bilgisayar kapsama alanına girdiğinde otomatik bağlanır",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+            Switch(
+                checked = userSettings.autoReconnect,
+                onCheckedChange = onAutoReconnectToggled
+            )
+        }
 
         HorizontalDivider()
 

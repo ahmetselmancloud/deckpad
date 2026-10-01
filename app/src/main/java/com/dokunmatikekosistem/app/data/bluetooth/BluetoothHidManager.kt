@@ -16,6 +16,14 @@ import java.util.concurrent.Executor
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.dokunmatikekosistem.app.data.settings.SettingsRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
+
 private const val TAG = "BluetoothHidManager"
 
 /** Pure guard: register() may only start a new registration from these states. */
@@ -24,8 +32,11 @@ internal fun shouldAttemptRegister(currentState: ConnectionState): Boolean =
 
 @Singleton
 class BluetoothHidManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
+    private val settingsRepository: SettingsRepository? = null
 ) : HidManager {
+
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
     override val connectionState: StateFlow<ConnectionState> = _connectionState
@@ -48,15 +59,68 @@ class BluetoothHidManager @Inject constructor(
         override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
             Log.d(TAG, "onAppStatusChanged: registered=$registered pluggedDevice=$pluggedDevice")
             _connectionState.value = if (registered) ConnectionState.REGISTERED else ConnectionState.ERROR
+            if (registered) {
+                tryConnectBondedHost(pluggedDevice)
+            }
         }
 
         override fun onConnectionStateChanged(device: BluetoothDevice?, state: Int) {
             Log.d(TAG, "onConnectionStateChanged: device=$device state=$state")
             connectedDevice = if (state == BluetoothProfile.STATE_CONNECTED) device else null
             _connectionState.value = when (state) {
-                BluetoothProfile.STATE_CONNECTED -> ConnectionState.CONNECTED
+                BluetoothProfile.STATE_CONNECTED -> {
+                    device?.address?.let { addr ->
+                        scope.launch { settingsRepository?.setLastDeviceAddress(addr) }
+                    }
+                    ConnectionState.CONNECTED
+                }
                 BluetoothProfile.STATE_CONNECTING -> ConnectionState.REGISTERING
-                else -> ConnectionState.DISCONNECTED
+                else -> {
+                    scheduleAutoReconnect()
+                    ConnectionState.DISCONNECTED
+                }
+            }
+        }
+    }
+
+    private fun tryConnectBondedHost(pluggedDevice: BluetoothDevice?) {
+        try {
+            val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager ?: return
+            val adapter = manager.adapter ?: return
+            if (!adapter.isEnabled) return
+
+            val bondedDevices = adapter.bondedDevices ?: emptySet()
+            if (bondedDevices.isEmpty()) return
+
+            scope.launch {
+                val settings = settingsRepository?.userSettingsFlow?.firstOrNull()
+                if (settings != null && !settings.autoReconnect) return@launch
+
+                val target = pluggedDevice
+                    ?: bondedDevices.firstOrNull { it.address == settings?.lastDeviceAddress }
+                    ?: bondedDevices.firstOrNull { dev ->
+                        dev.bluetoothClass?.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.COMPUTER
+                    }
+                    ?: bondedDevices.firstOrNull()
+
+                if (target != null && connectedDevice == null && _connectionState.value != ConnectionState.CONNECTED) {
+                    Log.d(TAG, "Auto-connecting to bonded host: ${target.name} (${target.address})")
+                    hidDevice?.connect(target)
+                }
+            }
+        } catch (e: SecurityException) {
+            Log.w(TAG, "SecurityException during auto-connect: ${e.message}")
+        }
+    }
+
+    private fun scheduleAutoReconnect() {
+        scope.launch {
+            delay(3000L)
+            if (connectedDevice == null && _connectionState.value == ConnectionState.DISCONNECTED && hidDevice != null) {
+                val settings = settingsRepository?.userSettingsFlow?.firstOrNull()
+                if (settings?.autoReconnect != false) {
+                    tryConnectBondedHost(null)
+                }
             }
         }
     }

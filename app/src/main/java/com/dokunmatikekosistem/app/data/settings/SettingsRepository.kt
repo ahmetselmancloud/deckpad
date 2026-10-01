@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -22,6 +23,10 @@ class SettingsRepository @Inject constructor(
         val KEY_FOUR_FINGER_TAP = stringPreferencesKey("four_finger_tap_action")
         val KEY_ZOOM_ENABLED = booleanPreferencesKey("zoom_enabled")
         val KEY_TURKISH_LAYOUT = booleanPreferencesKey("is_turkish_layout")
+        val KEY_CURSOR_SPEED = floatPreferencesKey("cursor_speed")
+        val KEY_SCROLL_SPEED = floatPreferencesKey("scroll_speed")
+        val KEY_AUTO_RECONNECT = booleanPreferencesKey("auto_reconnect")
+        val KEY_LAST_DEVICE_ADDRESS = stringPreferencesKey("last_connected_device_address")
     }
 
     val userSettingsFlow: Flow<UserSettings> = dataStore.data
@@ -37,12 +42,20 @@ class SettingsRepository @Inject constructor(
             val fourTapName = prefs[KEY_FOUR_FINGER_TAP] ?: TapAction.NOTIFICATION_CENTER.name
             val zoom = prefs[KEY_ZOOM_ENABLED] ?: true
             val trLayout = prefs[KEY_TURKISH_LAYOUT] ?: true
+            val cursor = prefs[KEY_CURSOR_SPEED] ?: 1.0f
+            val scroll = prefs[KEY_SCROLL_SPEED] ?: 1.0f
+            val autoRec = prefs[KEY_AUTO_RECONNECT] ?: true
+            val lastAddr = prefs[KEY_LAST_DEVICE_ADDRESS]
 
             UserSettings(
                 threeFingerTapAction = runCatching { TapAction.valueOf(threeTapName) }.getOrDefault(TapAction.MIDDLE_CLICK),
                 fourFingerTapAction = runCatching { TapAction.valueOf(fourTapName) }.getOrDefault(TapAction.NOTIFICATION_CENTER),
                 zoomEnabled = zoom,
-                isTurkishLayout = trLayout
+                isTurkishLayout = trLayout,
+                cursorSpeed = cursor,
+                scrollSpeed = scroll,
+                autoReconnect = autoRec,
+                lastDeviceAddress = lastAddr
             )
         }
 
@@ -67,6 +80,34 @@ class SettingsRepository @Inject constructor(
     suspend fun setTurkishLayout(isTurkish: Boolean) {
         dataStore.edit { prefs ->
             prefs[KEY_TURKISH_LAYOUT] = isTurkish
+        }
+    }
+
+    suspend fun setCursorSpeed(speed: Float) {
+        dataStore.edit { prefs ->
+            prefs[KEY_CURSOR_SPEED] = speed
+        }
+    }
+
+    suspend fun setScrollSpeed(speed: Float) {
+        dataStore.edit { prefs ->
+            prefs[KEY_SCROLL_SPEED] = speed
+        }
+    }
+
+    suspend fun setAutoReconnect(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_AUTO_RECONNECT] = enabled
+        }
+    }
+
+    suspend fun setLastDeviceAddress(address: String?) {
+        dataStore.edit { prefs ->
+            if (address != null) {
+                prefs[KEY_LAST_DEVICE_ADDRESS] = address
+            } else {
+                prefs.remove(KEY_LAST_DEVICE_ADDRESS)
+            }
         }
     }
 }

@@ -55,6 +55,10 @@ class MainViewModel @Inject constructor(
     val zoomEnabled: StateFlow<Boolean> = _zoomEnabled
 
     private var lastShiftClickMillis = Long.MIN_VALUE
+    private var cursorResidualX = 0f
+    private var cursorResidualY = 0f
+    private var scrollResidualV = 0f
+    private var scrollResidualH = 0f
 
     init {
         settingsRepository?.let { repo ->
@@ -74,8 +78,18 @@ class MainViewModel @Inject constructor(
 
     fun onGesture(gesture: RecognizedGesture) {
         when (gesture) {
-            is RecognizedGesture.CursorMove ->
-                hidManager.sendMouseReport(gesture.dx, gesture.dy, wheelDelta = 0, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)
+            is RecognizedGesture.CursorMove -> {
+                val speed = _userSettings.value.cursorSpeed
+                val totalDx = gesture.dx * speed + cursorResidualX
+                val totalDy = gesture.dy * speed + cursorResidualY
+                val sendDx = kotlin.math.round(totalDx).toInt()
+                val sendDy = kotlin.math.round(totalDy).toInt()
+                cursorResidualX = totalDx - sendDx
+                cursorResidualY = totalDy - sendDy
+                if (sendDx != 0 || sendDy != 0) {
+                    hidManager.sendMouseReport(sendDx, sendDy, wheelDelta = 0, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)
+                }
+            }
 
             RecognizedGesture.LeftClick -> {
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = true, rightButtonPressed = false)
@@ -89,16 +103,36 @@ class MainViewModel @Inject constructor(
                 haptics.click()
             }
 
-            is RecognizedGesture.Scroll ->
-                hidManager.sendMouseReport(0, 0, wheelDelta = gesture.vDelta, panDelta = gesture.hDelta, leftButtonPressed = false, rightButtonPressed = false)
+            is RecognizedGesture.Scroll -> {
+                val speed = _userSettings.value.scrollSpeed
+                val totalV = gesture.vDelta * speed + scrollResidualV
+                val totalH = gesture.hDelta * speed + scrollResidualH
+                val sendV = kotlin.math.round(totalV).toInt()
+                val sendH = kotlin.math.round(totalH).toInt()
+                scrollResidualV = totalV - sendV
+                scrollResidualH = totalH - sendH
+                if (sendV != 0 || sendH != 0) {
+                    hidManager.sendMouseReport(0, 0, wheelDelta = sendV, panDelta = sendH, leftButtonPressed = false, rightButtonPressed = false)
+                }
+            }
 
             RecognizedGesture.DragLockEngaged -> {
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = true, rightButtonPressed = false)
                 haptics.dragLockEngaged()
             }
 
-            is RecognizedGesture.DragMove ->
-                hidManager.sendMouseReport(gesture.dx, gesture.dy, wheelDelta = 0, panDelta = 0, leftButtonPressed = true, rightButtonPressed = false)
+            is RecognizedGesture.DragMove -> {
+                val speed = _userSettings.value.cursorSpeed
+                val totalDx = gesture.dx * speed + cursorResidualX
+                val totalDy = gesture.dy * speed + cursorResidualY
+                val sendDx = kotlin.math.round(totalDx).toInt()
+                val sendDy = kotlin.math.round(totalDy).toInt()
+                cursorResidualX = totalDx - sendDx
+                cursorResidualY = totalDy - sendDy
+                if (sendDx != 0 || sendDy != 0) {
+                    hidManager.sendMouseReport(sendDx, sendDy, wheelDelta = 0, panDelta = 0, leftButtonPressed = true, rightButtonPressed = false)
+                }
+            }
 
             RecognizedGesture.DragLockReleased ->
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false)
@@ -167,6 +201,27 @@ class MainViewModel @Inject constructor(
         _userSettings.value = _userSettings.value.copy(zoomEnabled = enabled)
         settingsRepository?.let { repo ->
             viewModelScope.launch { repo.setZoomEnabled(enabled) }
+        }
+    }
+
+    fun setCursorSpeed(speed: Float) {
+        _userSettings.value = _userSettings.value.copy(cursorSpeed = speed)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setCursorSpeed(speed) }
+        }
+    }
+
+    fun setScrollSpeed(speed: Float) {
+        _userSettings.value = _userSettings.value.copy(scrollSpeed = speed)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setScrollSpeed(speed) }
+        }
+    }
+
+    fun setAutoReconnect(enabled: Boolean) {
+        _userSettings.value = _userSettings.value.copy(autoReconnect = enabled)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setAutoReconnect(enabled) }
         }
     }
 

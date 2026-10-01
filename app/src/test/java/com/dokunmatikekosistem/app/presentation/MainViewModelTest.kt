@@ -533,5 +533,38 @@ class MainViewModelTest {
         viewModel.onZoomToggleClicked()
         assertEquals(true, viewModel.zoomEnabled.value)
     }
+
+    @Test
+    fun `CursorMove scales with cursorSpeed`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.setCursorSpeed(2.0f)
+        viewModel.onGesture(RecognizedGesture.CursorMove(dx = 10, dy = -5))
+        assertEquals(
+            listOf(FakeMouseReport(20, -10, wheelDelta = 0, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)),
+            fake.allReports
+        )
+    }
+
+    @Test
+    fun `Scroll scales with scrollSpeed`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.setScrollSpeed(2.0f)
+        viewModel.onGesture(RecognizedGesture.Scroll(vDelta = 3, hDelta = -2))
+        assertEquals(
+            listOf(FakeMouseReport(0, 0, wheelDelta = 6, panDelta = -4, leftButtonPressed = false, rightButtonPressed = false)),
+            fake.allReports
+        )
+    }
+
+    @Test
+    fun `setAutoReconnect updates userSettings`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        assertEquals(true, viewModel.userSettings.value.autoReconnect)
+        viewModel.setAutoReconnect(false)
+        assertEquals(false, viewModel.userSettings.value.autoReconnect)
+    }
 }
 
