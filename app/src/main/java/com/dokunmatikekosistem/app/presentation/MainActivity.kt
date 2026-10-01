@@ -84,6 +84,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
         ) {
@@ -94,6 +95,22 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 MainAppScreen(viewModel, onConnectRequested = ::connectWithPermissionCheck)
             }
+        }
+    }
+
+    fun startLockMode() {
+        try {
+            startLockTask()
+        } catch (e: Exception) {
+            // Lock task not permitted or already active
+        }
+    }
+
+    fun stopLockMode() {
+        try {
+            stopLockTask()
+        } catch (e: Exception) {
+            // Lock task not active
         }
     }
 

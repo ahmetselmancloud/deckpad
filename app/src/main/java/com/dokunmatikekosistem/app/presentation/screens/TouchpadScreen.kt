@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +33,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.dokunmatikekosistem.app.data.gesture.GestureRecognizer
 import com.dokunmatikekosistem.app.data.gesture.RawTouchEvent
+import com.dokunmatikekosistem.app.presentation.MainActivity
 import com.dokunmatikekosistem.app.presentation.MainViewModel
 
 @Composable
@@ -43,24 +45,29 @@ fun TouchpadScreen(
     val isFullscreen by viewModel.isFullscreen.collectAsState()
     val context = LocalContext.current
 
-    // Immersive system bars control for fullscreen
+    // Immersive system bars control & App Pinning for locked fullscreen
     DisposableEffect(isFullscreen) {
-        val window = (context as? Activity)?.window
+        val activity = context as? Activity
+        val window = activity?.window
         if (window != null) {
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
             if (isFullscreen) {
                 insetsController.hide(WindowInsetsCompat.Type.systemBars())
                 insetsController.systemBarsBehavior =
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                (activity as? MainActivity)?.startLockMode()
             } else {
                 insetsController.show(WindowInsetsCompat.Type.systemBars())
+                (activity as? MainActivity)?.stopLockMode()
             }
         }
         onDispose {
-            val window = (context as? Activity)?.window
+            val activity = context as? Activity
+            val window = activity?.window
             if (window != null) {
                 val insetsController = WindowCompat.getInsetsController(window, window.decorView)
                 insetsController.show(WindowInsetsCompat.Type.systemBars())
+                (activity as? MainActivity)?.stopLockMode()
             }
         }
     }
@@ -78,7 +85,7 @@ fun TouchpadScreen(
             .fillMaxSize()
             .clip(shape)
             .background(bgColor)
-            .then(if (isFullscreen) Modifier else Modifier.border(1.dp, Color(0xFF2E2E36), shape))
+            .then(if (isFullscreen) Modifier.systemGestureExclusion() else Modifier.border(1.dp, Color(0xFF2E2E36), shape))
             .pointerInput(zoomEnabled) {
                 val recognizer = GestureRecognizer(zoomEnabled = zoomEnabled)
                 awaitEachGesture {
@@ -108,7 +115,10 @@ fun TouchpadScreen(
     ) {
         if (isFullscreen) {
             Button(
-                onClick = { viewModel.setFullscreen(false) },
+                onClick = {
+                    (context as? MainActivity)?.stopLockMode()
+                    viewModel.setFullscreen(false)
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF282830).copy(alpha = 0.85f),
                     contentColor = Color.White
@@ -123,7 +133,7 @@ fun TouchpadScreen(
         }
 
         Text(
-            text = if (isFullscreen) "TAM EKRAN TOUCHPAD" else "DOKUNMATİK YÜZEY",
+            text = if (isFullscreen) "TAM EKRAN (KİLİTLİ)" else "DOKUNMATİK YÜZEY",
             style = MaterialTheme.typography.labelMedium,
             color = Color.White.copy(alpha = 0.12f),
             fontWeight = FontWeight.Bold,
