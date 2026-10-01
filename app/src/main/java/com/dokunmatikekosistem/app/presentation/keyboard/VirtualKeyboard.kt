@@ -2,6 +2,7 @@ package com.dokunmatikekosistem.app.presentation.keyboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ fun VirtualKeyboard(
     onCtrlClicked: () -> Unit,
     onAltClicked: () -> Unit,
     onWinClicked: () -> Unit,
+    onWinLongClicked: () -> Unit = {},
     onCtrlAltDelClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -197,15 +199,17 @@ fun VirtualKeyboard(
             KeyButton(
                 label = "Win",
                 weight = if (isTwelve) 1.6f else 1.2f,
-                isPrimary = false,
+                isPrimary = modifierState.winActive,
                 fontSize = 12.sp,
-                onClick = onWinClicked
+                onClick = onWinClicked,
+                onLongClick = onWinLongClicked
             )
         }
     }
 }
 
 /** A compact keyboard key that renders with sharp corners and clean uniform sizing */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun androidx.compose.foundation.layout.RowScope.KeyButton(
     label: String,
@@ -215,6 +219,7 @@ private fun androidx.compose.foundation.layout.RowScope.KeyButton(
     backgroundColor: Color? = null,
     textColor: Color? = null,
     fontSize: TextUnit = 14.sp,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     val bg = backgroundColor ?: if (isPrimary) MaterialTheme.colorScheme.primary else Color(0xFF262632)
@@ -227,10 +232,21 @@ private fun androidx.compose.foundation.layout.RowScope.KeyButton(
             .padding(1.2.dp)
             .clip(RoundedCornerShape(4.dp))
             .background(bg)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = Color.White),
-                onClick = onClick
+            .then(
+                if (onLongClick != null) {
+                    Modifier.combinedClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(color = Color.White),
+                        onClick = onClick,
+                        onLongClick = onLongClick
+                    )
+                } else {
+                    Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(color = Color.White),
+                        onClick = onClick
+                    )
+                }
             ),
         contentAlignment = Alignment.Center
     ) {

@@ -320,7 +320,21 @@ class MainViewModel @Inject constructor(
     }
 
     fun onWinClicked() {
+        if (_modifierState.value.winActive) {
+            // İkinci kez basıldı: Başka tuşa basılmadan tekrar Win'e basıldı -> Doğrudan Başlat Menüsünü aç/kapat
+            sendShortcutWithHaptics(HidKeyboardReport.MODIFIER_WIN, 0)
+            _modifierState.value = _modifierState.value.copy(winActive = false)
+        } else {
+            // İlk basış: Win kombinasyon modu (Win+D, Win+E, Win+R vb.) için aktif et
+            _modifierState.value = _modifierState.value.copy(winActive = true)
+            haptics.click()
+        }
+    }
+
+    fun onWinLongClicked() {
+        // Uzun basış: Beklemeden doğrudan tek başına Başlat Menüsünü aç/kapat
         sendShortcutWithHaptics(HidKeyboardReport.MODIFIER_WIN, 0)
+        _modifierState.value = _modifierState.value.copy(winActive = false)
     }
 
     fun onCtrlAltDelClicked() {

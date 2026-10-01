@@ -285,16 +285,46 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `onCtrlClicked onAltClicked toggle sticky state and onWinClicked sends win key`() {
+    fun `onWinClicked enables win modifier mode and combines with key typed`() {
         val fake = FakeHidManager()
         val viewModel = MainViewModel(fake, FakeHaptics())
 
-        viewModel.onCtrlClicked()
-        viewModel.onAltClicked()
         viewModel.onWinClicked()
+        assertEquals(true, viewModel.modifierState.value.winActive)
 
-        assertEquals(true, viewModel.modifierState.value.ctrlActive)
-        assertEquals(true, viewModel.modifierState.value.altActive)
+        // Type 'd' for Win+D
+        viewModel.onKeyTyped('d')
+
+        assertEquals(
+            listOf(HidKeyboardReport.MODIFIER_WIN to 0x07),
+            fake.allKeyPresses
+        )
+        assertEquals(false, viewModel.modifierState.value.winActive)
+    }
+
+    @Test
+    fun `onWinClicked twice sends standalone Win key for Start Menu`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        viewModel.onWinClicked()
+        assertEquals(true, viewModel.modifierState.value.winActive)
+
+        viewModel.onWinClicked()
+        assertEquals(false, viewModel.modifierState.value.winActive)
+        assertEquals(
+            listOf(HidKeyboardReport.MODIFIER_WIN to 0),
+            fake.allKeyPresses
+        )
+    }
+
+    @Test
+    fun `onWinLongClicked sends standalone Win key immediately`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        viewModel.onWinLongClicked()
+        assertEquals(false, viewModel.modifierState.value.winActive)
         assertEquals(
             listOf(HidKeyboardReport.MODIFIER_WIN to 0),
             fake.allKeyPresses

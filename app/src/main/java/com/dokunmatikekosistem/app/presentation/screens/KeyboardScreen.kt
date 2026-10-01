@@ -173,6 +173,7 @@ fun KeyboardScreen(
                     onCtrlClicked = { viewModel.onCtrlClicked() },
                     onAltClicked = { viewModel.onAltClicked() },
                     onWinClicked = { viewModel.onWinClicked() },
+                    onWinLongClicked = { viewModel.onWinLongClicked() },
                     onCtrlAltDelClicked = { viewModel.onCtrlAltDelClicked() },
                     modifier = Modifier.fillMaxSize()
                 )
