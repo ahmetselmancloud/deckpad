@@ -11,7 +11,7 @@ private const val DRAG_LOCK_TAP_GAP_MS = 300L
 private const val DRAG_LOCK_HOLD_MS = 150L
 private const val SCROLL_PX_PER_UNIT = 24f
 private const val SWIPE_MIN_DISTANCE_PX = 60f
-private const val PINCH_PX_PER_UNIT = 12f
+private const val PINCH_PX_PER_UNIT = 48f
 // For two fingers moving purely radially (a clean pinch), |distanceChange|
 // approaches the SUM of both fingers' own movement (they add when opposing);
 // for two fingers moving purely in parallel (a clean scroll), it approaches
@@ -19,7 +19,7 @@ private const val PINCH_PX_PER_UNIT = 12f
 // above 0 and below 1 cleanly separates the two poles despite real-world
 // jitter perturbing the ratio slightly around either end.
 private const val PINCH_RATIO_THRESHOLD = 0.6f
-private const val PINCH_MIN_SPAN_DELTA_PX = 24f
+private const val PINCH_MIN_SPAN_DELTA_PX = 36f
 
 enum class SwipeDirection { UP, DOWN, LEFT, RIGHT }
 
@@ -298,8 +298,8 @@ class GestureRecognizer(var zoomEnabled: Boolean = true) {
                 val shouldEngagePinch = zoomEnabled &&
                     !pinchEngaged &&
                     !isSameDirection &&
-                    (totalSpanDelta >= PINCH_MIN_SPAN_DELTA_PX || abs(distanceChange) > ownMovement * PINCH_RATIO_THRESHOLD) &&
-                    (totalSpanDelta >= midpointTravel * 0.8f)
+                    totalSpanDelta >= PINCH_MIN_SPAN_DELTA_PX &&
+                    totalSpanDelta > midpointTravel * 1.2f
 
                 if (shouldEngagePinch) {
                     pinchEngaged = true

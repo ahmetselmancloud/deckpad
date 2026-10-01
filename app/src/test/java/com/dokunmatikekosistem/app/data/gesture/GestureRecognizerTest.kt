@@ -296,7 +296,7 @@ class GestureRecognizerTest {
         assertEquals(RecognizedGesture.PinchZoomStarted, started)
         recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 380f, y = 100f, timeMs = 70))
         val delta = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 40f, y = 100f, timeMs = 80))
-        assertEquals(RecognizedGesture.PinchZoomDelta(units = 8), delta)
+        assertEquals(RecognizedGesture.PinchZoomDelta(units = 2), delta)
         val ended = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 380f, y = 100f, timeMs = 90))
         assertEquals(RecognizedGesture.PinchZoomEnded, ended)
     }
