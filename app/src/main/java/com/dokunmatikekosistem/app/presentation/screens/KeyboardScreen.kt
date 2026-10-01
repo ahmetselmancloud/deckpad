@@ -1,6 +1,7 @@
 package com.dokunmatikekosistem.app.presentation.screens
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,9 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,9 +48,9 @@ fun KeyboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 2.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = if (isLandscape) Arrangement.SpaceBetween else Arrangement.Bottom
         ) {
-            // Compact Header Bar
+            // Header Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -82,11 +83,41 @@ fun KeyboardScreen(
                 }
             }
 
-            // Keyboard Container (Takes all remaining height evenly)
+            // Quick PC Shortcuts (Only in portrait to fill space ergonomically)
+            if (!isLandscape) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 2.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    KeyboardShortcutButton("Esc", modifier = Modifier.weight(1f)) {
+                        viewModel.sendKey(com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_ESC)
+                    }
+                    KeyboardShortcutButton("Tab", modifier = Modifier.weight(1f)) {
+                        viewModel.sendKey(com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_TAB)
+                    }
+                    KeyboardShortcutButton("Kopyala", modifier = Modifier.weight(1.3f)) {
+                        viewModel.macroCopy()
+                    }
+                    KeyboardShortcutButton("Yapıştır", modifier = Modifier.weight(1.3f)) {
+                        viewModel.macroPaste()
+                    }
+                    KeyboardShortcutButton("Geri Al", modifier = Modifier.weight(1.2f)) {
+                        viewModel.macroUndo()
+                    }
+                    KeyboardShortcutButton("C+A+D", modifier = Modifier.weight(1.2f)) {
+                        viewModel.onCtrlAltDelClicked()
+                    }
+                }
+            }
+
+            // Keyboard Container
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .then(if (isLandscape) Modifier.weight(1f) else Modifier.height(260.dp)),
+                contentAlignment = Alignment.BottomCenter
             ) {
                 VirtualKeyboard(
                     layout = activeLayout,
@@ -102,5 +133,29 @@ fun KeyboardScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun KeyboardShortcutButton(
+    label: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .height(34.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(Color(0xFF22222C))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White.copy(alpha = 0.85f),
+            maxLines = 1
+        )
     }
 }

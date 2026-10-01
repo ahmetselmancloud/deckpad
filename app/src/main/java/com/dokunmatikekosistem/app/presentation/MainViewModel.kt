@@ -329,8 +329,11 @@ class MainViewModel @Inject constructor(
     }
 
     fun sendKey(usageCode: Int, modifierBits: Int = 0) {
-        hidManager.sendKeyboardReport(modifierBits, usageCode)
-        hidManager.releaseKeyboardReport()
+        viewModelScope.launch {
+            hidManager.sendKeyboardReport(modifierBits, usageCode)
+            kotlinx.coroutines.delay(30L)
+            hidManager.releaseKeyboardReport()
+        }
         haptics.click()
     }
 

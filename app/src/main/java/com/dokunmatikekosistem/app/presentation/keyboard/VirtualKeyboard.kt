@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,30 +44,85 @@ fun VirtualKeyboard(
     modifier: Modifier = Modifier
 ) {
     val upper = modifierState.isUpperCaseEffective()
+    val displayRows = layout.displayRows()
+    val row0 = displayRows.getOrElse(0) { emptyList() } // Digits
+    val row1 = displayRows.getOrElse(1) { emptyList() } // Top letters
+    val row2 = displayRows.getOrElse(2) { emptyList() } // Middle letters
+    val row3 = displayRows.getOrElse(3) { emptyList() } // Bottom letters
+
+    // Max keys in letter rows determines the base unit width M
+    val maxRowUnits = row1.size.toFloat().coerceAtLeast(10f)
 
     Column(
         modifier = modifier
-            .fillMaxSize()
-            .padding(vertical = 2.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp, vertical = 2.dp)
     ) {
-        // Rows 1-3: Character rows (Each row evenly divides vertical space)
-        for (row in layout.displayRows()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                for (baseChar in row) {
-                    val displayChar = if (upper) layout.shiftedChar(baseChar) else baseChar
-                    KeyButton(
-                        label = displayChar.toString(),
-                        onClick = { onKeyTyped(displayChar) }
-                    )
-                }
+        // --- Row 0: Digits (1 2 3 4 5 6 7 8 9 0) centered with exact same key width ---
+        val digitSpacer = (maxRowUnits - row0.size.toFloat()) / 2f
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            if (digitSpacer > 0f) {
+                Spacer(modifier = Modifier.weight(digitSpacer))
+            }
+            for (char in row0) {
+                val displayChar = if (upper) layout.shiftedChar(char) else char
+                KeyButton(
+                    label = displayChar.toString(),
+                    weight = 1.0f,
+                    onClick = { onKeyTyped(displayChar) }
+                )
+            }
+            if (digitSpacer > 0f) {
+                Spacer(modifier = Modifier.weight(digitSpacer))
             }
         }
 
-        // Row 4: Shift, Caps, Space, Enter, Backspace
+        // --- Row 1: Top letters (q w e r t y u ı o p ğ ü) ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            for (char in row1) {
+                val displayChar = if (upper) layout.shiftedChar(char) else char
+                KeyButton(
+                    label = displayChar.toString(),
+                    weight = 1.0f,
+                    onClick = { onKeyTyped(displayChar) }
+                )
+            }
+        }
+
+        // --- Row 2: Middle letters (a s d f g h j k l ş i) with equal half-key margins ---
+        val midSpacer = (maxRowUnits - row2.size.toFloat()) / 2f
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            if (midSpacer > 0f) {
+                Spacer(modifier = Modifier.weight(midSpacer))
+            }
+            for (char in row2) {
+                val displayChar = if (upper) layout.shiftedChar(char) else char
+                KeyButton(
+                    label = displayChar.toString(),
+                    weight = 1.0f,
+                    onClick = { onKeyTyped(displayChar) }
+                )
+            }
+            if (midSpacer > 0f) {
+                Spacer(modifier = Modifier.weight(midSpacer))
+            }
+        }
+
+        // --- Row 3: Shift + Bottom letters (z x c v b n m ö ç) + Sil (Backspace) ---
+        // Letters have exact same 1.0f width as Row 1 and Row 2! Shift and Sil balance the row!
+        val sideKeyWeight = ((maxRowUnits - row3.size.toFloat()) / 2f).coerceAtLeast(1.2f)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -74,71 +130,74 @@ fun VirtualKeyboard(
         ) {
             KeyButton(
                 label = shiftLabel(modifierState.shiftState),
-                weight = 1.3f,
+                weight = sideKeyWeight,
                 isPrimary = modifierState.shiftState != ShiftState.Off,
                 onClick = onShiftClicked
             )
-            KeyButton(
-                label = if (modifierState.capsLockActive) "Caps ●" else "Caps",
-                weight = 1.1f,
-                isPrimary = modifierState.capsLockActive,
-                onClick = onCapsLockClicked
-            )
-            KeyButton(
-                label = "Boşluk",
-                weight = 3.5f,
-                onClick = { onKeyTyped(' ') }
-            )
-            KeyButton(
-                label = "Enter",
-                weight = 1.5f,
-                isPrimary = true,
-                onClick = { onKeyTyped('\n') }
-            )
+            for (char in row3) {
+                val displayChar = if (upper) layout.shiftedChar(char) else char
+                KeyButton(
+                    label = displayChar.toString(),
+                    weight = 1.0f,
+                    onClick = { onKeyTyped(displayChar) }
+                )
+            }
             KeyButton(
                 label = "Sil",
-                weight = 1.2f,
+                weight = sideKeyWeight,
                 backgroundColor = Color(0xFF382024),
                 textColor = Color(0xFFFF8A80),
                 onClick = { onKeyTyped('\b') }
             )
         }
 
-        // Row 5: Modifiers
+        // --- Row 4: Modifiers, Space, Enter ---
+        val isTwelve = maxRowUnits >= 11.5f
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
         ) {
             KeyButton(
+                label = if (modifierState.capsLockActive) "Caps ●" else "Caps",
+                weight = if (isTwelve) 1.2f else 1.1f,
+                isPrimary = modifierState.capsLockActive,
+                onClick = onCapsLockClicked
+            )
+            KeyButton(
                 label = if (modifierState.ctrlActive) "Ctrl ●" else "Ctrl",
-                weight = 1f,
+                weight = if (isTwelve) 1.1f else 1.0f,
                 isPrimary = modifierState.ctrlActive,
                 onClick = onCtrlClicked
             )
             KeyButton(
                 label = if (modifierState.altActive) "Alt ●" else "Alt",
-                weight = 1f,
+                weight = if (isTwelve) 1.1f else 1.0f,
                 isPrimary = modifierState.altActive,
                 onClick = onAltClicked
             )
             KeyButton(
-                label = if (modifierState.winActive) "Win ●" else "Win",
-                weight = 1f,
-                isPrimary = modifierState.winActive,
-                onClick = onWinClicked
+                label = "Boşluk",
+                weight = if (isTwelve) 4.8f else 3.9f,
+                onClick = { onKeyTyped(' ') }
             )
             KeyButton(
-                label = "Ctrl+Alt+Del",
-                weight = 1.8f,
-                fontSize = 11.sp,
-                onClick = onCtrlAltDelClicked
+                label = "Enter",
+                weight = if (isTwelve) 2.2f else 1.8f,
+                isPrimary = true,
+                onClick = { onKeyTyped('\n') }
+            )
+            KeyButton(
+                label = if (modifierState.winActive) "Win ●" else "Win",
+                weight = if (isTwelve) 1.6f else 1.2f,
+                isPrimary = modifierState.winActive,
+                onClick = onWinClicked
             )
         }
     }
 }
 
-/** A compact keyboard key that shares height and width evenly without squishing or clipping */
+/** A compact keyboard key that renders with sharp corners and clean uniform sizing */
 @Composable
 private fun androidx.compose.foundation.layout.RowScope.KeyButton(
     label: String,
@@ -157,7 +216,7 @@ private fun androidx.compose.foundation.layout.RowScope.KeyButton(
         modifier = modifier
             .weight(weight)
             .fillMaxHeight()
-            .padding(1.5.dp)
+            .padding(1.2.dp)
             .clip(RoundedCornerShape(4.dp))
             .background(bg)
             .clickable(

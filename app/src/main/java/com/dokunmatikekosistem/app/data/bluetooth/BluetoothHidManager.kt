@@ -214,12 +214,20 @@ class BluetoothHidManager @Inject constructor(
     }
 
     override fun sendConsumerReport(usageCode: Int) {
-        val device = connectedDevice ?: return
+        val device = connectedDevice ?: run {
+            Log.w(TAG, "sendConsumerReport: connectedDevice is null, report dropped")
+            return
+        }
         val pressReport = com.dokunmatikekosistem.app.data.hid.HidConsumerReport.build(usageCode)
         val releaseReport = com.dokunmatikekosistem.app.data.hid.HidConsumerReport.release()
         val reportId = com.dokunmatikekosistem.app.data.hid.HidDescriptor.CONSUMER_REPORT_ID.toInt()
         val sent = hidDevice?.sendReport(device, reportId, pressReport)
-        hidDevice?.sendReport(device, reportId, releaseReport)
+        Log.d(TAG, "sendConsumerReport: press sent=$sent reportId=$reportId usage=0x${usageCode.toString(16)}")
+        scope.launch {
+            delay(50L)
+            val relSent = hidDevice?.sendReport(device, reportId, releaseReport)
+            Log.d(TAG, "sendConsumerReport: release sent=$relSent")
+        }
         if (sent == true) {
             _reportsSent.value = _reportsSent.value + 1
         }
