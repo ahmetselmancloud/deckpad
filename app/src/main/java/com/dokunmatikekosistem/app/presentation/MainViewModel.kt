@@ -1,11 +1,15 @@
 package com.dokunmatikekosistem.app.presentation
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.dokunmatikekosistem.app.data.gesture.RecognizedGesture
 import com.dokunmatikekosistem.app.data.gesture.SwipeDirection
 import com.dokunmatikekosistem.app.data.hid.HidKeyboardReport
 import com.dokunmatikekosistem.app.data.keyboard.EnglishUsLayout
 import com.dokunmatikekosistem.app.data.keyboard.TurkishQLayout
+import com.dokunmatikekosistem.app.data.settings.SettingsRepository
+import com.dokunmatikekosistem.app.data.settings.TapAction
+import com.dokunmatikekosistem.app.data.settings.UserSettings
 import com.dokunmatikekosistem.app.domain.ConnectionState
 import com.dokunmatikekosistem.app.domain.Haptics
 import com.dokunmatikekosistem.app.domain.HidManager
@@ -15,6 +19,7 @@ import com.dokunmatikekosistem.app.domain.ShiftState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val SHIFT_DOUBLE_TAP_WINDOW_MS = 300L
@@ -30,11 +35,15 @@ private const val NO_KEY_USAGE_CODE = 0
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val hidManager: HidManager,
-    private val haptics: Haptics
+    private val haptics: Haptics,
+    private val settingsRepository: SettingsRepository? = null
 ) : ViewModel() {
 
     val connectionState: StateFlow<ConnectionState> = hidManager.connectionState
     val reportsSent: StateFlow<Int> = hidManager.reportsSent
+
+    private val _userSettings = MutableStateFlow(UserSettings())
+    val userSettings: StateFlow<UserSettings> = _userSettings
 
     private val _activeLayout = MutableStateFlow<KeyboardLayout>(TurkishQLayout())
     val activeLayout: StateFlow<KeyboardLayout> = _activeLayout
@@ -46,6 +55,18 @@ class MainViewModel @Inject constructor(
     val zoomEnabled: StateFlow<Boolean> = _zoomEnabled
 
     private var lastShiftClickMillis = Long.MIN_VALUE
+
+    init {
+        settingsRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.userSettingsFlow.collect { settings ->
+                    _userSettings.value = settings
+                    _zoomEnabled.value = settings.zoomEnabled
+                    _activeLayout.value = if (settings.isTurkishLayout) TurkishQLayout() else EnglishUsLayout()
+                }
+            }
+        }
+    }
 
     fun onConnectClicked() {
         hidManager.register()
@@ -89,7 +110,8 @@ class MainViewModel @Inject constructor(
                 SwipeDirection.RIGHT -> sendShortcut(HidKeyboardReport.MODIFIER_ALT or HidKeyboardReport.MODIFIER_SHIFT, TAB_USAGE_CODE)
             }
 
-            RecognizedGesture.ThreeFingerTap -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, S_USAGE_CODE)
+            RecognizedGesture.ThreeFingerTap ->
+                executeTapAction(_userSettings.value.threeFingerTapAction)
 
             is RecognizedGesture.FourFingerSwipe -> when (gesture.direction) {
                 SwipeDirection.UP -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, TAB_USAGE_CODE)
@@ -98,7 +120,8 @@ class MainViewModel @Inject constructor(
                 SwipeDirection.RIGHT -> sendShortcut(HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_WIN, LEFT_ARROW_USAGE_CODE)
             }
 
-            RecognizedGesture.FourFingerTap -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, N_USAGE_CODE)
+            RecognizedGesture.FourFingerTap ->
+                executeTapAction(_userSettings.value.fourFingerTapAction)
 
             RecognizedGesture.PinchZoomStarted ->
                 hidManager.sendKeyboardReport(HidKeyboardReport.MODIFIER_CTRL, NO_KEY_USAGE_CODE)
@@ -111,12 +134,58 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private fun executeTapAction(action: TapAction) {
+        when (action) {
+            TapAction.MIDDLE_CLICK -> {
+                hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false, middleButtonPressed = true)
+                hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false, middleButtonPressed = false)
+                haptics.click()
+            }
+            TapAction.WINDOWS_SEARCH -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, S_USAGE_CODE)
+            TapAction.SHOW_DESKTOP -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, D_USAGE_CODE)
+            TapAction.NOTIFICATION_CENTER -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, N_USAGE_CODE)
+            TapAction.DISABLED -> { /* No-op */ }
+        }
+    }
+
+    fun setThreeFingerTapAction(action: TapAction) {
+        _userSettings.value = _userSettings.value.copy(threeFingerTapAction = action)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setThreeFingerTapAction(action) }
+        }
+    }
+
+    fun setFourFingerTapAction(action: TapAction) {
+        _userSettings.value = _userSettings.value.copy(fourFingerTapAction = action)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setFourFingerTapAction(action) }
+        }
+    }
+
+    fun setZoomEnabled(enabled: Boolean) {
+        _zoomEnabled.value = enabled
+        _userSettings.value = _userSettings.value.copy(zoomEnabled = enabled)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setZoomEnabled(enabled) }
+        }
+    }
+
+    fun setTurkishLayout(isTurkish: Boolean) {
+        _activeLayout.value = if (isTurkish) TurkishQLayout() else EnglishUsLayout()
+        _userSettings.value = _userSettings.value.copy(isTurkishLayout = isTurkish)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setTurkishLayout(isTurkish) }
+        }
+    }
+
     fun onLayoutToggleClicked() {
-        _activeLayout.value = if (_activeLayout.value is TurkishQLayout) EnglishUsLayout() else TurkishQLayout()
+        val nextIsTurkish = _activeLayout.value !is TurkishQLayout
+        setTurkishLayout(nextIsTurkish)
     }
 
     fun onZoomToggleClicked() {
-        _zoomEnabled.value = !_zoomEnabled.value
+        val next = !_zoomEnabled.value
+        setZoomEnabled(next)
     }
 
     fun onKeyTyped(char: Char) {

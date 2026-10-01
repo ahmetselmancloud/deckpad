@@ -30,6 +30,18 @@ class HidMouseReportTest {
     }
 
     @Test
+    fun `middle button sets bit 2`() {
+        val report = HidMouseReport.build(dx = 0, dy = 0, wheelDelta = 0, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false, middleButtonPressed = true)
+        assertArrayEquals(byteArrayOf(4, 0, 0, 0, 0), report)
+    }
+
+    @Test
+    fun `all three buttons set bits 0 1 and 2`() {
+        val report = HidMouseReport.build(dx = 0, dy = 0, wheelDelta = 0, panDelta = 0, leftButtonPressed = true, rightButtonPressed = true, middleButtonPressed = true)
+        assertArrayEquals(byteArrayOf(7, 0, 0, 0, 0), report)
+    }
+
+    @Test
     fun `positive dx dy wheel pan pass through unchanged`() {
         val report = HidMouseReport.build(dx = 10, dy = 20, wheelDelta = 3, panDelta = 4, leftButtonPressed = false, rightButtonPressed = false)
         assertArrayEquals(byteArrayOf(0, 10, 20, 3, 4), report)

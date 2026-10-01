@@ -21,7 +21,8 @@ private data class FakeMouseReport(
     val wheelDelta: Int,
     val panDelta: Int,
     val leftButtonPressed: Boolean,
-    val rightButtonPressed: Boolean
+    val rightButtonPressed: Boolean,
+    val middleButtonPressed: Boolean = false
 )
 
 private class FakeHidManager : HidManager {
@@ -36,8 +37,16 @@ private class FakeHidManager : HidManager {
         registerCalled = true
     }
 
-    override fun sendMouseReport(dx: Int, dy: Int, wheelDelta: Int, panDelta: Int, leftButtonPressed: Boolean, rightButtonPressed: Boolean) {
-        allReports.add(FakeMouseReport(dx, dy, wheelDelta, panDelta, leftButtonPressed, rightButtonPressed))
+    override fun sendMouseReport(
+        dx: Int,
+        dy: Int,
+        wheelDelta: Int,
+        panDelta: Int,
+        leftButtonPressed: Boolean,
+        rightButtonPressed: Boolean,
+        middleButtonPressed: Boolean
+    ) {
+        allReports.add(FakeMouseReport(dx, dy, wheelDelta, panDelta, leftButtonPressed, rightButtonPressed, middleButtonPressed))
         reportsSent.value = reportsSent.value + 1
     }
 
@@ -431,11 +440,37 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `ThreeFingerTap sends Win+S`() {
+    fun `ThreeFingerTap sends middle click by default and clicks haptics`() {
+        val fake = FakeHidManager()
+        val haptics = FakeHaptics()
+        val viewModel = MainViewModel(fake, haptics)
+        viewModel.onGesture(RecognizedGesture.ThreeFingerTap)
+        assertEquals(
+            listOf(
+                FakeMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false, middleButtonPressed = true),
+                FakeMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false, middleButtonPressed = false)
+            ),
+            fake.allReports
+        )
+        assertEquals(1, haptics.clickCount)
+    }
+
+    @Test
+    fun `ThreeFingerTap with WINDOWS_SEARCH action sends Win+S`() {
         val fake = FakeHidManager()
         val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.setThreeFingerTapAction(com.dokunmatikekosistem.app.data.settings.TapAction.WINDOWS_SEARCH)
         viewModel.onGesture(RecognizedGesture.ThreeFingerTap)
         assertEquals(listOf(HidKeyboardReport.MODIFIER_WIN to 0x16), fake.allKeyPresses)
+    }
+
+    @Test
+    fun `ThreeFingerTap with SHOW_DESKTOP action sends Win+D`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        viewModel.setThreeFingerTapAction(com.dokunmatikekosistem.app.data.settings.TapAction.SHOW_DESKTOP)
+        viewModel.onGesture(RecognizedGesture.ThreeFingerTap)
+        assertEquals(listOf(HidKeyboardReport.MODIFIER_WIN to 0x07), fake.allKeyPresses)
     }
 
     @Test

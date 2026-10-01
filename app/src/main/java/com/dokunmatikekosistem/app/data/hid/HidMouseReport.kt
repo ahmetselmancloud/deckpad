@@ -8,11 +8,13 @@ object HidMouseReport {
         wheelDelta: Int,
         panDelta: Int,
         leftButtonPressed: Boolean,
-        rightButtonPressed: Boolean
+        rightButtonPressed: Boolean,
+        middleButtonPressed: Boolean = false
     ): ByteArray {
         var buttons = 0
         if (leftButtonPressed) buttons = buttons or 0x01
         if (rightButtonPressed) buttons = buttons or 0x02
+        if (middleButtonPressed) buttons = buttons or 0x04
         return byteArrayOf(
             buttons.toByte(),
             dx.coerceIn(-127, 127).toByte(),
