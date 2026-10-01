@@ -19,6 +19,7 @@ private const val PINCH_PX_PER_UNIT = 12f
 // above 0 and below 1 cleanly separates the two poles despite real-world
 // jitter perturbing the ratio slightly around either end.
 private const val PINCH_RATIO_THRESHOLD = 0.6f
+private const val PINCH_MIN_SPAN_DELTA_PX = 24f
 
 enum class SwipeDirection { UP, DOWN, LEFT, RIGHT }
 
@@ -72,7 +73,7 @@ private class ActivePointer(var lastX: Float, var lastY: Float, val downX: Float
  * Compose gesture cancellation) — otherwise a "stuck" pointer entry would
  * corrupt classification for the rest of this instance's lifetime.
  */
-class GestureRecognizer {
+class GestureRecognizer(var zoomEnabled: Boolean = true) {
 
     private val active = mutableMapOf<Int, ActivePointer>()
     private var lastTapUpTimeMs: Long? = null
@@ -100,6 +101,9 @@ class GestureRecognizer {
     // (mirrors dragLockPointerId's sticky-until-release pattern).
     private var pinchEngaged = false
     private var lastPinchDistance = -1f
+    private var initialPinchDistance = -1f
+    private var initialMidpointX = 0f
+    private var initialMidpointY = 0f
     private var pinchResidual = 0f
     // Which pointer produced the current unconsumed seed, and whether the
     // OTHER pointer has reported a qualifying frame since. Guards against the
@@ -221,6 +225,9 @@ class GestureRecognizer {
                 // pinch-baseline frame.
                 if (lastPinchDistance < 0f) {
                     lastPinchDistance = hypot(pointer.lastX - other.lastX, pointer.lastY - other.lastY)
+                    initialPinchDistance = lastPinchDistance
+                    initialMidpointX = (pointer.lastX + other.lastX) / 2f
+                    initialMidpointY = (pointer.lastY + other.lastY) / 2f
                     pinchSeedPointerId = event.id
                     pinchPartnerSeen = false
                     // Movement accumulated before this seed isn't part of the change
@@ -255,6 +262,11 @@ class GestureRecognizer {
                 val distanceChange = distanceNow - lastPinchDistance
                 lastPinchDistance = distanceNow
 
+                val currentMidX = (pointer.lastX + other.lastX) / 2f
+                val currentMidY = (pointer.lastY + other.lastY) / 2f
+                val midpointTravel = hypot(currentMidX - initialMidpointX, currentMidY - initialMidpointY)
+                val totalSpanDelta = abs(distanceNow - initialPinchDistance)
+
                 // Compare against BOTH fingers' own accumulated movement since the
                 // last decision (not just this single event's delta from one
                 // finger) — real touch hardware doesn't report both fingers in
@@ -275,14 +287,21 @@ class GestureRecognizer {
                 // move in the same direction (dot product > 0), this is definitively a scroll
                 // and cannot be a pinch.
                 val isSameDirection = dotProduct > 0f && ownMovement > 4f
+                val isMidpointScrolling = midpointTravel > 15f && midpointTravel > totalSpanDelta
 
-                if (pinchEngaged && isSameDirection) {
+                if (pinchEngaged && (isSameDirection || isMidpointScrolling)) {
                     pinchEngaged = false
                     pinchResidual = 0f
                     return RecognizedGesture.PinchZoomEnded
                 }
 
-                if (!pinchEngaged && !isSameDirection && abs(distanceChange) > ownMovement * PINCH_RATIO_THRESHOLD) {
+                val shouldEngagePinch = zoomEnabled &&
+                    !pinchEngaged &&
+                    !isSameDirection &&
+                    (totalSpanDelta >= PINCH_MIN_SPAN_DELTA_PX || abs(distanceChange) > ownMovement * PINCH_RATIO_THRESHOLD) &&
+                    (totalSpanDelta >= midpointTravel * 0.8f)
+
+                if (shouldEngagePinch) {
                     pinchEngaged = true
                     return RecognizedGesture.PinchZoomStarted
                 }
@@ -402,6 +421,9 @@ class GestureRecognizer {
     // the wasPinching release path in onUp and resetSession().
     private fun resetPinchBaseline() {
         lastPinchDistance = -1f
+        initialPinchDistance = -1f
+        initialMidpointX = 0f
+        initialMidpointY = 0f
         pinchSeedPointerId = null
         pinchPartnerSeen = false
     }

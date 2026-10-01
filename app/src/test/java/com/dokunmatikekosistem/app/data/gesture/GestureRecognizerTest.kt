@@ -451,5 +451,30 @@ class GestureRecognizerTest {
         assertTrue(scrollDown is RecognizedGesture.Scroll)
         assertEquals(1, (scrollDown as RecognizedGesture.Scroll).vDelta)
     }
+
+    @Test
+    fun `when zoomEnabled is false, two finger movement never triggers PinchZoomStarted`() {
+        val recognizer = GestureRecognizer(zoomEnabled = false)
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 150f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 250f, y = 100f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 350f, y = 100f, timeMs = 20))
+        val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 50f, y = 100f, timeMs = 30))
+        // Should NOT be PinchZoomStarted
+        assertTrue(result !is RecognizedGesture.PinchZoomStarted)
+    }
+
+    @Test
+    fun `scroll where midpoint travels significantly never triggers pinch despite minor finger distance wobble`() {
+        val recognizer = GestureRecognizer(zoomEnabled = true)
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 100f, timeMs = 10))
+
+        // Finger 0 moves down 40px, Finger 1 moves down 35px (5px wobble)
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 140f, timeMs = 30))
+        val result = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 205f, y = 135f, timeMs = 40))
+        // Baseline seeded or scroll emitted, never pinch
+        assertTrue(result !is RecognizedGesture.PinchZoomStarted)
+    }
 }
+
 

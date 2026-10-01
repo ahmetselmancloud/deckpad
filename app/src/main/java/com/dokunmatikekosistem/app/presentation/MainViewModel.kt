@@ -42,6 +42,9 @@ class MainViewModel @Inject constructor(
     private val _modifierState = MutableStateFlow(KeyboardModifierState())
     val modifierState: StateFlow<KeyboardModifierState> = _modifierState
 
+    private val _zoomEnabled = MutableStateFlow(true)
+    val zoomEnabled: StateFlow<Boolean> = _zoomEnabled
+
     private var lastShiftClickMillis = Long.MIN_VALUE
 
     fun onConnectClicked() {
@@ -110,6 +113,10 @@ class MainViewModel @Inject constructor(
 
     fun onLayoutToggleClicked() {
         _activeLayout.value = if (_activeLayout.value is TurkishQLayout) EnglishUsLayout() else TurkishQLayout()
+    }
+
+    fun onZoomToggleClicked() {
+        _zoomEnabled.value = !_zoomEnabled.value
     }
 
     fun onKeyTyped(char: Char) {

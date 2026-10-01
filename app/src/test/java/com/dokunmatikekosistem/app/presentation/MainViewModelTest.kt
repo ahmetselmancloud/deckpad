@@ -487,4 +487,16 @@ class MainViewModelTest {
         assertEquals(true, fake.releaseKeyboardCalled)
         assertEquals(emptyList<Pair<Int, Int>>(), fake.allKeyPresses)
     }
+
+    @Test
+    fun `onZoomToggleClicked flips zoomEnabled state`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        assertEquals(true, viewModel.zoomEnabled.value)
+        viewModel.onZoomToggleClicked()
+        assertEquals(false, viewModel.zoomEnabled.value)
+        viewModel.onZoomToggleClicked()
+        assertEquals(true, viewModel.zoomEnabled.value)
+    }
 }
+

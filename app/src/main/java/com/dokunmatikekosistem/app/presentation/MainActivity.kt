@@ -12,12 +12,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -112,17 +115,24 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
     val reportsSent by viewModel.reportsSent.collectAsState()
     val activeLayout by viewModel.activeLayout.collectAsState()
     val modifierState by viewModel.modifierState.collectAsState()
+    val zoomEnabled by viewModel.zoomEnabled.collectAsState()
     var keyboardVisible by remember { mutableStateOf(false) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             Text("Durum: ${NotificationHelper.titleFor(connectionState)}")
             Text("Gönderilen rapor: $reportsSent")
-            Row {
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Button(onClick = onConnectRequested) { Text("Eşleştir/Bağlan") }
                 Button(onClick = { keyboardVisible = !keyboardVisible }) { Text("Klavye") }
                 Button(onClick = { viewModel.onLayoutToggleClicked() }) {
                     Text(if (activeLayout is com.dokunmatikekosistem.app.data.keyboard.TurkishQLayout) "TR Q" else "EN US")
+                }
+                Button(onClick = { viewModel.onZoomToggleClicked() }) {
+                    Text(if (zoomEnabled) "Zoom: Açık" else "Zoom: Kapalı")
                 }
             }
             Box(
@@ -131,8 +141,8 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                     .weight(1f)
                     .padding(top = 16.dp)
                     .background(Color.DarkGray)
-                    .pointerInput(Unit) {
-                        val recognizer = GestureRecognizer()
+                    .pointerInput(zoomEnabled) {
+                        val recognizer = GestureRecognizer(zoomEnabled = zoomEnabled)
                         awaitEachGesture {
                             while (true) {
                                 val event = awaitPointerEvent()
@@ -149,6 +159,7 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                                     }
                                     if (raw != null) {
                                         change.consume()
+                                        recognizer.zoomEnabled = zoomEnabled
                                         recognizer.onEvent(raw)?.let { viewModel.onGesture(it) }
                                     }
                                 }
