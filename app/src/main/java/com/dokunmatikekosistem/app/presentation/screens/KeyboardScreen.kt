@@ -50,63 +50,108 @@ fun KeyboardScreen(
                 .padding(top = 2.dp),
             verticalArrangement = if (isLandscape) Arrangement.SpaceBetween else Arrangement.Bottom
         ) {
-            // Header Bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = if (isLandscape) 2.dp else 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "SANAL KLAVYE",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White.copy(alpha = 0.5f),
-                    fontSize = if (isLandscape) 11.sp else 12.sp
-                )
-
-                Box(
+            if (isLandscape) {
+                // In Landscape: Unified top bar with [TR Q] toggle and all PC shortcuts
+                Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFF262632))
-                        .clickable { viewModel.onLayoutToggleClicked() }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .height(28.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xFF262632))
+                            .clickable { viewModel.onLayoutToggleClicked() }
+                            .padding(horizontal = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (activeLayout is TurkishQLayout) "TR Q" else "EN US",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    KeyboardShortcutButton("Esc", modifier = Modifier.weight(1f), height = 28.dp) {
+                        viewModel.sendKey(com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_ESC)
+                    }
+                    KeyboardShortcutButton("Tab", modifier = Modifier.weight(1f), height = 28.dp) {
+                        viewModel.sendKey(com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_TAB)
+                    }
+                    KeyboardShortcutButton("Kopyala", modifier = Modifier.weight(1.3f), height = 28.dp) {
+                        viewModel.macroCopy()
+                    }
+                    KeyboardShortcutButton("Yapıştır", modifier = Modifier.weight(1.3f), height = 28.dp) {
+                        viewModel.macroPaste()
+                    }
+                    KeyboardShortcutButton("Geri Al", modifier = Modifier.weight(1.2f), height = 28.dp) {
+                        viewModel.macroUndo()
+                    }
+                    KeyboardShortcutButton("C+A+D", modifier = Modifier.weight(1.2f), height = 28.dp) {
+                        viewModel.onCtrlAltDelClicked()
+                    }
+                }
+            } else {
+                // Header Bar (Portrait)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (activeLayout is TurkishQLayout) "TR Q" else "EN US",
-                        fontSize = 11.sp,
+                        text = "SANAL KLAVYE",
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 12.sp
                     )
-                }
-            }
 
-            // Quick PC Shortcuts (Only in portrait to fill space ergonomically)
-            if (!isLandscape) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFF262632))
+                            .clickable { viewModel.onLayoutToggleClicked() }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (activeLayout is TurkishQLayout) "TR Q" else "EN US",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                // Quick PC Shortcuts (Portrait)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 2.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    KeyboardShortcutButton("Esc", modifier = Modifier.weight(1f)) {
+                    KeyboardShortcutButton("Esc", modifier = Modifier.weight(1f), height = 34.dp) {
                         viewModel.sendKey(com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_ESC)
                     }
-                    KeyboardShortcutButton("Tab", modifier = Modifier.weight(1f)) {
+                    KeyboardShortcutButton("Tab", modifier = Modifier.weight(1f), height = 34.dp) {
                         viewModel.sendKey(com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_TAB)
                     }
-                    KeyboardShortcutButton("Kopyala", modifier = Modifier.weight(1.3f)) {
+                    KeyboardShortcutButton("Kopyala", modifier = Modifier.weight(1.3f), height = 34.dp) {
                         viewModel.macroCopy()
                     }
-                    KeyboardShortcutButton("Yapıştır", modifier = Modifier.weight(1.3f)) {
+                    KeyboardShortcutButton("Yapıştır", modifier = Modifier.weight(1.3f), height = 34.dp) {
                         viewModel.macroPaste()
                     }
-                    KeyboardShortcutButton("Geri Al", modifier = Modifier.weight(1.2f)) {
+                    KeyboardShortcutButton("Geri Al", modifier = Modifier.weight(1.2f), height = 34.dp) {
                         viewModel.macroUndo()
                     }
-                    KeyboardShortcutButton("C+A+D", modifier = Modifier.weight(1.2f)) {
+                    KeyboardShortcutButton("C+A+D", modifier = Modifier.weight(1.2f), height = 34.dp) {
                         viewModel.onCtrlAltDelClicked()
                     }
                 }
@@ -140,11 +185,12 @@ fun KeyboardScreen(
 private fun KeyboardShortcutButton(
     label: String,
     modifier: Modifier = Modifier,
+    height: androidx.compose.ui.unit.Dp = 34.dp,
     onClick: () -> Unit
 ) {
     Box(
         modifier = modifier
-            .height(34.dp)
+            .height(height)
             .clip(RoundedCornerShape(4.dp))
             .background(Color(0xFF22222C))
             .clickable(onClick = onClick),

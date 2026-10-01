@@ -48,8 +48,8 @@ class BluetoothHidManager @Inject constructor(
     private var connectedDevice: BluetoothDevice? = null
 
     private val sdpSettings = BluetoothHidDeviceAppSdpSettings(
-        "TouchpadEkosistem",
-        "Dokunmatik Ekosistem",
+        "TouchpadEkosistemV3",
+        "Dokunmatik Ekosistem V3",
         "DokunmatikEkosistem",
         BluetoothHidDevice.SUBCLASS1_COMBO,
         com.dokunmatikekosistem.app.data.hid.HidDescriptor.DESCRIPTOR
@@ -224,7 +224,7 @@ class BluetoothHidManager @Inject constructor(
         val sent = hidDevice?.sendReport(device, reportId, pressReport)
         Log.d(TAG, "sendConsumerReport: press sent=$sent reportId=$reportId usage=0x${usageCode.toString(16)}")
         scope.launch {
-            delay(50L)
+            delay(70L)
             val relSent = hidDevice?.sendReport(device, reportId, releaseReport)
             Log.d(TAG, "sendConsumerReport: release sent=$relSent")
         }

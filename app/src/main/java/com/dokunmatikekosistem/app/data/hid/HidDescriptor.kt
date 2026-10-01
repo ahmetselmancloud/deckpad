@@ -78,18 +78,26 @@ object HidDescriptor {
         0x81.toByte(), 0x00,    //   Input (Data,Array)
         0xC0.toByte(),          // End Collection
 
-        // Consumer Control (Report ID 3) - Volume, Play/Pause, Next/Prev
+        // Consumer Control (Report ID 3) - Universal Variable Bitmask for Windows & Android
         0x05, 0x0C,             // Usage Page (Consumer)
         0x09, 0x01,             // Usage (Consumer Control)
         0xA1.toByte(), 0x01,    // Collection (Application)
         0x85.toByte(), CONSUMER_REPORT_ID, // Report ID (3)
         0x15, 0x00,             //   Logical Minimum (0)
-        0x26, 0x9C.toByte(), 0x02, //   Logical Maximum (668)
-        0x19, 0x00,             //   Usage Minimum (0)
-        0x2A, 0x9C.toByte(), 0x02, //   Usage Maximum (668)
-        0x75, 0x10,             //   Report Size (16)
-        0x95.toByte(), 0x01,    //   Report Count (1)
-        0x81.toByte(), 0x00,    //   Input (Data,Array)
+        0x25, 0x01,             //   Logical Maximum (1)
+        0x75, 0x01,             //   Report Size (1 bit)
+        0x95.toByte(), 0x07,    //   Report Count (7 bits)
+        0x09, 0xCD.toByte(),    //   Usage (Play/Pause)       -> bit 0 (0x01)
+        0x09, 0xB5.toByte(),    //   Usage (Scan Next Track)  -> bit 1 (0x02)
+        0x09, 0xB6.toByte(),    //   Usage (Scan Prev Track)  -> bit 2 (0x04)
+        0x09, 0xB7.toByte(),    //   Usage (Stop)             -> bit 3 (0x08)
+        0x09, 0xE9.toByte(),    //   Usage (Volume Increment) -> bit 4 (0x10)
+        0x09, 0xEA.toByte(),    //   Usage (Volume Decrement) -> bit 5 (0x20)
+        0x09, 0xE2.toByte(),    //   Usage (Mute)             -> bit 6 (0x40)
+        0x81.toByte(), 0x02,    //   Input (Data,Var,Abs)
+        0x75, 0x01,             //   Report Size (1 bit) - Padding
+        0x95.toByte(), 0x01,    //   Report Count (1 bit)
+        0x81.toByte(), 0x01,    //   Input (Const)
         0xC0.toByte()           // End Collection
     )
 }
