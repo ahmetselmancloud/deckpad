@@ -429,4 +429,27 @@ class GestureRecognizerTest {
         val continued = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 140f, timeMs = 80))
         assertEquals(RecognizedGesture.Scroll(vDelta = 1, hDelta = 0), continued)
     }
+
+    @Test
+    fun `reversing scroll direction without lifting fingers does not lock into pinch and immediately scrolls in new direction`() {
+        val recognizer = GestureRecognizer()
+        // 1. Touch down both fingers
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 300f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 300f, timeMs = 10))
+
+        // 2. Scroll UP (negative Y movement)
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 270f, timeMs = 20))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 200f, y = 270f, timeMs = 30))
+        val scrollUp = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 240f, timeMs = 40))
+        assertTrue(scrollUp is RecognizedGesture.Scroll)
+        assertEquals(-1, (scrollUp as RecognizedGesture.Scroll).vDelta)
+
+        // 3. Reverse direction to DOWN without lifting fingers
+        // Even if finger 1 reverses slightly earlier or drifts, vector analysis prevents false pinch
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 200f, y = 270f, timeMs = 50))
+        val scrollDown = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 100f, y = 270f, timeMs = 60))
+        assertTrue(scrollDown is RecognizedGesture.Scroll)
+        assertEquals(1, (scrollDown as RecognizedGesture.Scroll).vDelta)
+    }
 }
+

@@ -54,12 +54,14 @@ private class ActivePointer(var lastX: Float, var lastY: Float, val downX: Float
     var totalMovement = 0f
     var residualX = 0f
     var residualY = 0f
-    // Accumulated hypot(dx,dy) since the last pinch-vs-scroll decision (reset
-    // after every decision). Real touch hardware doesn't report both fingers
-    // in lockstep, so a single frame's delta from just the canonical pointer
-    // is a noisy, easily-swamped proxy for "how much the hand actually moved"
-    // — this accumulates both fingers' own movement between decisions instead.
+    // Accumulated hypot(dx,dy) and displacement components since the last
+    // pinch-vs-scroll decision (reset after every decision). Real touch hardware
+    // doesn't report both fingers in lockstep, so accumulating displacement
+    // enables direction vector (dot-product) analysis to cleanly separate
+    // parallel scroll from divergent pinch.
     var pinchAccumMovement = 0f
+    var pinchAccumDx = 0f
+    var pinchAccumDy = 0f
 }
 
 /**
@@ -171,6 +173,8 @@ class GestureRecognizer {
         val rawDy = event.y - pointer.lastY
         pointer.totalMovement += hypot(rawDx, rawDy)
         pointer.pinchAccumMovement += hypot(rawDx, rawDy)
+        pointer.pinchAccumDx += rawDx
+        pointer.pinchAccumDy += rawDy
         pointer.lastX = event.x
         pointer.lastY = event.y
 
@@ -224,7 +228,11 @@ class GestureRecognizer {
                     // the distance captured HERE) — start both fingers' accumulators
                     // fresh so they line up with what distanceChange will represent.
                     pointer.pinchAccumMovement = 0f
+                    pointer.pinchAccumDx = 0f
+                    pointer.pinchAccumDy = 0f
                     other.pinchAccumMovement = 0f
+                    other.pinchAccumDx = 0f
+                    other.pinchAccumDy = 0f
                     return null
                 }
 
@@ -255,10 +263,26 @@ class GestureRecognizer {
                 // parallel scroll masquerade as a pinch. A margin factor on top
                 // gives extra headroom against that same jitter.
                 val ownMovement = pointer.pinchAccumMovement + other.pinchAccumMovement
+                val dotProduct = (pointer.pinchAccumDx * other.pinchAccumDx) + (pointer.pinchAccumDy * other.pinchAccumDy)
                 pointer.pinchAccumMovement = 0f
+                pointer.pinchAccumDx = 0f
+                pointer.pinchAccumDy = 0f
                 other.pinchAccumMovement = 0f
+                other.pinchAccumDx = 0f
+                other.pinchAccumDy = 0f
 
-                if (!pinchEngaged && abs(distanceChange) > ownMovement * PINCH_RATIO_THRESHOLD) {
+                // Industry standard (libinput tp_gesture_same_directions): If both fingers
+                // move in the same direction (dot product > 0), this is definitively a scroll
+                // and cannot be a pinch.
+                val isSameDirection = dotProduct > 0f && ownMovement > 4f
+
+                if (pinchEngaged && isSameDirection) {
+                    pinchEngaged = false
+                    pinchResidual = 0f
+                    return RecognizedGesture.PinchZoomEnded
+                }
+
+                if (!pinchEngaged && !isSameDirection && abs(distanceChange) > ownMovement * PINCH_RATIO_THRESHOLD) {
                     pinchEngaged = true
                     return RecognizedGesture.PinchZoomStarted
                 }
@@ -269,6 +293,15 @@ class GestureRecognizer {
                     if (units == 0) return null
                     pinchResidual -= units * PINCH_PX_PER_UNIT
                     return RecognizedGesture.PinchZoomDelta(units)
+                }
+
+                // Instant direction turnaround: clear opposing residual so there is no deadzone lag
+                // when changing direction from up to down or vice versa.
+                if ((scrollResidualV > 0f && rawDy < 0f) || (scrollResidualV < 0f && rawDy > 0f)) {
+                    scrollResidualV = 0f
+                }
+                if ((scrollResidualH > 0f && rawDx < 0f) || (scrollResidualH < 0f && rawDx > 0f)) {
+                    scrollResidualH = 0f
                 }
 
                 scrollResidualV += rawDy
