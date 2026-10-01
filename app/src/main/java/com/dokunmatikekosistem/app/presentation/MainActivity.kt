@@ -11,10 +11,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,16 +25,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,7 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.dokunmatikekosistem.app.data.settings.TapAction
 import com.dokunmatikekosistem.app.data.settings.UserSettings
-import com.dokunmatikekosistem.app.presentation.components.TopStatusBar
+import com.dokunmatikekosistem.app.domain.ConnectionState
 import com.dokunmatikekosistem.app.presentation.screens.KeyboardScreen
 import com.dokunmatikekosistem.app.presentation.screens.MediaPresentationScreen
 import com.dokunmatikekosistem.app.presentation.screens.NumpadScreen
@@ -130,118 +129,103 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
     val currentTab by viewModel.currentTab.collectAsState()
-    val isFullscreen by viewModel.isFullscreen.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
     val userSettings by viewModel.userSettings.collectAsState()
     var showSettingsSheet by remember { mutableStateOf(false) }
 
-    Scaffold(
-        bottomBar = {
-            if (!isFullscreen) {
-                NavigationBar(
-                    containerColor = Color(0xFF18181E),
-                    contentColor = Color.White
-                ) {
-                    AppTab.entries.forEach { tab ->
-                        val selected = tab == currentTab
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = { viewModel.selectTab(tab) },
-                            icon = { Text(tab.icon, fontSize = 20.sp) },
-                            label = {
-                                Text(
-                                    tab.title,
-                                    fontSize = 11.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = Color(0xFF282835),
-                                unselectedIconColor = Color.White.copy(alpha = 0.6f),
-                                unselectedTextColor = Color.White.copy(alpha = 0.6f)
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    ) { innerPadding ->
-        Box(
+    Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF121214)) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(if (isFullscreen) PaddingValues(0.dp) else innerPadding)
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            when (currentTab) {
-                AppTab.TOUCHPAD -> {
-                    TouchpadScreen(
-                        viewModel = viewModel,
-                        onConnectRequested = onConnectRequested,
-                        onSettingsRequested = { showSettingsSheet = true }
-                    )
+            // Top Bar: Connection status & buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val statusText = when (connectionState) {
+                    ConnectionState.CONNECTED -> "Bağlandı"
+                    ConnectionState.REGISTERING -> "Bağlanıyor..."
+                    ConnectionState.REGISTERED -> "Hazır"
+                    ConnectionState.DISCONNECTED -> "Bağlı Değil"
+                    ConnectionState.ERROR -> "Hata"
                 }
-                AppTab.NUMPAD -> {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        TopStatusBar(
-                            connectionState = connectionState,
-                            onConnectClicked = onConnectRequested,
-                            onSettingsClicked = { showSettingsSheet = true },
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                Text(
+                    text = "Durum: $statusText",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (connectionState == ConnectionState.CONNECTED) Color(0xFF4CAF50) else Color(0xFFE53935)
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = onConnectRequested) {
+                        Text("Eşleştir", fontSize = 12.sp)
+                    }
+                    Button(onClick = { showSettingsSheet = true }) {
+                        Text("Ayarlar", fontSize = 12.sp)
+                    }
+                }
+            }
+
+            // Simple Tab Row (Text only, zero icons, zero animations)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                AppTab.entries.forEach { tab ->
+                    val selected = tab == currentTab
+                    FilledTonalButton(
+                        onClick = { viewModel.selectTab(tab) },
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = if (selected) MaterialTheme.colorScheme.primary else Color(0xFF22222A),
+                            contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White
                         )
-                        NumpadScreen(
-                            viewModel = viewModel,
-                            modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = tab.title,
+                            fontSize = 12.sp,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                         )
                     }
                 }
-                AppTab.MEDIA -> {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        TopStatusBar(
-                            connectionState = connectionState,
-                            onConnectClicked = onConnectRequested,
-                            onSettingsClicked = { showSettingsSheet = true },
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                        )
-                        MediaPresentationScreen(
-                            viewModel = viewModel,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                AppTab.KEYBOARD -> {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        TopStatusBar(
-                            connectionState = connectionState,
-                            onConnectClicked = onConnectRequested,
-                            onSettingsClicked = { showSettingsSheet = true },
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                        )
-                        KeyboardScreen(
-                            viewModel = viewModel,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+            }
+
+            // Active Tab Content
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                when (currentTab) {
+                    AppTab.TOUCHPAD -> TouchpadScreen(viewModel = viewModel)
+                    AppTab.NUMPAD -> NumpadScreen(viewModel = viewModel)
+                    AppTab.MEDIA -> MediaPresentationScreen(viewModel = viewModel)
+                    AppTab.KEYBOARD -> KeyboardScreen(viewModel = viewModel)
                 }
             }
         }
+    }
 
-        if (showSettingsSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showSettingsSheet = false }
-            ) {
-                SettingsSheetContent(
-                    userSettings = userSettings,
-                    onThreeFingerActionSelected = { viewModel.setThreeFingerTapAction(it) },
-                    onFourFingerActionSelected = { viewModel.setFourFingerTapAction(it) },
-                    onZoomToggled = { viewModel.setZoomEnabled(it) },
-                    onTurkishLayoutToggled = { viewModel.setTurkishLayout(it) },
-                    onCursorSpeedChanged = { viewModel.setCursorSpeed(it) },
-                    onScrollSpeedChanged = { viewModel.setScrollSpeed(it) },
-                    onAutoReconnectToggled = { viewModel.setAutoReconnect(it) },
-                    onDismiss = { showSettingsSheet = false }
-                )
-            }
+    if (showSettingsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSettingsSheet = false }
+        ) {
+            SettingsSheetContent(
+                userSettings = userSettings,
+                onThreeFingerActionSelected = { viewModel.setThreeFingerTapAction(it) },
+                onFourFingerActionSelected = { viewModel.setFourFingerTapAction(it) },
+                onZoomToggled = { viewModel.setZoomEnabled(it) },
+                onTurkishLayoutToggled = { viewModel.setTurkishLayout(it) },
+                onCursorSpeedChanged = { viewModel.setCursorSpeed(it) },
+                onScrollSpeedChanged = { viewModel.setScrollSpeed(it) },
+                onAutoReconnectToggled = { viewModel.setAutoReconnect(it) },
+                onDismiss = { showSettingsSheet = false }
+            )
         }
     }
 }
@@ -267,7 +251,7 @@ private fun SettingsSheetContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "⚙️ Touchpad Ayarları & Özelleştirme",
+            text = "Touchpad Ayarları",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )

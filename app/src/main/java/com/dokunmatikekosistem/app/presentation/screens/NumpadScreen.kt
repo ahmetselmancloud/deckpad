@@ -93,9 +93,10 @@ fun NumpadScreen(
                     viewModel.sendKey(HidUsageCodes.KEYPAD_ASTERISK)
                 }
                 NumpadKey(
-                    label = "⌫",
+                    label = "Sil",
                     color = Color(0xFF3E2723),
                     textColor = Color(0xFFFF8A80),
+                    fontSize = 15.sp,
                     modifier = Modifier.weight(1f)
                 ) {
                     viewModel.sendKey(HidUsageCodes.KEY_BACKSPACE)
@@ -163,7 +164,7 @@ fun NumpadScreen(
                     viewModel.sendKey(HidUsageCodes.KEYPAD_3)
                 }
                 NumpadKey(
-                    label = "Tab ⇥",
+                    label = "Tab",
                     color = Color(0xFF2C2D35),
                     fontSize = 14.sp,
                     modifier = Modifier.weight(1f)
@@ -191,7 +192,7 @@ fun NumpadScreen(
                     viewModel.sendKey(HidUsageCodes.KEYPAD_DOT)
                 }
                 NumpadKey(
-                    label = "Enter ↵",
+                    label = "Enter",
                     color = MaterialTheme.colorScheme.primary,
                     textColor = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 16.sp,

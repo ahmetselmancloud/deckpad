@@ -67,7 +67,7 @@ fun KeyboardScreen(
                     )
                 ) {
                     Text(
-                        text = if (activeLayout is TurkishQLayout) "TR Q 🇹🇷" else "EN US 🇺🇸",
+                        text = if (activeLayout is TurkishQLayout) "TR Q" else "EN US",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
