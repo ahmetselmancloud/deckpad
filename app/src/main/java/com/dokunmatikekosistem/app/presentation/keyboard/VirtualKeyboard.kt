@@ -129,9 +129,10 @@ fun VirtualKeyboard(
                 .weight(1f)
         ) {
             KeyButton(
-                label = shiftLabel(modifierState.shiftState),
+                label = "Shift",
                 weight = sideKeyWeight,
                 isPrimary = modifierState.shiftState != ShiftState.Off,
+                fontSize = 13.sp,
                 onClick = onShiftClicked
             )
             for (char in row3) {
@@ -145,6 +146,7 @@ fun VirtualKeyboard(
             KeyButton(
                 label = "Sil",
                 weight = sideKeyWeight,
+                fontSize = 13.sp,
                 backgroundColor = Color(0xFF382024),
                 textColor = Color(0xFFFF8A80),
                 onClick = { onKeyTyped('\b') }
@@ -159,38 +161,44 @@ fun VirtualKeyboard(
                 .weight(1f)
         ) {
             KeyButton(
-                label = if (modifierState.capsLockActive) "Caps ●" else "Caps",
+                label = "Caps",
                 weight = if (isTwelve) 1.2f else 1.1f,
                 isPrimary = modifierState.capsLockActive,
+                fontSize = 12.sp,
                 onClick = onCapsLockClicked
             )
             KeyButton(
-                label = if (modifierState.ctrlActive) "Ctrl ●" else "Ctrl",
+                label = "Ctrl",
                 weight = if (isTwelve) 1.1f else 1.0f,
                 isPrimary = modifierState.ctrlActive,
+                fontSize = 12.sp,
                 onClick = onCtrlClicked
             )
             KeyButton(
-                label = if (modifierState.altActive) "Alt ●" else "Alt",
+                label = "Alt",
                 weight = if (isTwelve) 1.1f else 1.0f,
                 isPrimary = modifierState.altActive,
+                fontSize = 12.sp,
                 onClick = onAltClicked
             )
             KeyButton(
                 label = "Boşluk",
                 weight = if (isTwelve) 4.8f else 3.9f,
+                fontSize = 13.sp,
                 onClick = { onKeyTyped(' ') }
             )
             KeyButton(
                 label = "Enter",
                 weight = if (isTwelve) 2.2f else 1.8f,
                 isPrimary = true,
+                fontSize = 13.sp,
                 onClick = { onKeyTyped('\n') }
             )
             KeyButton(
-                label = if (modifierState.winActive) "Win ●" else "Win",
+                label = "Win",
                 weight = if (isTwelve) 1.6f else 1.2f,
                 isPrimary = modifierState.winActive,
+                fontSize = 12.sp,
                 onClick = onWinClicked
             )
         }
@@ -235,10 +243,4 @@ private fun androidx.compose.foundation.layout.RowScope.KeyButton(
             overflow = TextOverflow.Clip
         )
     }
-}
-
-private fun shiftLabel(state: ShiftState): String = when (state) {
-    ShiftState.Off -> "Shift"
-    ShiftState.OneShot -> "⇧ Aktif"
-    ShiftState.Locked -> "⇧ Kilit"
 }
