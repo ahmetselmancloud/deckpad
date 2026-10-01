@@ -12,7 +12,7 @@ import javax.inject.Singleton
 
 @Singleton
 class HapticManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : Haptics {
 
     private val vibrator: Vibrator by lazy {
