@@ -7,6 +7,7 @@ package com.dokunmatikekosistem.app.data.hid
 object HidDescriptor {
     const val MOUSE_REPORT_ID: Byte = 1
     const val KEYBOARD_REPORT_ID: Byte = 2
+    const val CONSUMER_REPORT_ID: Byte = 3
 
     val DESCRIPTOR: ByteArray = byteArrayOf(
         // Mouse (Report ID 1)
@@ -51,7 +52,7 @@ object HidDescriptor {
         0xC0.toByte(),          // End Collection (Physical)
         0xC0.toByte(),          // End Collection (Application)
 
-        // Keyboard (Report ID 2) - boot format, not populated with real data yet
+        // Keyboard (Report ID 2) - boot format
         0x05, 0x01,             // Usage Page (Generic Desktop)
         0x09, 0x06,             // Usage (Keyboard)
         0xA1.toByte(), 0x01,    // Collection (Application)
@@ -74,6 +75,20 @@ object HidDescriptor {
         0x05, 0x07,             //   Usage Page (Key Codes)
         0x19, 0x00,             //   Usage Minimum (0)
         0x29, 0x65,             //   Usage Maximum (101)
+        0x81.toByte(), 0x00,    //   Input (Data,Array)
+        0xC0.toByte(),          // End Collection
+
+        // Consumer Control (Report ID 3) - Volume, Play/Pause, Next/Prev
+        0x05, 0x0C,             // Usage Page (Consumer)
+        0x09, 0x01,             // Usage (Consumer Control)
+        0xA1.toByte(), 0x01,    // Collection (Application)
+        0x85.toByte(), CONSUMER_REPORT_ID, // Report ID (3)
+        0x15, 0x00,             //   Logical Minimum (0)
+        0x26, 0x9C.toByte(), 0x02, //   Logical Maximum (668)
+        0x19, 0x00,             //   Usage Minimum (0)
+        0x2A, 0x9C.toByte(), 0x02, //   Usage Maximum (668)
+        0x75, 0x10,             //   Report Size (16)
+        0x95.toByte(), 0x01,    //   Report Count (1)
         0x81.toByte(), 0x00,    //   Input (Data,Array)
         0xC0.toByte()           // End Collection
     )

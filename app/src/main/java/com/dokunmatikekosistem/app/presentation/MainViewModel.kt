@@ -54,6 +54,24 @@ class MainViewModel @Inject constructor(
     private val _zoomEnabled = MutableStateFlow(true)
     val zoomEnabled: StateFlow<Boolean> = _zoomEnabled
 
+    private val _currentTab = MutableStateFlow(AppTab.TOUCHPAD)
+    val currentTab: StateFlow<AppTab> = _currentTab
+
+    private val _isFullscreen = MutableStateFlow(false)
+    val isFullscreen: StateFlow<Boolean> = _isFullscreen
+
+    fun selectTab(tab: AppTab) {
+        _currentTab.value = tab
+    }
+
+    fun setFullscreen(enabled: Boolean) {
+        _isFullscreen.value = enabled
+    }
+
+    fun toggleFullscreen() {
+        _isFullscreen.value = !_isFullscreen.value
+    }
+
     private var lastShiftClickMillis = Long.MIN_VALUE
     private var cursorResidualX = 0f
     private var cursorResidualY = 0f
@@ -308,6 +326,32 @@ class MainViewModel @Inject constructor(
     fun onCtrlAltDelClicked() {
         hidManager.sendKeyboardReport(HidKeyboardReport.MODIFIER_CTRL or HidKeyboardReport.MODIFIER_ALT, DELETE_FORWARD_USAGE_CODE)
         hidManager.releaseKeyboardReport()
+    }
+
+    fun sendKey(usageCode: Int, modifierBits: Int = 0) {
+        hidManager.sendKeyboardReport(modifierBits, usageCode)
+        hidManager.releaseKeyboardReport()
+        haptics.click()
+    }
+
+    fun sendConsumer(usageCode: Int) {
+        hidManager.sendConsumerReport(usageCode)
+        haptics.click()
+    }
+
+    // Macro actions
+    fun macroCopy() = sendShortcutWithHaptics(HidKeyboardReport.MODIFIER_CTRL, com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_C)
+    fun macroPaste() = sendShortcutWithHaptics(HidKeyboardReport.MODIFIER_CTRL, com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_V)
+    fun macroCut() = sendShortcutWithHaptics(HidKeyboardReport.MODIFIER_CTRL, com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_X)
+    fun macroUndo() = sendShortcutWithHaptics(HidKeyboardReport.MODIFIER_CTRL, com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_Z)
+    fun macroSave() = sendShortcutWithHaptics(HidKeyboardReport.MODIFIER_CTRL, com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_S)
+    fun macroSelectAll() = sendShortcutWithHaptics(HidKeyboardReport.MODIFIER_CTRL, com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_A)
+    fun macroShowDesktop() = sendShortcutWithHaptics(HidKeyboardReport.MODIFIER_WIN, com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_D)
+
+    private fun sendShortcutWithHaptics(modifierBits: Int, usageCode: Int) {
+        hidManager.sendKeyboardReport(modifierBits, usageCode)
+        hidManager.releaseKeyboardReport()
+        haptics.click()
     }
 
     private fun sendShortcut(modifierBits: Int, usageCode: Int) {

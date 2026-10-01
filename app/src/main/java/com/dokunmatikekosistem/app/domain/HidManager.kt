@@ -17,4 +17,5 @@ interface HidManager {
     )
     fun sendKeyboardReport(modifierBits: Int, usageCode: Int)
     fun releaseKeyboardReport()
+    fun sendConsumerReport(usageCode: Int)
 }

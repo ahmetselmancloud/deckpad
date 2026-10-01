@@ -50,6 +50,8 @@ private class FakeHidManager : HidManager {
         reportsSent.value = reportsSent.value + 1
     }
 
+    val allConsumerPresses = mutableListOf<Int>()
+
     override fun sendKeyboardReport(modifierBits: Int, usageCode: Int) {
         allKeyPresses.add(modifierBits to usageCode)
         reportsSent.value = reportsSent.value + 1
@@ -57,6 +59,11 @@ private class FakeHidManager : HidManager {
 
     override fun releaseKeyboardReport() {
         releaseKeyboardCalled = true
+    }
+
+    override fun sendConsumerReport(usageCode: Int) {
+        allConsumerPresses.add(usageCode)
+        reportsSent.value = reportsSent.value + 1
     }
 }
 
@@ -565,6 +572,69 @@ class MainViewModelTest {
         assertEquals(true, viewModel.userSettings.value.autoReconnect)
         viewModel.setAutoReconnect(false)
         assertEquals(false, viewModel.userSettings.value.autoReconnect)
+    }
+
+    @Test
+    fun `selectTab updates currentTab state`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        assertEquals(AppTab.TOUCHPAD, viewModel.currentTab.value)
+
+        viewModel.selectTab(AppTab.NUMPAD)
+        assertEquals(AppTab.NUMPAD, viewModel.currentTab.value)
+
+        viewModel.selectTab(AppTab.MEDIA)
+        assertEquals(AppTab.MEDIA, viewModel.currentTab.value)
+
+        viewModel.selectTab(AppTab.KEYBOARD)
+        assertEquals(AppTab.KEYBOARD, viewModel.currentTab.value)
+    }
+
+    @Test
+    fun `fullscreen toggling works as expected`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        assertEquals(false, viewModel.isFullscreen.value)
+
+        viewModel.setFullscreen(true)
+        assertEquals(true, viewModel.isFullscreen.value)
+
+        viewModel.toggleFullscreen()
+        assertEquals(false, viewModel.isFullscreen.value)
+    }
+
+    @Test
+    fun `sendConsumer delegates to hidManager and triggers haptic`() {
+        val fake = FakeHidManager()
+        val haptics = FakeHaptics()
+        val viewModel = MainViewModel(fake, haptics)
+
+        viewModel.sendConsumer(com.dokunmatikekosistem.app.data.hid.HidConsumerReport.VOLUME_INCREMENT)
+        assertEquals(listOf(com.dokunmatikekosistem.app.data.hid.HidConsumerReport.VOLUME_INCREMENT), fake.allConsumerPresses)
+        assertEquals(1, haptics.clickCount)
+    }
+
+    @Test
+    fun `macroCopy sends Ctrl+C and triggers haptic`() {
+        val fake = FakeHidManager()
+        val haptics = FakeHaptics()
+        val viewModel = MainViewModel(fake, haptics)
+
+        viewModel.macroCopy()
+        assertEquals(listOf(com.dokunmatikekosistem.app.data.hid.HidKeyboardReport.MODIFIER_CTRL to com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_C), fake.allKeyPresses)
+        assertEquals(true, fake.releaseKeyboardCalled)
+        assertEquals(1, haptics.clickCount)
+    }
+
+    @Test
+    fun `macroPaste sends Ctrl+V and triggers haptic`() {
+        val fake = FakeHidManager()
+        val haptics = FakeHaptics()
+        val viewModel = MainViewModel(fake, haptics)
+
+        viewModel.macroPaste()
+        assertEquals(listOf(com.dokunmatikekosistem.app.data.hid.HidKeyboardReport.MODIFIER_CTRL to com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_V), fake.allKeyPresses)
+        assertEquals(1, haptics.clickCount)
     }
 }
 

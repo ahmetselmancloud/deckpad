@@ -10,15 +10,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,42 +23,40 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.dokunmatikekosistem.app.data.gesture.GestureRecognizer
-import com.dokunmatikekosistem.app.data.gesture.RawTouchEvent
-import com.dokunmatikekosistem.app.data.notification.NotificationHelper
 import com.dokunmatikekosistem.app.data.settings.TapAction
 import com.dokunmatikekosistem.app.data.settings.UserSettings
-import com.dokunmatikekosistem.app.presentation.keyboard.VirtualKeyboard
+import com.dokunmatikekosistem.app.presentation.components.TopStatusBar
+import com.dokunmatikekosistem.app.presentation.screens.KeyboardScreen
+import com.dokunmatikekosistem.app.presentation.screens.MediaPresentationScreen
+import com.dokunmatikekosistem.app.presentation.screens.NumpadScreen
+import com.dokunmatikekosistem.app.presentation.screens.TouchpadScreen
 import com.dokunmatikekosistem.app.presentation.service.HidForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -76,8 +70,6 @@ class MainActivity : ComponentActivity() {
     private val requestDiscoverable = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        // Regardless of the result code (duration granted or cancelled), proceed:
-        // registerApp() itself doesn't require discoverability, only pairing does.
         viewModel.onConnectClicked()
         ContextCompat.startForegroundService(this, Intent(this, HidForegroundService::class.java))
     }
@@ -85,9 +77,6 @@ class MainActivity : ComponentActivity() {
     private val requestPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
-        // POST_NOTIFICATIONS being denied only means the persistent notification stays
-        // hidden — it doesn't block starting the foreground service, so only
-        // BLUETOOTH_CONNECT gates whether we proceed to connect.
         val bluetoothGranted = results[Manifest.permission.BLUETOOTH_CONNECT] ?: true
         if (bluetoothGranted) {
             requestDiscoverableAndConnect()
@@ -104,7 +93,7 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             MaterialTheme {
-                TouchpadScreen(viewModel, onConnectRequested = ::connectWithPermissionCheck)
+                MainAppScreen(viewModel, onConnectRequested = ::connectWithPermissionCheck)
             }
         }
     }
@@ -139,110 +128,124 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
+fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
+    val currentTab by viewModel.currentTab.collectAsState()
+    val isFullscreen by viewModel.isFullscreen.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
     val reportsSent by viewModel.reportsSent.collectAsState()
-    val activeLayout by viewModel.activeLayout.collectAsState()
-    val modifierState by viewModel.modifierState.collectAsState()
-    val zoomEnabled by viewModel.zoomEnabled.collectAsState()
     val userSettings by viewModel.userSettings.collectAsState()
-    var keyboardVisible by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
 
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            Text("Durum: ${NotificationHelper.titleFor(connectionState)}")
-            Text("Gönderilen rapor: $reportsSent")
-            Row(
-                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(onClick = onConnectRequested) { Text("Eşleştir/Bağlan") }
-                Button(onClick = { keyboardVisible = !keyboardVisible }) { Text("Klavye") }
-                Button(onClick = { showSettingsSheet = true }) { Text("⚙️ Ayarlar") }
-                Button(onClick = { viewModel.onLayoutToggleClicked() }) {
-                    Text(if (activeLayout is com.dokunmatikekosistem.app.data.keyboard.TurkishQLayout) "TR Q" else "EN US")
-                }
-                Button(onClick = { viewModel.onZoomToggleClicked() }) {
-                    Text(if (zoomEnabled) "Zoom: Açık" else "Zoom: Kapalı")
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(top = 16.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF1B1B1F))
-                    .border(1.dp, Color(0xFF2E2E36), RoundedCornerShape(16.dp))
-                    .pointerInput(zoomEnabled) {
-                        val recognizer = GestureRecognizer(zoomEnabled = zoomEnabled)
-                        awaitEachGesture {
-                            while (true) {
-                                val event = awaitPointerEvent()
-                                val timeMs = System.currentTimeMillis()
-                                for (change in event.changes) {
-                                    val raw: RawTouchEvent? = when {
-                                        change.pressed && change.previousPressed.not() ->
-                                            RawTouchEvent.PointerDown(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                        change.pressed && change.previousPressed ->
-                                            RawTouchEvent.PointerMove(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                        !change.pressed && change.previousPressed ->
-                                            RawTouchEvent.PointerUp(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                        else -> null
-                                    }
-                                    if (raw != null) {
-                                        change.consume()
-                                        recognizer.zoomEnabled = zoomEnabled
-                                        recognizer.onEvent(raw)?.let { viewModel.onGesture(it) }
-                                    }
-                                }
-                                if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) break
-                            }
-                        }
+    Scaffold(
+        bottomBar = {
+            if (!isFullscreen) {
+                NavigationBar(
+                    containerColor = Color(0xFF18181E),
+                    contentColor = Color.White
+                ) {
+                    AppTab.entries.forEach { tab ->
+                        val selected = tab == currentTab
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = { viewModel.selectTab(tab) },
+                            icon = { Text(tab.icon, fontSize = 20.sp) },
+                            label = {
+                                Text(
+                                    tab.title,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = Color(0xFF282835),
+                                unselectedIconColor = Color.White.copy(alpha = 0.6f),
+                                unselectedTextColor = Color.White.copy(alpha = 0.6f)
+                            )
+                        )
                     }
-            ) {
-                Text(
-                    text = "DOKUNMATİK YÜZEY",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color.White.copy(alpha = 0.12f),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-            if (keyboardVisible) {
-                Box(modifier = Modifier.weight(1f)) {
-                    VirtualKeyboard(
-                        layout = activeLayout,
-                        modifierState = modifierState,
-                        onKeyTyped = { viewModel.onKeyTyped(it) },
-                        onShiftClicked = { viewModel.onShiftClicked() },
-                        onCapsLockClicked = { viewModel.onCapsLockClicked() },
-                        onCtrlClicked = { viewModel.onCtrlClicked() },
-                        onAltClicked = { viewModel.onAltClicked() },
-                        onWinClicked = { viewModel.onWinClicked() },
-                        onCtrlAltDelClicked = { viewModel.onCtrlAltDelClicked() }
-                    )
                 }
             }
         }
-    }
-
-    if (showSettingsSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showSettingsSheet = false }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(if (isFullscreen) PaddingValues(0.dp) else innerPadding)
         ) {
-            SettingsSheetContent(
-                userSettings = userSettings,
-                onThreeFingerActionSelected = { viewModel.setThreeFingerTapAction(it) },
-                onFourFingerActionSelected = { viewModel.setFourFingerTapAction(it) },
-                onZoomToggled = { viewModel.setZoomEnabled(it) },
-                onTurkishLayoutToggled = { viewModel.setTurkishLayout(it) },
-                onCursorSpeedChanged = { viewModel.setCursorSpeed(it) },
-                onScrollSpeedChanged = { viewModel.setScrollSpeed(it) },
-                onAutoReconnectToggled = { viewModel.setAutoReconnect(it) },
-                onDismiss = { showSettingsSheet = false }
-            )
+            when (currentTab) {
+                AppTab.TOUCHPAD -> {
+                    TouchpadScreen(
+                        viewModel = viewModel,
+                        onConnectRequested = onConnectRequested,
+                        onSettingsRequested = { showSettingsSheet = true }
+                    )
+                }
+                AppTab.NUMPAD -> {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        TopStatusBar(
+                            connectionState = connectionState,
+                            reportsSent = reportsSent,
+                            onConnectClicked = onConnectRequested,
+                            onSettingsClicked = { showSettingsSheet = true },
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                        )
+                        NumpadScreen(
+                            viewModel = viewModel,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                AppTab.MEDIA -> {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        TopStatusBar(
+                            connectionState = connectionState,
+                            reportsSent = reportsSent,
+                            onConnectClicked = onConnectRequested,
+                            onSettingsClicked = { showSettingsSheet = true },
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                        )
+                        MediaPresentationScreen(
+                            viewModel = viewModel,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                AppTab.KEYBOARD -> {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        TopStatusBar(
+                            connectionState = connectionState,
+                            reportsSent = reportsSent,
+                            onConnectClicked = onConnectRequested,
+                            onSettingsClicked = { showSettingsSheet = true },
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                        )
+                        KeyboardScreen(
+                            viewModel = viewModel,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+        }
+
+        if (showSettingsSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showSettingsSheet = false }
+            ) {
+                SettingsSheetContent(
+                    userSettings = userSettings,
+                    onThreeFingerActionSelected = { viewModel.setThreeFingerTapAction(it) },
+                    onFourFingerActionSelected = { viewModel.setFourFingerTapAction(it) },
+                    onZoomToggled = { viewModel.setZoomEnabled(it) },
+                    onTurkishLayoutToggled = { viewModel.setTurkishLayout(it) },
+                    onCursorSpeedChanged = { viewModel.setCursorSpeed(it) },
+                    onScrollSpeedChanged = { viewModel.setScrollSpeed(it) },
+                    onAutoReconnectToggled = { viewModel.setAutoReconnect(it) },
+                    onDismiss = { showSettingsSheet = false }
+                )
+            }
         }
     }
 }
