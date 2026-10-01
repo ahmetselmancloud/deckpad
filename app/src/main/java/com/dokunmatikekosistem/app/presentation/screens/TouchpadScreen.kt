@@ -33,7 +33,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.dokunmatikekosistem.app.data.gesture.GestureRecognizer
 import com.dokunmatikekosistem.app.data.gesture.RawTouchEvent
-import com.dokunmatikekosistem.app.presentation.MainActivity
 import com.dokunmatikekosistem.app.presentation.MainViewModel
 
 @Composable
@@ -45,7 +44,7 @@ fun TouchpadScreen(
     val isFullscreen by viewModel.isFullscreen.collectAsState()
     val context = LocalContext.current
 
-    // Immersive system bars control, screen brightness dimming & screen timeout prevention
+    // Immersive system bars control, screen brightness dimming & keep screen awake
     DisposableEffect(isFullscreen) {
         val activity = context as? Activity
         val window = activity?.window
@@ -59,13 +58,11 @@ fun TouchpadScreen(
                 window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 params.screenBrightness = 0.01f
                 window.attributes = params
-                (activity as? MainActivity)?.startLockMode()
             } else {
                 insetsController.show(WindowInsetsCompat.Type.systemBars())
                 window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 params.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
                 window.attributes = params
-                (activity as? MainActivity)?.stopLockMode()
             }
         }
         onDispose {
@@ -78,7 +75,6 @@ fun TouchpadScreen(
                 val params = window.attributes
                 params.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
                 window.attributes = params
-                (activity as? MainActivity)?.stopLockMode()
             }
         }
     }
@@ -91,47 +87,56 @@ fun TouchpadScreen(
     val shape = if (isFullscreen) RoundedCornerShape(0.dp) else RoundedCornerShape(16.dp)
     val bgColor = if (isFullscreen) Color.Black else Color(0xFF1B1B1F)
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .clip(shape)
-            .background(bgColor)
-            .then(if (isFullscreen) Modifier.systemGestureExclusion() else Modifier.border(1.dp, Color(0xFF2E2E36), shape))
-            .pointerInput(zoomEnabled) {
-                val recognizer = GestureRecognizer(zoomEnabled = zoomEnabled)
-                awaitEachGesture {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val timeMs = System.currentTimeMillis()
-                        for (change in event.changes) {
-                            val raw: RawTouchEvent? = when {
-                                change.pressed && change.previousPressed.not() ->
-                                    RawTouchEvent.PointerDown(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                change.pressed && change.previousPressed ->
-                                    RawTouchEvent.PointerMove(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                !change.pressed && change.previousPressed ->
-                                    RawTouchEvent.PointerUp(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                else -> null
+    Box(modifier = modifier.fillMaxSize()) {
+        // 1. Dedicated Touch Surface (Captures pointer inputs without intercepting sibling buttons)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(shape)
+                .background(bgColor)
+                .then(if (isFullscreen) Modifier.systemGestureExclusion() else Modifier.border(1.dp, Color(0xFF2E2E36), shape))
+                .pointerInput(zoomEnabled) {
+                    val recognizer = GestureRecognizer(zoomEnabled = zoomEnabled)
+                    awaitEachGesture {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val timeMs = System.currentTimeMillis()
+                            for (change in event.changes) {
+                                val raw: RawTouchEvent? = when {
+                                    change.pressed && change.previousPressed.not() ->
+                                        RawTouchEvent.PointerDown(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
+                                    change.pressed && change.previousPressed ->
+                                        RawTouchEvent.PointerMove(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
+                                    !change.pressed && change.previousPressed ->
+                                        RawTouchEvent.PointerUp(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
+                                    else -> null
+                                }
+                                if (raw != null) {
+                                    change.consume()
+                                    recognizer.zoomEnabled = zoomEnabled
+                                    recognizer.onEvent(raw)?.let { viewModel.onGesture(it) }
+                                }
                             }
-                            if (raw != null) {
-                                change.consume()
-                                recognizer.zoomEnabled = zoomEnabled
-                                recognizer.onEvent(raw)?.let { viewModel.onGesture(it) }
-                            }
+                            if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) break
                         }
-                        if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) break
                     }
                 }
-            }
-    ) {
+        ) {
+            Text(
+                text = if (isFullscreen) "TAM EKRAN TOUCHPAD" else "DOKUNMATİK YÜZEY",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White.copy(alpha = 0.12f),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+        // 2. Sibling Exit Button (Rendered on top, receives clicks cleanly on first touch)
         if (isFullscreen) {
             Button(
-                onClick = {
-                    (context as? MainActivity)?.stopLockMode()
-                    viewModel.setFullscreen(false)
-                },
+                onClick = { viewModel.setFullscreen(false) },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF282830).copy(alpha = 0.85f),
+                    containerColor = Color(0xFF282832),
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp),
@@ -139,16 +144,8 @@ fun TouchpadScreen(
                     .align(Alignment.TopEnd)
                     .padding(16.dp)
             ) {
-                Text("Çıkış", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("Çıkış", fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
-
-        Text(
-            text = if (isFullscreen) "TAM EKRAN (KİLİTLİ)" else "DOKUNMATİK YÜZEY",
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.White.copy(alpha = 0.12f),
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.Center)
-        )
     }
 }

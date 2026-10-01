@@ -98,22 +98,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun startLockMode() {
-        try {
-            startLockTask()
-        } catch (e: Exception) {
-            // Lock task not permitted or already active
-        }
-    }
-
-    fun stopLockMode() {
-        try {
-            stopLockTask()
-        } catch (e: Exception) {
-            // Lock task not active
-        }
-    }
-
     private fun connectWithPermissionCheck() {
         val permissionsToRequest = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
