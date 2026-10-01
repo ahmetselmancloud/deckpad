@@ -148,7 +148,6 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
     val userSettings by viewModel.userSettings.collectAsState()
     var keyboardVisible by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
-    val activeTouches = remember { mutableStateMapOf<Int, Offset>() }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -184,18 +183,12 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                                 val timeMs = System.currentTimeMillis()
                                 for (change in event.changes) {
                                     val raw: RawTouchEvent? = when {
-                                        change.pressed && change.previousPressed.not() -> {
-                                            activeTouches[change.id.value.toInt()] = change.position
+                                        change.pressed && change.previousPressed.not() ->
                                             RawTouchEvent.PointerDown(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                        }
-                                        change.pressed && change.previousPressed -> {
-                                            activeTouches[change.id.value.toInt()] = change.position
+                                        change.pressed && change.previousPressed ->
                                             RawTouchEvent.PointerMove(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                        }
-                                        !change.pressed && change.previousPressed -> {
-                                            activeTouches.remove(change.id.value.toInt())
+                                        !change.pressed && change.previousPressed ->
                                             RawTouchEvent.PointerUp(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                        }
                                         else -> null
                                     }
                                     if (raw != null) {
@@ -204,10 +197,7 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                                         recognizer.onEvent(raw)?.let { viewModel.onGesture(it) }
                                     }
                                 }
-                                if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) {
-                                    activeTouches.clear()
-                                    break
-                                }
+                                if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) break
                             }
                         }
                     }
@@ -219,27 +209,6 @@ fun TouchpadScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.Center)
                 )
-
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    activeTouches.values.forEach { pos ->
-                        drawCircle(
-                            color = Color(0xFF00ADB5).copy(alpha = 0.15f),
-                            radius = 48.dp.toPx(),
-                            center = pos
-                        )
-                        drawCircle(
-                            color = Color(0xFF00ADB5).copy(alpha = 0.5f),
-                            radius = 28.dp.toPx(),
-                            center = pos,
-                            style = Stroke(width = 2.dp.toPx())
-                        )
-                        drawCircle(
-                            color = Color(0xFF00ADB5).copy(alpha = 0.9f),
-                            radius = 7.dp.toPx(),
-                            center = pos
-                        )
-                    }
-                }
             }
             if (keyboardVisible) {
                 Box(modifier = Modifier.weight(1f)) {

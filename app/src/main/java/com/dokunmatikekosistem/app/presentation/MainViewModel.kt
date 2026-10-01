@@ -80,14 +80,18 @@ class MainViewModel @Inject constructor(
         when (gesture) {
             is RecognizedGesture.CursorMove -> {
                 val speed = _userSettings.value.cursorSpeed
-                val totalDx = gesture.dx * speed + cursorResidualX
-                val totalDy = gesture.dy * speed + cursorResidualY
-                val sendDx = kotlin.math.round(totalDx).toInt()
-                val sendDy = kotlin.math.round(totalDy).toInt()
-                cursorResidualX = totalDx - sendDx
-                cursorResidualY = totalDy - sendDy
-                if (sendDx != 0 || sendDy != 0) {
-                    hidManager.sendMouseReport(sendDx, sendDy, wheelDelta = 0, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)
+                if (speed == 1.0f) {
+                    hidManager.sendMouseReport(gesture.dx, gesture.dy, wheelDelta = 0, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)
+                } else {
+                    val totalDx = gesture.dx * speed + cursorResidualX
+                    val totalDy = gesture.dy * speed + cursorResidualY
+                    val sendDx = kotlin.math.round(totalDx).toInt()
+                    val sendDy = kotlin.math.round(totalDy).toInt()
+                    cursorResidualX = totalDx - sendDx
+                    cursorResidualY = totalDy - sendDy
+                    if (sendDx != 0 || sendDy != 0) {
+                        hidManager.sendMouseReport(sendDx, sendDy, wheelDelta = 0, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)
+                    }
                 }
             }
 
@@ -105,14 +109,18 @@ class MainViewModel @Inject constructor(
 
             is RecognizedGesture.Scroll -> {
                 val speed = _userSettings.value.scrollSpeed
-                val totalV = gesture.vDelta * speed + scrollResidualV
-                val totalH = gesture.hDelta * speed + scrollResidualH
-                val sendV = kotlin.math.round(totalV).toInt()
-                val sendH = kotlin.math.round(totalH).toInt()
-                scrollResidualV = totalV - sendV
-                scrollResidualH = totalH - sendH
-                if (sendV != 0 || sendH != 0) {
-                    hidManager.sendMouseReport(0, 0, wheelDelta = sendV, panDelta = sendH, leftButtonPressed = false, rightButtonPressed = false)
+                if (speed == 1.0f) {
+                    hidManager.sendMouseReport(0, 0, wheelDelta = gesture.vDelta, panDelta = gesture.hDelta, leftButtonPressed = false, rightButtonPressed = false)
+                } else {
+                    val totalV = gesture.vDelta * speed + scrollResidualV
+                    val totalH = gesture.hDelta * speed + scrollResidualH
+                    val sendV = kotlin.math.round(totalV).toInt()
+                    val sendH = kotlin.math.round(totalH).toInt()
+                    scrollResidualV = totalV - sendV
+                    scrollResidualH = totalH - sendH
+                    if (sendV != 0 || sendH != 0) {
+                        hidManager.sendMouseReport(0, 0, wheelDelta = sendV, panDelta = sendH, leftButtonPressed = false, rightButtonPressed = false)
+                    }
                 }
             }
 
@@ -123,14 +131,18 @@ class MainViewModel @Inject constructor(
 
             is RecognizedGesture.DragMove -> {
                 val speed = _userSettings.value.cursorSpeed
-                val totalDx = gesture.dx * speed + cursorResidualX
-                val totalDy = gesture.dy * speed + cursorResidualY
-                val sendDx = kotlin.math.round(totalDx).toInt()
-                val sendDy = kotlin.math.round(totalDy).toInt()
-                cursorResidualX = totalDx - sendDx
-                cursorResidualY = totalDy - sendDy
-                if (sendDx != 0 || sendDy != 0) {
-                    hidManager.sendMouseReport(sendDx, sendDy, wheelDelta = 0, panDelta = 0, leftButtonPressed = true, rightButtonPressed = false)
+                if (speed == 1.0f) {
+                    hidManager.sendMouseReport(gesture.dx, gesture.dy, wheelDelta = 0, panDelta = 0, leftButtonPressed = true, rightButtonPressed = false)
+                } else {
+                    val totalDx = gesture.dx * speed + cursorResidualX
+                    val totalDy = gesture.dy * speed + cursorResidualY
+                    val sendDx = kotlin.math.round(totalDx).toInt()
+                    val sendDy = kotlin.math.round(totalDy).toInt()
+                    cursorResidualX = totalDx - sendDx
+                    cursorResidualY = totalDy - sendDy
+                    if (sendDx != 0 || sendDy != 0) {
+                        hidManager.sendMouseReport(sendDx, sendDy, wheelDelta = 0, panDelta = 0, leftButtonPressed = true, rightButtonPressed = false)
+                    }
                 }
             }
 
