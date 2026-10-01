@@ -197,7 +197,7 @@ fun VirtualKeyboard(
             KeyButton(
                 label = "Win",
                 weight = if (isTwelve) 1.6f else 1.2f,
-                isPrimary = modifierState.winActive,
+                isPrimary = false,
                 fontSize = 12.sp,
                 onClick = onWinClicked
             )

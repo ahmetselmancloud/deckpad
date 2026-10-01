@@ -320,7 +320,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun onWinClicked() {
-        _modifierState.value = _modifierState.value.let { it.copy(winActive = !it.winActive) }
+        sendShortcutWithHaptics(HidKeyboardReport.MODIFIER_WIN, 0)
     }
 
     fun onCtrlAltDelClicked() {
@@ -331,7 +331,7 @@ class MainViewModel @Inject constructor(
     fun sendKey(usageCode: Int, modifierBits: Int = 0) {
         viewModelScope.launch {
             hidManager.sendKeyboardReport(modifierBits, usageCode)
-            kotlinx.coroutines.delay(30L)
+            kotlinx.coroutines.delay(50L)
             hidManager.releaseKeyboardReport()
         }
         haptics.click()

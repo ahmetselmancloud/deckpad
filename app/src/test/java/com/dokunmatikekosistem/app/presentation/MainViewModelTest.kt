@@ -285,8 +285,9 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `onCtrlClicked onAltClicked onWinClicked toggle sticky state`() {
-        val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
+    fun `onCtrlClicked onAltClicked toggle sticky state and onWinClicked sends win key`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
 
         viewModel.onCtrlClicked()
         viewModel.onAltClicked()
@@ -294,7 +295,10 @@ class MainViewModelTest {
 
         assertEquals(true, viewModel.modifierState.value.ctrlActive)
         assertEquals(true, viewModel.modifierState.value.altActive)
-        assertEquals(true, viewModel.modifierState.value.winActive)
+        assertEquals(
+            listOf(HidKeyboardReport.MODIFIER_WIN to 0),
+            fake.allKeyPresses
+        )
     }
 
     @Test
