@@ -164,7 +164,7 @@ private fun SimpleButton(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(color)
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp, horizontal = 8.dp),

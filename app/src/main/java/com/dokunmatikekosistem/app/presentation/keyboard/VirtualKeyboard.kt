@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -72,6 +73,7 @@ private fun KeyRow(content: @Composable androidx.compose.foundation.layout.RowSc
 private fun androidx.compose.foundation.layout.RowScope.KeyButton(label: String, onClick: () -> Unit) {
     Button(
         onClick = onClick,
+        shape = RoundedCornerShape(4.dp),
         modifier = Modifier.weight(1f).padding(1.dp),
         contentPadding = PaddingValues(horizontal = 2.dp, vertical = 8.dp)
     ) {

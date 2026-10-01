@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -20,9 +21,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -44,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -142,64 +149,135 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(12.dp),
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Top Bar: Connection status & buttons
+                // Top Bar: Status pill & compact sharp action buttons (Symmetrical & no screen overflow)
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF1B1B22))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val statusText = when (connectionState) {
-                        ConnectionState.CONNECTED -> "Bağlandı"
-                        ConnectionState.REGISTERING -> "Bağlanıyor..."
-                        ConnectionState.REGISTERED -> "Hazır"
-                        ConnectionState.DISCONNECTED -> "Bağlı Değil"
-                        ConnectionState.ERROR -> "Hata"
+                    val (statusColor, statusText) = when (connectionState) {
+                        ConnectionState.CONNECTED -> Color(0xFF4CAF50) to "Bağlandı"
+                        ConnectionState.REGISTERING -> Color(0xFFFFB300) to "Bağlanıyor..."
+                        ConnectionState.REGISTERED -> Color(0xFF29B6F6) to "Hazır"
+                        ConnectionState.DISCONNECTED -> Color(0xFFE53935) to "Bağlı Değil"
+                        ConnectionState.ERROR -> Color(0xFFE53935) to "Hata"
                     }
-                    Text(
-                        text = "Durum: $statusText",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (connectionState == ConnectionState.CONNECTED) Color(0xFF4CAF50) else Color(0xFFE53935)
-                    )
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // Status Badge
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFF252530))
+                            .padding(horizontal = 8.dp, vertical = 5.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(statusColor)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = statusText,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                    }
+
+                    // Action Controls
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         if (currentTab == AppTab.TOUCHPAD) {
-                            Button(onClick = { viewModel.setFullscreen(true) }) {
-                                Text("Tam Ekran", fontSize = 12.sp)
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0xFF2B2B38))
+                                    .clickable { viewModel.setFullscreen(true) }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Tam Ekran",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.White
+                                )
                             }
                         }
-                        Button(onClick = onConnectRequested) {
-                            Text("Eşleştir", fontSize = 12.sp)
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(MaterialTheme.colorScheme.primary)
+                                .clickable(onClick = onConnectRequested)
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Eşleştir",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
-                        Button(onClick = { showSettingsSheet = true }) {
-                            Text("Ayarlar", fontSize = 12.sp)
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color(0xFF2B2B38))
+                                .clickable { showSettingsSheet = true }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Ayarlar",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White
+                            )
                         }
                     }
                 }
 
-                // Simple Tab Row (Text only, zero icons, zero animations)
+                // Symmetrical 4-Tab Segmented Bar (Zero cut-off, equal weight, sharp corners)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF1B1B22))
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     AppTab.entries.forEach { tab ->
                         val selected = tab == currentTab
-                        FilledTonalButton(
-                            onClick = { viewModel.selectTab(tab) },
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = if (selected) MaterialTheme.colorScheme.primary else Color(0xFF22222A),
-                                contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White
-                            )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(36.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable { viewModel.selectTab(tab) },
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = tab.title,
                                 fontSize = 12.sp,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.7f),
+                                maxLines = 1
                             )
                         }
                     }
@@ -477,7 +555,10 @@ private fun SettingsSheetContent(
                     color = Color.Gray
                 )
             }
-            Button(onClick = { onTurkishLayoutToggled(!userSettings.isTurkishLayout) }) {
+            Button(
+                onClick = { onTurkishLayoutToggled(!userSettings.isTurkishLayout) },
+                shape = RoundedCornerShape(8.dp)
+            ) {
                 Text(if (userSettings.isTurkishLayout) "TR Q" else "EN US")
             }
         }
@@ -486,6 +567,7 @@ private fun SettingsSheetContent(
 
         Button(
             onClick = onDismiss,
+            shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Kaydet & Kapat")

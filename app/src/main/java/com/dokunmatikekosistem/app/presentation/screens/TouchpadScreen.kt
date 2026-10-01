@@ -84,7 +84,7 @@ fun TouchpadScreen(
         // Intercepts back swipe on edges so user doesn't accidentally exit
     }
 
-    val shape = if (isFullscreen) RoundedCornerShape(0.dp) else RoundedCornerShape(16.dp)
+    val shape = if (isFullscreen) RoundedCornerShape(0.dp) else RoundedCornerShape(8.dp)
     val bgColor = if (isFullscreen) Color.Black else Color(0xFF1B1B1F)
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -139,7 +139,7 @@ fun TouchpadScreen(
                     containerColor = Color(0xFF282832),
                     contentColor = Color.White
                 ),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(6.dp),
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(16.dp)

@@ -217,7 +217,7 @@ private fun NumpadKey(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(color)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },

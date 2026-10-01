@@ -60,7 +60,7 @@ fun KeyboardScreen(
 
                 FilledTonalButton(
                     onClick = { viewModel.onLayoutToggleClicked() },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.filledTonalButtonColors(
                         containerColor = Color(0xFF262630),
                         contentColor = MaterialTheme.colorScheme.primary
