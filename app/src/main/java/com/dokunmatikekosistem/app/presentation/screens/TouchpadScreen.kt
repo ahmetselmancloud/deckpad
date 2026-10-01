@@ -65,12 +65,11 @@ fun TouchpadScreen(
     modifier: Modifier = Modifier
 ) {
     val connectionState by viewModel.connectionState.collectAsState()
-    val reportsSent by viewModel.reportsSent.collectAsState()
     val zoomEnabled by viewModel.zoomEnabled.collectAsState()
     val isFullscreen by viewModel.isFullscreen.collectAsState()
 
     val context = LocalContext.current
-    var lastTouchTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val lastTouchTimeRef = remember { longArrayOf(System.currentTimeMillis()) }
     var isOledDimmed by remember { mutableStateOf(false) }
 
     // Immersive Mode & System Bars Control for Fullscreen
@@ -101,14 +100,19 @@ fun TouchpadScreen(
         // Accidental back gesture intercepted and prevented
     }
 
-    // OLED Idle Dimming timer
-    LaunchedEffect(lastTouchTime, isFullscreen) {
-        if (isFullscreen) {
+    // OLED Idle Dimming timer - checks once a second without restarting coroutine or invalidating state on each touch
+    LaunchedEffect(isFullscreen) {
+        if (!isFullscreen) {
             isOledDimmed = false
-            delay(OLED_IDLE_DIM_TIMEOUT_MS)
-            isOledDimmed = true
-        } else {
-            isOledDimmed = false
+            return@LaunchedEffect
+        }
+        while (true) {
+            delay(1000L)
+            val elapsed = System.currentTimeMillis() - lastTouchTimeRef[0]
+            val shouldDim = elapsed >= OLED_IDLE_DIM_TIMEOUT_MS
+            if (isOledDimmed != shouldDim) {
+                isOledDimmed = shouldDim
+            }
         }
     }
 
@@ -129,7 +133,10 @@ fun TouchpadScreen(
                                 while (true) {
                                     val event = awaitPointerEvent()
                                     val timeMs = System.currentTimeMillis()
-                                    lastTouchTime = timeMs
+                                    lastTouchTimeRef[0] = timeMs
+                                    if (isOledDimmed) {
+                                        isOledDimmed = false
+                                    }
 
                                     for (change in event.changes) {
                                         val raw: RawTouchEvent? = when {
@@ -215,7 +222,6 @@ fun TouchpadScreen(
                     // Top Status Bar
                     TopStatusBar(
                         connectionState = connectionState,
-                        reportsSent = reportsSent,
                         onConnectClicked = onConnectRequested,
                         onSettingsClicked = onSettingsRequested,
                         showFullscreenButton = true,

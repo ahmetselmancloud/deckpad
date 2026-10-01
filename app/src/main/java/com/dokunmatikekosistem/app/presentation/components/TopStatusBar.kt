@@ -33,7 +33,6 @@ import com.dokunmatikekosistem.app.domain.ConnectionState
 @Composable
 fun TopStatusBar(
     connectionState: ConnectionState,
-    reportsSent: Int,
     onConnectClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
     showFullscreenButton: Boolean = false,
@@ -83,14 +82,6 @@ fun TopStatusBar(
                     fontWeight = FontWeight.Medium,
                     color = Color.White
                 )
-                if (reportsSent > 0) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "⚡ $reportsSent",
-                        fontSize = 11.sp,
-                        color = Color.White.copy(alpha = 0.6f)
-                    )
-                }
             }
 
             // Right Action Controls

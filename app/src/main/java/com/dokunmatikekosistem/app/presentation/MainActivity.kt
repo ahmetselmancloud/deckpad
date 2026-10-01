@@ -132,7 +132,6 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
     val currentTab by viewModel.currentTab.collectAsState()
     val isFullscreen by viewModel.isFullscreen.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
-    val reportsSent by viewModel.reportsSent.collectAsState()
     val userSettings by viewModel.userSettings.collectAsState()
     var showSettingsSheet by remember { mutableStateOf(false) }
 
@@ -186,7 +185,6 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         TopStatusBar(
                             connectionState = connectionState,
-                            reportsSent = reportsSent,
                             onConnectClicked = onConnectRequested,
                             onSettingsClicked = { showSettingsSheet = true },
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
@@ -201,7 +199,6 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         TopStatusBar(
                             connectionState = connectionState,
-                            reportsSent = reportsSent,
                             onConnectClicked = onConnectRequested,
                             onSettingsClicked = { showSettingsSheet = true },
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
@@ -216,7 +213,6 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         TopStatusBar(
                             connectionState = connectionState,
-                            reportsSent = reportsSent,
                             onConnectClicked = onConnectRequested,
                             onSettingsClicked = { showSettingsSheet = true },
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)

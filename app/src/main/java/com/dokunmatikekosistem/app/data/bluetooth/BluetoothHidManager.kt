@@ -186,7 +186,7 @@ class BluetoothHidManager @Inject constructor(
             dx, dy, wheelDelta, panDelta, leftButtonPressed, rightButtonPressed, middleButtonPressed
         )
         val sent = hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.MOUSE_REPORT_ID.toInt(), report)
-        if (sent == true) {
+        if (sent == true && (leftButtonPressed || rightButtonPressed || middleButtonPressed)) {
             _reportsSent.value = _reportsSent.value + 1
         }
     }
