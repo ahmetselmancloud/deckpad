@@ -22,7 +22,7 @@ class SettingsRepository @Inject constructor(
         val KEY_THREE_FINGER_TAP = stringPreferencesKey("three_finger_tap_action")
         val KEY_FOUR_FINGER_TAP = stringPreferencesKey("four_finger_tap_action")
         val KEY_ZOOM_ENABLED = booleanPreferencesKey("zoom_enabled")
-        val KEY_TURKISH_LAYOUT = booleanPreferencesKey("is_turkish_layout")
+        val KEY_TURKISH_LAYOUT = booleanPreferencesKey("keyboard_layout_turkish")
         val KEY_CURSOR_SPEED = floatPreferencesKey("cursor_speed")
         val KEY_SCROLL_SPEED = floatPreferencesKey("scroll_speed")
         val KEY_AUTO_RECONNECT = booleanPreferencesKey("auto_reconnect")

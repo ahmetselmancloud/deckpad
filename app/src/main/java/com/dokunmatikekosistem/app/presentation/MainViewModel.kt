@@ -264,6 +264,8 @@ class MainViewModel @Inject constructor(
     }
 
     fun setAppLanguage(languageCode: String) {
+        val isTurkish = languageCode == "tr"
+        setTurkishLayout(isTurkish)
         _userSettings.value = _userSettings.value.copy(appLanguage = languageCode)
         settingsRepository?.let { repo ->
             viewModelScope.launch { repo.setAppLanguage(languageCode) }

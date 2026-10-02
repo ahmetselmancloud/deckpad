@@ -206,12 +206,21 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `setAppLanguage updates userSettings`() {
+    fun `setAppLanguage updates userSettings and keyboard layout`() {
         val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
         assertEquals("en", viewModel.userSettings.value.appLanguage)
+        assertEquals(false, viewModel.userSettings.value.isTurkishLayout)
+        assertTrue(viewModel.activeLayout.value is EnglishUsLayout)
 
         viewModel.setAppLanguage("tr")
         assertEquals("tr", viewModel.userSettings.value.appLanguage)
+        assertEquals(true, viewModel.userSettings.value.isTurkishLayout)
+        assertTrue(viewModel.activeLayout.value is TurkishQLayout)
+
+        viewModel.setAppLanguage("en")
+        assertEquals("en", viewModel.userSettings.value.appLanguage)
+        assertEquals(false, viewModel.userSettings.value.isTurkishLayout)
+        assertTrue(viewModel.activeLayout.value is EnglishUsLayout)
     }
 
     @Test
