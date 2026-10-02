@@ -48,9 +48,9 @@ class BluetoothHidManager @Inject constructor(
     private var connectedDevice: BluetoothDevice? = null
 
     private val sdpSettings = BluetoothHidDeviceAppSdpSettings(
-        "TouchpadEkosistemV3",
-        "Dokunmatik Ekosistem V3",
-        "DokunmatikEkosistem",
+        "DeckPad",
+        "DeckPad PC Remote",
+        "DeckPad",
         BluetoothHidDevice.SUBCLASS1_COMBO,
         com.dokunmatikekosistem.app.data.hid.HidDescriptor.DESCRIPTOR
     )

@@ -39,6 +39,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -55,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -636,6 +638,81 @@ private fun SettingsSheetContent(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(if (userSettings.isTurkishLayout) "TR Q" else "EN US")
+            }
+        }
+
+        HorizontalDivider()
+
+        // About & Support Section
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp),
+            color = Color(0xFF1E1E26)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "DeckPad",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "v1.0.0",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Text(
+                    text = "Sürücüsüz, yerel ve sıfır gecikmeli Bluetooth PC kontrolcüsü. İnternet gerektirmez, kişisel veri toplamaz.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.7f),
+                    lineHeight = 16.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                val context = LocalContext.current
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                android.net.Uri.parse("https://github.com/ahmetselmancloud/touchpad-ekosistem")
+                            )
+                            context.startActivity(intent)
+                        },
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("GitHub", fontSize = 12.sp)
+                    }
+                    Button(
+                        onClick = {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                android.net.Uri.parse("https://buymeacoffee.com/ahmetselman")
+                            )
+                            context.startActivity(intent)
+                        },
+                        shape = RoundedCornerShape(6.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF813F)),
+                        modifier = Modifier.weight(1.3f)
+                    ) {
+                        Text("☕ Kahve Ismarla", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
 
