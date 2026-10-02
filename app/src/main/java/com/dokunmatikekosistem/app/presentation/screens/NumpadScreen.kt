@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,10 +55,19 @@ fun NumpadScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .widthIn(max = if (isLandscape) 380.dp else Dp.Unspecified)
-                    .fillMaxWidth(if (isLandscape) 0.55f else 1f)
-                    .padding(top = 4.dp),
+                    .fillMaxHeight(if (isLandscape) 0.96f else 1f)
+                    .then(
+                        if (isLandscape) {
+                            Modifier
+                                .aspectRatio(0.92f, matchHeightConstraintsFirst = true)
+                                .widthIn(max = 480.dp)
+                        } else {
+                            Modifier
+                                .widthIn(max = 460.dp)
+                                .fillMaxWidth()
+                        }
+                    )
+                    .padding(vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(gap)
             ) {
                 // Header
@@ -66,32 +77,37 @@ fun NumpadScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "NUMERİK KLAVYE (NUMPAD)",
+                        text = "NUMPAD",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White.copy(alpha = 0.5f),
-                        fontSize = if (isLandscape) 11.sp else 12.sp
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = if (isLandscape) 11.sp else 12.sp,
+                        maxLines = 1,
+                        softWrap = false
                     )
                     Text(
                         text = "Excel & Hesaplama",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
-                        fontSize = if (isLandscape) 10.sp else 11.sp
+                        fontSize = if (isLandscape) 10.sp else 11.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
                 Spacer(modifier = Modifier.height(2.dp))
 
-                // Row 1: NumLock, /, *, Backspace
+                // Row 1: NumLk, /, *, Backspace
                 Row(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(gap)
                 ) {
                 NumpadKey(
-                    label = "NumLock",
+                    label = "NumLk",
                     color = Color(0xFF2C2D35),
                     textColor = MaterialTheme.colorScheme.primary,
-                    fontSize = 13.sp,
+                    fontSize = 12.5.sp,
                     modifier = Modifier.weight(1f)
                 ) {
                     viewModel.sendKey(HidUsageCodes.KEYPAD_NUM_LOCK)

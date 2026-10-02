@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -45,12 +46,17 @@ fun KeyboardScreen(
         modifier = modifier.fillMaxSize(),
         color = Color(0xFF121214)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 2.dp),
-            verticalArrangement = if (isLandscape) Arrangement.SpaceBetween else Arrangement.Bottom
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = 840.dp)
+                    .padding(top = 2.dp),
+                verticalArrangement = if (isLandscape) Arrangement.SpaceBetween else Arrangement.Bottom
+            ) {
             if (isLandscape) {
                 // In Landscape: Unified top bar with [TR Q] toggle and all PC shortcuts
                 Row(
@@ -181,6 +187,7 @@ fun KeyboardScreen(
             }
         }
     }
+}
 }
 
 @Composable
