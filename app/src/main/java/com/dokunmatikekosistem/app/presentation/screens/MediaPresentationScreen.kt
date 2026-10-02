@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -221,7 +222,7 @@ private fun PresentationControlsCard(
                     title = "Başlat (F5)",
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 36.dp else 42.dp,
-                    fontSize = 11.sp
+                    fontSize = 10.5.sp
                 ) {
                     viewModel.sendKey(HidUsageCodes.KEY_F5)
                 }
@@ -230,7 +231,7 @@ private fun PresentationControlsCard(
                     title = "Mevcut (⇧F5)",
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 36.dp else 42.dp,
-                    fontSize = 11.sp
+                    fontSize = 10.5.sp
                 ) {
                     viewModel.sendKey(HidUsageCodes.KEY_F5, HidKeyboardReport.MODIFIER_SHIFT)
                 }
@@ -239,7 +240,7 @@ private fun PresentationControlsCard(
                     title = "Karart (B)",
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 36.dp else 42.dp,
-                    fontSize = 11.sp
+                    fontSize = 10.5.sp
                 ) {
                     viewModel.sendKey(HidUsageCodes.KEY_B)
                 }
@@ -248,7 +249,7 @@ private fun PresentationControlsCard(
                     title = "Bitir (Esc)",
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 36.dp else 42.dp,
-                    fontSize = 11.sp,
+                    fontSize = 10.5.sp,
                     backgroundColor = Color(0xFF382024),
                     textColor = Color(0xFFFF8A80)
                 ) {
@@ -287,7 +288,9 @@ private fun MediaButton(
             fontSize = fontSize,
             fontWeight = fontWeight,
             color = txtColor,
-            maxLines = 1
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

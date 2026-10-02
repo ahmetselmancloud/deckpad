@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dokunmatikekosistem.app.data.keyboard.TurkishQLayout
@@ -202,7 +203,9 @@ private fun KeyboardShortcutButton(
             fontSize = 11.sp,
             fontWeight = FontWeight.Medium,
             color = Color.White.copy(alpha = 0.85f),
-            maxLines = 1
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

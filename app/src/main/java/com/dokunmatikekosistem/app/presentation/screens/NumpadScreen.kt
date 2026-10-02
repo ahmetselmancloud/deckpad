@@ -91,6 +91,7 @@ fun NumpadScreen(
                     label = "NumLock",
                     color = Color(0xFF2C2D35),
                     textColor = MaterialTheme.colorScheme.primary,
+                    fontSize = 13.sp,
                     modifier = Modifier.weight(1f)
                 ) {
                     viewModel.sendKey(HidUsageCodes.KEYPAD_NUM_LOCK)
@@ -248,7 +249,9 @@ private fun NumpadKey(
             text = label,
             fontSize = fontSize,
             fontWeight = FontWeight.Bold,
-            color = textColor
+            color = textColor,
+            maxLines = 1,
+            softWrap = false
         )
     }
 }

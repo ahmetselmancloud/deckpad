@@ -256,6 +256,7 @@ private fun androidx.compose.foundation.layout.RowScope.KeyButton(
             fontWeight = FontWeight.SemiBold,
             color = textCol,
             maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Clip
         )
     }

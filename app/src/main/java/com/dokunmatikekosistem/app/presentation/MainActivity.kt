@@ -32,11 +32,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -58,6 +61,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -173,12 +177,16 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        StatusBadge(connectionState)
+                        StatusBadge(
+                            connectionState = connectionState,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
 
                         // Center 4 Tabs
                         Row(
                             modifier = Modifier
-                                .widthIn(max = 440.dp)
+                                .weight(2f, fill = false)
+                                .widthIn(max = 420.dp)
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(Color(0xFF24242F))
                                 .padding(2.dp),
@@ -189,7 +197,7 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(30.dp)
+                                        .height(28.dp)
                                         .clip(RoundedCornerShape(4.dp))
                                         .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
                                         .clickable { viewModel.selectTab(tab) },
@@ -200,7 +208,9 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                                         fontSize = 11.sp,
                                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                                         color = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.65f),
-                                        maxLines = 1
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -220,11 +230,15 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
                             .background(Color(0xFF1B1B22))
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        StatusBadge(connectionState)
+                        StatusBadge(
+                            connectionState = connectionState,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
                         TopActionButtons(
                             currentTab = currentTab,
                             viewModel = viewModel,
@@ -247,7 +261,7 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(36.dp)
+                                    .height(34.dp)
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
                                     .clickable { viewModel.selectTab(tab) },
@@ -255,10 +269,12 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                             ) {
                                 Text(
                                     text = tab.title,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 11.5.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                     color = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.7f),
-                                    maxLines = 1
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -302,10 +318,13 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
 }
 
 @Composable
-private fun StatusBadge(connectionState: ConnectionState) {
+private fun StatusBadge(
+    connectionState: ConnectionState,
+    modifier: Modifier = Modifier
+) {
     val (statusColor, statusText) = when (connectionState) {
         ConnectionState.CONNECTED -> Color(0xFF4CAF50) to "Bağlandı"
-        ConnectionState.REGISTERING -> Color(0xFFFFB300) to "Bağlanıyor..."
+        ConnectionState.REGISTERING -> Color(0xFFFFB300) to "Bağlanıyor"
         ConnectionState.REGISTERED -> Color(0xFF29B6F6) to "Hazır"
         ConnectionState.DISCONNECTED -> Color(0xFFE53935) to "Bağlı Değil"
         ConnectionState.ERROR -> Color(0xFFE53935) to "Hata"
@@ -313,10 +332,11 @@ private fun StatusBadge(connectionState: ConnectionState) {
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
+            .height(30.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(Color(0xFF252530))
-            .padding(horizontal = 8.dp, vertical = 5.dp)
+            .padding(horizontal = 8.dp)
     ) {
         Box(
             modifier = Modifier
@@ -327,9 +347,12 @@ private fun StatusBadge(connectionState: ConnectionState) {
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = statusText,
-            fontSize = 12.sp,
+            fontSize = 11.5.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.White
+            color = Color.White,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -348,50 +371,56 @@ private fun TopActionButtons(
         if (currentTab == AppTab.TOUCHPAD) {
             Box(
                 modifier = Modifier
+                    .height(30.dp)
                     .clip(RoundedCornerShape(6.dp))
                     .background(Color(0xFF2B2B38))
                     .clickable { viewModel.setFullscreen(true) }
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                    .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Tam Ekran",
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White
+                    color = Color.White,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }
 
         Box(
             modifier = Modifier
+                .height(30.dp)
                 .clip(RoundedCornerShape(6.dp))
                 .background(MaterialTheme.colorScheme.primary)
                 .clickable(onClick = onConnectRequested)
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .padding(horizontal = 10.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "Eşleştir",
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
+                color = MaterialTheme.colorScheme.onPrimary,
+                maxLines = 1,
+                softWrap = false
             )
         }
 
         Box(
             modifier = Modifier
+                .size(30.dp)
                 .clip(RoundedCornerShape(6.dp))
                 .background(Color(0xFF2B2B38))
-                .clickable(onClick = onOpenSettings)
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .clickable(onClick = onOpenSettings),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Ayarlar",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Ayarlar",
+                tint = Color.White.copy(alpha = 0.9f),
+                modifier = Modifier.size(17.dp)
             )
         }
     }
