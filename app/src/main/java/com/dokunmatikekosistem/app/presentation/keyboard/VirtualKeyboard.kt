@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.dokunmatikekosistem.app.R
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -146,7 +148,7 @@ fun VirtualKeyboard(
                 )
             }
             KeyButton(
-                label = "Sil",
+                label = stringResource(R.string.key_delete),
                 weight = sideKeyWeight,
                 fontSize = 13.sp,
                 backgroundColor = Color(0xFF382024),
@@ -184,7 +186,7 @@ fun VirtualKeyboard(
                 onClick = onAltClicked
             )
             KeyButton(
-                label = "Boşluk",
+                label = stringResource(R.string.key_space),
                 weight = if (isTwelve) 4.8f else 3.9f,
                 fontSize = 13.sp,
                 onClick = { onKeyTyped(' ') }

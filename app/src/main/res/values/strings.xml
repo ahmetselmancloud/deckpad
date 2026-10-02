@@ -1,3 +1,111 @@
 <resources>
     <string name="app_name">DeckPad</string>
+
+    <!-- Connection Status -->
+    <string name="status_connected">Connected</string>
+    <string name="status_connecting">Connecting</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_error">Error</string>
+
+    <!-- Top Bar Actions -->
+    <string name="action_fullscreen">Fullscreen</string>
+    <string name="action_pair">Pair</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_exit">Exit</string>
+    <string name="action_close">Close</string>
+
+    <!-- Tabs -->
+    <string name="tab_touchpad">Touchpad</string>
+    <string name="tab_numpad">Numpad</string>
+    <string name="tab_media">Media</string>
+    <string name="tab_keyboard">Keyboard</string>
+
+    <!-- Touchpad Screen -->
+    <string name="touchpad_surface">TOUCH SURFACE</string>
+    <string name="touchpad_fullscreen_label">FULLSCREEN TOUCHPAD</string>
+
+    <!-- Numpad Screen -->
+    <string name="numpad_title">NUMPAD</string>
+    <string name="numpad_subtitle">Excel &amp; Calculation</string>
+    <string name="numpad_del">Del</string>
+    <string name="numpad_numlk">NumLk</string>
+    <string name="numpad_tab">Tab</string>
+    <string name="numpad_enter">Enter</string>
+
+    <!-- Media & Presentation Screen -->
+    <string name="media_player_title">MEDIA PLAYER</string>
+    <string name="media_prev">◀ Prev</string>
+    <string name="media_play_pause">Play / Pause</string>
+    <string name="media_next">Next ▶</string>
+    <string name="media_vol_down">Vol -</string>
+    <string name="media_mute">Mute</string>
+    <string name="media_vol_up">Vol +</string>
+    <string name="presentation_title">PRESENTATION (SLIDES)</string>
+    <string name="presentation_prev_slide">◀  Previous Slide</string>
+    <string name="presentation_next_slide">Next Slide  ▶</string>
+    <string name="presentation_start">Start (F5)</string>
+    <string name="presentation_from_current">Current (⇧F5)</string>
+    <string name="presentation_black">Black (B)</string>
+    <string name="presentation_end">End (Esc)</string>
+
+    <!-- Keyboard Screen -->
+    <string name="keyboard_title">VIRTUAL KEYBOARD</string>
+    <string name="shortcut_copy">Copy</string>
+    <string name="shortcut_paste">Paste</string>
+    <string name="shortcut_undo">Undo</string>
+    <string name="key_space">Space</string>
+    <string name="key_delete">Del</string>
+
+    <!-- Settings Sheet -->
+    <string name="settings_title">DeckPad Settings</string>
+    
+    <!-- Language Setting -->
+    <string name="settings_language_title">App Language</string>
+    <string name="settings_language_desc">Select your preferred interface language</string>
+    <string name="settings_lang_en">English (Default)</string>
+    <string name="settings_lang_tr">Türkçe (Turkish)</string>
+
+    <!-- Cursor & Scroll -->
+    <string name="settings_cursor_speed">Cursor Speed</string>
+    <string name="settings_cursor_speed_desc">Speed and sensitivity of mouse pointer</string>
+    <string name="settings_scroll_speed">Scroll Speed</string>
+    <string name="settings_scroll_speed_desc">Two-finger page scrolling speed</string>
+    <string name="settings_auto_reconnect">Auto Reconnect</string>
+    <string name="settings_auto_reconnect_desc">Automatically connects when paired PC is in range</string>
+
+    <!-- Multi-finger Taps -->
+    <string name="settings_three_finger">3-Finger Tap Action</string>
+    <string name="settings_three_finger_desc">Action triggered when tapping with 3 fingers</string>
+    <string name="settings_four_finger">4-Finger Tap Action</string>
+    <string name="settings_four_finger_desc">Action triggered when tapping with 4 fingers</string>
+
+    <!-- Tap Actions -->
+    <string name="action_middle_click">Middle Click (New Tab)</string>
+    <string name="action_windows_search">Windows Search (Win + S)</string>
+    <string name="action_show_desktop">Show Desktop (Win + D)</string>
+    <string name="action_notification_center">Action Center (Win + N)</string>
+    <string name="action_disabled">Disabled</string>
+
+    <!-- Zoom & Layout -->
+    <string name="settings_zoom_title">Pinch-to-Zoom</string>
+    <string name="settings_zoom_desc">Zoom in/out with two fingers (Ctrl + Scroll)</string>
+    <string name="settings_keyboard_layout">Physical Keyboard Layout</string>
+    <string name="settings_keyboard_layout_desc">Virtual keyboard standard mapping</string>
+    <string name="settings_layout_turkish">Turkish Q Layout</string>
+    <string name="settings_layout_english">English US Layout</string>
+
+    <!-- About & Support -->
+    <string name="settings_about_title">About &amp; Support</string>
+    <string name="settings_about_desc">Free, open-source Bluetooth HID remote ecosystem for Windows PCs.</string>
+    <string name="settings_github">GitHub Project</string>
+    <string name="settings_coffee">Buy Me a Coffee ☕</string>
+
+    <!-- Notification -->
+    <string name="notif_channel_name">Connection Status</string>
+    <string name="notif_disconnected">Disconnected</string>
+    <string name="notif_pairing">Pairing...</string>
+    <string name="notif_ready">Ready, waiting for connection</string>
+    <string name="notif_connected">Connected</string>
+    <string name="notif_error">Error</string>
 </resources>

@@ -1,0 +1,111 @@
+<resources>
+    <string name="app_name">DeckPad</string>
+
+    <!-- Connection Status -->
+    <string name="status_connected">Bağlandı</string>
+    <string name="status_connecting">Bağlanıyor</string>
+    <string name="status_ready">Hazır</string>
+    <string name="status_disconnected">Bağlı Değil</string>
+    <string name="status_error">Hata</string>
+
+    <!-- Top Bar Actions -->
+    <string name="action_fullscreen">Tam Ekran</string>
+    <string name="action_pair">Eşleştir</string>
+    <string name="action_settings">Ayarlar</string>
+    <string name="action_exit">Çıkış</string>
+    <string name="action_close">Kapat</string>
+
+    <!-- Tabs -->
+    <string name="tab_touchpad">Touchpad</string>
+    <string name="tab_numpad">Numpad</string>
+    <string name="tab_media">Medya</string>
+    <string name="tab_keyboard">Klavye</string>
+
+    <!-- Touchpad Screen -->
+    <string name="touchpad_surface">DOKUNMATİK YÜZEY</string>
+    <string name="touchpad_fullscreen_label">TAM EKRAN TOUCHPAD</string>
+
+    <!-- Numpad Screen -->
+    <string name="numpad_title">NUMPAD</string>
+    <string name="numpad_subtitle">Excel &amp; Hesaplama</string>
+    <string name="numpad_del">Sil</string>
+    <string name="numpad_numlk">NumLk</string>
+    <string name="numpad_tab">Tab</string>
+    <string name="numpad_enter">Enter</string>
+
+    <!-- Media & Presentation Screen -->
+    <string name="media_player_title">MEDYA OYNATICI</string>
+    <string name="media_prev">◀ Önceki</string>
+    <string name="media_play_pause">Oynat / Duraklat</string>
+    <string name="media_next">Sonraki ▶</string>
+    <string name="media_vol_down">Sesi Kıs -</string>
+    <string name="media_mute">Sustur</string>
+    <string name="media_vol_up">Sesi Aç +</string>
+    <string name="presentation_title">SUNUM (SLAYT KONTROLÜ)</string>
+    <string name="presentation_prev_slide">◀  Önceki Slayt</string>
+    <string name="presentation_next_slide">Sonraki Slayt  ▶</string>
+    <string name="presentation_start">Başlat (F5)</string>
+    <string name="presentation_from_current">Mevcut (⇧F5)</string>
+    <string name="presentation_black">Karart (B)</string>
+    <string name="presentation_end">Bitir (Esc)</string>
+
+    <!-- Keyboard Screen -->
+    <string name="keyboard_title">SANAL KLAVYE</string>
+    <string name="shortcut_copy">Kopyala</string>
+    <string name="shortcut_paste">Yapıştır</string>
+    <string name="shortcut_undo">Geri Al</string>
+    <string name="key_space">Boşluk</string>
+    <string name="key_delete">Sil</string>
+
+    <!-- Settings Sheet -->
+    <string name="settings_title">DeckPad Ayarları</string>
+    
+    <!-- Language Setting -->
+    <string name="settings_language_title">Uygulama Dili</string>
+    <string name="settings_language_desc">Tercih ettiğiniz arayüz dilini seçin</string>
+    <string name="settings_lang_en">English (İngilizce)</string>
+    <string name="settings_lang_tr">Türkçe</string>
+
+    <!-- Cursor & Scroll -->
+    <string name="settings_cursor_speed">İmleç Hızı</string>
+    <string name="settings_cursor_speed_desc">Fare imlecinin ekrandaki hareket hızı ve hassasiyeti</string>
+    <string name="settings_scroll_speed">Kaydırma (Scroll) Hızı</string>
+    <string name="settings_scroll_speed_desc">İki parmakla sayfa kaydırma hızı ve adımı</string>
+    <string name="settings_auto_reconnect">Otomatik Yeniden Bağlan</string>
+    <string name="settings_auto_reconnect_desc">Eşleşmiş bilgisayar kapsama alanına girdiğinde otomatik bağlanır</string>
+
+    <!-- Multi-finger Taps -->
+    <string name="settings_three_finger">3 Parmak Dokunma (3-Finger Tap)</string>
+    <string name="settings_three_finger_desc">Ekrana 3 parmakla tek dokunulduğunda tetiklenecek işlem</string>
+    <string name="settings_four_finger">4 Parmak Dokunma (4-Finger Tap)</string>
+    <string name="settings_four_finger_desc">Ekrana 4 parmakla tek dokunulduğunda tetiklenecek işlem</string>
+
+    <!-- Tap Actions -->
+    <string name="action_middle_click">Orta Tık (Yeni Sekme)</string>
+    <string name="action_windows_search">Windows Arama (Win + S)</string>
+    <string name="action_show_desktop">Masaüstünü Göster (Win + D)</string>
+    <string name="action_notification_center">Bildirim Merkezi (Win + N)</string>
+    <string name="action_disabled">Devre Dışı</string>
+
+    <!-- Zoom & Layout -->
+    <string name="settings_zoom_title">İki Parmak Yakınlaştırma (Pinch-to-Zoom)</string>
+    <string name="settings_zoom_desc">İki parmağı açıp kapatarak sayfayı yakınlaştırıp uzaklaştırma (Ctrl + Scroll)</string>
+    <string name="settings_keyboard_layout">Klavye Harf Düzeni</string>
+    <string name="settings_keyboard_layout_desc">Sanal klavyenin harf dizilim standardı</string>
+    <string name="settings_layout_turkish">Türkçe Q Klavye</string>
+    <string name="settings_layout_english">İngilizce US Klavye</string>
+
+    <!-- About & Support -->
+    <string name="settings_about_title">Hakkında &amp; Destek</string>
+    <string name="settings_about_desc">Windows bilgisayarlar için ücretsiz, açık kaynaklı Bluetooth HID uzaktan kontrol ekosistemi.</string>
+    <string name="settings_github">GitHub Projesi</string>
+    <string name="settings_coffee">Buy Me a Coffee ☕</string>
+
+    <!-- Notification -->
+    <string name="notif_channel_name">Bağlantı Durumu</string>
+    <string name="notif_disconnected">Bağlı değil</string>
+    <string name="notif_pairing">Eşleştiriliyor...</string>
+    <string name="notif_ready">Kayıtlı, bağlantı bekleniyor</string>
+    <string name="notif_connected">Bağlı</string>
+    <string name="notif_error">Hata</string>
+</resources>

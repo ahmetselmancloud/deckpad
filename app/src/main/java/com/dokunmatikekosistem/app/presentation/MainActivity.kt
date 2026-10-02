@@ -49,6 +49,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,11 +61,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.dokunmatikekosistem.app.R
+import java.util.Locale
 import com.dokunmatikekosistem.app.data.settings.TapAction
 import com.dokunmatikekosistem.app.data.settings.UserSettings
 import com.dokunmatikekosistem.app.domain.ConnectionState
@@ -151,63 +155,143 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
     val userSettings by viewModel.userSettings.collectAsState()
     var showSettingsSheet by remember { mutableStateOf(false) }
 
+    val locale = remember(userSettings.appLanguage) { Locale.forLanguageTag(userSettings.appLanguage) }
     val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val localizedConfig = remember(configuration, locale) {
+        Configuration(configuration).apply {
+            setLocale(locale)
+            setLayoutDirection(locale)
+        }
+    }
+    val context = LocalContext.current
+    val localizedContext = remember(context, localizedConfig) {
+        context.createConfigurationContext(localizedConfig)
+    }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = if (isFullscreen) Color.Black else Color(0xFF121214)) {
-        if (isFullscreen) {
-            TouchpadScreen(viewModel = viewModel, modifier = Modifier.fillMaxSize())
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 12.dp, vertical = if (isLandscape) 4.dp else 8.dp),
-                verticalArrangement = Arrangement.spacedBy(if (isLandscape) 4.dp else 8.dp)
-            ) {
-                if (isLandscape) {
-                    // Landscape: Single consolidated top bar (Status, 4 Tabs, Action buttons)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF1B1B22))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        StatusBadge(
-                            connectionState = connectionState,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
+    CompositionLocalProvider(
+        LocalConfiguration provides localizedConfig,
+        LocalContext provides localizedContext
+    ) {
+        val isLandscape = localizedConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-                        // Center 4 Tabs
+        Surface(modifier = Modifier.fillMaxSize(), color = if (isFullscreen) Color.Black else Color(0xFF121214)) {
+            if (isFullscreen) {
+                TouchpadScreen(viewModel = viewModel, modifier = Modifier.fillMaxSize())
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 12.dp, vertical = if (isLandscape) 4.dp else 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(if (isLandscape) 4.dp else 8.dp)
+                ) {
+                    if (isLandscape) {
+                        // Landscape: Single consolidated top bar (Status, 4 Tabs, Action buttons)
                         Row(
                             modifier = Modifier
-                                .weight(2f, fill = false)
-                                .widthIn(max = 420.dp)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFF24242F))
-                                .padding(2.dp),
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF1B1B22))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            StatusBadge(
+                                connectionState = connectionState,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+
+                            // Center 4 Tabs
+                            Row(
+                                modifier = Modifier
+                                    .weight(2f, fill = false)
+                                    .widthIn(max = 420.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0xFF24242F))
+                                    .padding(2.dp),
+                                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                AppTab.entries.forEach { tab ->
+                                    val selected = tab == currentTab
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(28.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                            .clickable { viewModel.selectTab(tab) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = stringResource(tab.titleRes),
+                                            fontSize = 11.sp,
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.65f),
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+
+                            TopActionButtons(
+                                currentTab = currentTab,
+                                viewModel = viewModel,
+                                onConnectRequested = onConnectRequested,
+                                onOpenSettings = { showSettingsSheet = true }
+                            )
+                        }
+                    } else {
+                        // Portrait: Two separate rows
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF1B1B22))
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            StatusBadge(
+                                connectionState = connectionState,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            TopActionButtons(
+                                currentTab = currentTab,
+                                viewModel = viewModel,
+                                onConnectRequested = onConnectRequested,
+                                onOpenSettings = { showSettingsSheet = true }
+                            )
+                        }
+
+                        // Symmetrical 4-Tab Segmented Bar
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF1B1B22))
+                                .padding(3.dp),
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
                         ) {
                             AppTab.entries.forEach { tab ->
                                 val selected = tab == currentTab
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(28.dp)
-                                        .clip(RoundedCornerShape(4.dp))
+                                        .height(34.dp)
+                                        .clip(RoundedCornerShape(6.dp))
                                         .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
                                         .clickable { viewModel.selectTab(tab) },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = tab.title,
-                                        fontSize = 11.sp,
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.65f),
+                                        text = stringResource(tab.titleRes),
+                                        fontSize = 11.5.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.7f),
                                         maxLines = 1,
                                         softWrap = false,
                                         overflow = TextOverflow.Ellipsis
@@ -215,104 +299,47 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                                 }
                             }
                         }
-
-                        TopActionButtons(
-                            currentTab = currentTab,
-                            viewModel = viewModel,
-                            onConnectRequested = onConnectRequested,
-                            onOpenSettings = { showSettingsSheet = true }
-                        )
-                    }
-                } else {
-                    // Portrait: Two separate rows
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF1B1B22))
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        StatusBadge(
-                            connectionState = connectionState,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        TopActionButtons(
-                            currentTab = currentTab,
-                            viewModel = viewModel,
-                            onConnectRequested = onConnectRequested,
-                            onOpenSettings = { showSettingsSheet = true }
-                        )
                     }
 
-                    // Symmetrical 4-Tab Segmented Bar
-                    Row(
+                    // Active Tab Content
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF1B1B22))
-                            .padding(3.dp),
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            .weight(1f)
                     ) {
-                        AppTab.entries.forEach { tab ->
-                            val selected = tab == currentTab
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(34.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                    .clickable { viewModel.selectTab(tab) },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = tab.title,
-                                    fontSize = 11.5.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.7f),
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
+                        when (currentTab) {
+                            AppTab.TOUCHPAD -> TouchpadScreen(viewModel = viewModel)
+                            AppTab.NUMPAD -> NumpadScreen(viewModel = viewModel)
+                            AppTab.MEDIA -> MediaPresentationScreen(viewModel = viewModel)
+                            AppTab.KEYBOARD -> KeyboardScreen(viewModel = viewModel)
                         }
-                    }
-                }
-
-                // Active Tab Content
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                ) {
-                    when (currentTab) {
-                        AppTab.TOUCHPAD -> TouchpadScreen(viewModel = viewModel)
-                        AppTab.NUMPAD -> NumpadScreen(viewModel = viewModel)
-                        AppTab.MEDIA -> MediaPresentationScreen(viewModel = viewModel)
-                        AppTab.KEYBOARD -> KeyboardScreen(viewModel = viewModel)
                     }
                 }
             }
         }
-    }
 
-    if (showSettingsSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showSettingsSheet = false }
-        ) {
-            SettingsSheetContent(
-                userSettings = userSettings,
-                onThreeFingerActionSelected = { viewModel.setThreeFingerTapAction(it) },
-                onFourFingerActionSelected = { viewModel.setFourFingerTapAction(it) },
-                onZoomToggled = { viewModel.setZoomEnabled(it) },
-                onTurkishLayoutToggled = { viewModel.setTurkishLayout(it) },
-                onCursorSpeedChanged = { viewModel.setCursorSpeed(it) },
-                onScrollSpeedChanged = { viewModel.setScrollSpeed(it) },
-                onAutoReconnectToggled = { viewModel.setAutoReconnect(it) },
-                onDismiss = { showSettingsSheet = false }
-            )
+        if (showSettingsSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showSettingsSheet = false }
+            ) {
+                CompositionLocalProvider(
+                    LocalConfiguration provides localizedConfig,
+                    LocalContext provides localizedContext
+                ) {
+                    SettingsSheetContent(
+                        userSettings = userSettings,
+                        onLanguageSelected = { viewModel.setAppLanguage(it) },
+                        onThreeFingerActionSelected = { viewModel.setThreeFingerTapAction(it) },
+                        onFourFingerActionSelected = { viewModel.setFourFingerTapAction(it) },
+                        onZoomToggled = { viewModel.setZoomEnabled(it) },
+                        onTurkishLayoutToggled = { viewModel.setTurkishLayout(it) },
+                        onCursorSpeedChanged = { viewModel.setCursorSpeed(it) },
+                        onScrollSpeedChanged = { viewModel.setScrollSpeed(it) },
+                        onAutoReconnectToggled = { viewModel.setAutoReconnect(it) },
+                        onDismiss = { showSettingsSheet = false }
+                    )
+                }
+            }
         }
     }
 }
@@ -323,11 +350,11 @@ private fun StatusBadge(
     modifier: Modifier = Modifier
 ) {
     val (statusColor, statusText) = when (connectionState) {
-        ConnectionState.CONNECTED -> Color(0xFF4CAF50) to "Bağlandı"
-        ConnectionState.REGISTERING -> Color(0xFFFFB300) to "Bağlanıyor"
-        ConnectionState.REGISTERED -> Color(0xFF29B6F6) to "Hazır"
-        ConnectionState.DISCONNECTED -> Color(0xFFE53935) to "Bağlı Değil"
-        ConnectionState.ERROR -> Color(0xFFE53935) to "Hata"
+        ConnectionState.CONNECTED -> Color(0xFF4CAF50) to stringResource(R.string.status_connected)
+        ConnectionState.REGISTERING -> Color(0xFFFFB300) to stringResource(R.string.status_connecting)
+        ConnectionState.REGISTERED -> Color(0xFF29B6F6) to stringResource(R.string.status_ready)
+        ConnectionState.DISCONNECTED -> Color(0xFFE53935) to stringResource(R.string.status_disconnected)
+        ConnectionState.ERROR -> Color(0xFFE53935) to stringResource(R.string.status_error)
     }
 
     Row(
@@ -379,7 +406,7 @@ private fun TopActionButtons(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Tam Ekran",
+                    text = stringResource(R.string.action_fullscreen),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White,
@@ -399,7 +426,7 @@ private fun TopActionButtons(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Eşleştir",
+                text = stringResource(R.string.action_pair),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary,
@@ -418,7 +445,7 @@ private fun TopActionButtons(
         ) {
             Icon(
                 imageVector = Icons.Default.Settings,
-                contentDescription = "Ayarlar",
+                contentDescription = stringResource(R.string.action_settings),
                 tint = Color.White.copy(alpha = 0.9f),
                 modifier = Modifier.size(17.dp)
             )
@@ -429,6 +456,7 @@ private fun TopActionButtons(
 @Composable
 private fun SettingsSheetContent(
     userSettings: UserSettings,
+    onLanguageSelected: (String) -> Unit,
     onThreeFingerActionSelected: (TapAction) -> Unit,
     onFourFingerActionSelected: (TapAction) -> Unit,
     onZoomToggled: (Boolean) -> Unit,
@@ -447,10 +475,60 @@ private fun SettingsSheetContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Touchpad Ayarları",
+            text = stringResource(R.string.settings_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
+
+        HorizontalDivider()
+
+        // Language Selector
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = stringResource(R.string.settings_language_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = stringResource(R.string.settings_language_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onLanguageSelected("en") }
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = userSettings.appLanguage == "en",
+                    onClick = { onLanguageSelected("en") }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.settings_lang_en),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onLanguageSelected("tr") }
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = userSettings.appLanguage == "tr",
+                    onClick = { onLanguageSelected("tr") }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.settings_lang_tr),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
 
         HorizontalDivider()
 
@@ -462,7 +540,7 @@ private fun SettingsSheetContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "İmleç Hızı",
+                    text = stringResource(R.string.settings_cursor_speed),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -474,7 +552,7 @@ private fun SettingsSheetContent(
                 )
             }
             Text(
-                text = "Fare imlecinin ekrandaki hareket hızı ve hassasiyeti",
+                text = stringResource(R.string.settings_cursor_speed_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
@@ -496,7 +574,7 @@ private fun SettingsSheetContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Kaydırma (Scroll) Hızı",
+                    text = stringResource(R.string.settings_scroll_speed),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -508,7 +586,7 @@ private fun SettingsSheetContent(
                 )
             }
             Text(
-                text = "İki parmakla sayfa kaydırma hızı ve adımı",
+                text = stringResource(R.string.settings_scroll_speed_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
@@ -530,12 +608,12 @@ private fun SettingsSheetContent(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Otomatik Yeniden Bağlan",
+                    text = stringResource(R.string.settings_auto_reconnect),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Eşleşmiş bilgisayar kapsama alanına girdiğinde otomatik bağlanır",
+                    text = stringResource(R.string.settings_auto_reconnect_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -551,12 +629,12 @@ private fun SettingsSheetContent(
         // 3 Finger Tap Section
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "3 Parmak Dokunma (3-Finger Tap)",
+                text = stringResource(R.string.settings_three_finger),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "Ekrana 3 parmakla tek dokunulduğunda tetiklenecek işlem",
+                text = stringResource(R.string.settings_three_finger_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
@@ -574,7 +652,7 @@ private fun SettingsSheetContent(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = action.displayName,
+                        text = stringResource(action.titleRes),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -586,12 +664,12 @@ private fun SettingsSheetContent(
         // 4 Finger Tap Section
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "4 Parmak Dokunma (4-Finger Tap)",
+                text = stringResource(R.string.settings_four_finger),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "Ekrana 4 parmakla tek dokunulduğunda tetiklenecek işlem",
+                text = stringResource(R.string.settings_four_finger_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
@@ -609,7 +687,7 @@ private fun SettingsSheetContent(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = action.displayName,
+                        text = stringResource(action.titleRes),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -626,12 +704,12 @@ private fun SettingsSheetContent(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "İki Parmakla Zoom (Pinch)",
+                    text = stringResource(R.string.settings_zoom_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "İki parmakla çimdikleme yaparak sayfayı büyüt / küçült",
+                    text = stringResource(R.string.settings_zoom_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -652,12 +730,12 @@ private fun SettingsSheetContent(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Sanal Klavye Düzeni",
+                    text = stringResource(R.string.settings_keyboard_layout),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = if (userSettings.isTurkishLayout) "Türkçe Q Klavye Aktif" else "İngilizce US Klavye Aktif",
+                    text = if (userSettings.isTurkishLayout) stringResource(R.string.settings_layout_turkish) else stringResource(R.string.settings_layout_english),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -690,7 +768,7 @@ private fun SettingsSheetContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "DeckPad",
+                        text = stringResource(R.string.app_name),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -703,7 +781,7 @@ private fun SettingsSheetContent(
                     )
                 }
                 Text(
-                    text = "Sürücüsüz, yerel ve sıfır gecikmeli Bluetooth PC kontrolcüsü. İnternet gerektirmez, kişisel veri toplamaz.",
+                    text = stringResource(R.string.settings_about_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.7f),
                     lineHeight = 16.sp
@@ -725,7 +803,7 @@ private fun SettingsSheetContent(
                         shape = RoundedCornerShape(6.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("GitHub", fontSize = 12.sp)
+                        Text(stringResource(R.string.settings_github), fontSize = 12.sp)
                     }
                     Button(
                         onClick = {
@@ -739,7 +817,7 @@ private fun SettingsSheetContent(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF813F)),
                         modifier = Modifier.weight(1.3f)
                     ) {
-                        Text("☕ Kahve Ismarla", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.settings_coffee), fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -752,7 +830,7 @@ private fun SettingsSheetContent(
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Kaydet & Kapat")
+            Text(stringResource(R.string.action_close))
         }
     }
 }

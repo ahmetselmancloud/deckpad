@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.res.stringResource
+import com.dokunmatikekosistem.app.R
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -123,7 +125,7 @@ fun TouchpadScreen(
                 }
         ) {
             Text(
-                text = if (isFullscreen) "TAM EKRAN TOUCHPAD" else "DOKUNMATİK YÜZEY",
+                text = if (isFullscreen) stringResource(R.string.touchpad_fullscreen_label) else stringResource(R.string.touchpad_surface),
                 style = MaterialTheme.typography.labelMedium,
                 color = Color.White.copy(alpha = 0.12f),
                 fontWeight = FontWeight.Bold,
@@ -144,7 +146,7 @@ fun TouchpadScreen(
                     .align(Alignment.TopEnd)
                     .padding(16.dp)
             ) {
-                Text("Çıkış", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.action_exit), fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

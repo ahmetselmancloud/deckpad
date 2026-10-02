@@ -24,10 +24,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dokunmatikekosistem.app.R
 import com.dokunmatikekosistem.app.data.keyboard.TurkishQLayout
 import com.dokunmatikekosistem.app.presentation.MainViewModel
 import com.dokunmatikekosistem.app.presentation.keyboard.VirtualKeyboard
@@ -89,13 +91,13 @@ fun KeyboardScreen(
                     KeyboardShortcutButton("Tab", modifier = Modifier.weight(1f), height = 28.dp) {
                         viewModel.sendKey(com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_TAB)
                     }
-                    KeyboardShortcutButton("Kopyala", modifier = Modifier.weight(1.3f), height = 28.dp) {
+                    KeyboardShortcutButton(stringResource(R.string.shortcut_copy), modifier = Modifier.weight(1.3f), height = 28.dp) {
                         viewModel.macroCopy()
                     }
-                    KeyboardShortcutButton("Yapıştır", modifier = Modifier.weight(1.3f), height = 28.dp) {
+                    KeyboardShortcutButton(stringResource(R.string.shortcut_paste), modifier = Modifier.weight(1.3f), height = 28.dp) {
                         viewModel.macroPaste()
                     }
-                    KeyboardShortcutButton("Geri Al", modifier = Modifier.weight(1.2f), height = 28.dp) {
+                    KeyboardShortcutButton(stringResource(R.string.shortcut_undo), modifier = Modifier.weight(1.2f), height = 28.dp) {
                         viewModel.macroUndo()
                     }
                     KeyboardShortcutButton("C+A+D", modifier = Modifier.weight(1.2f), height = 28.dp) {
@@ -112,7 +114,7 @@ fun KeyboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "SANAL KLAVYE",
+                        text = stringResource(R.string.keyboard_title),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White.copy(alpha = 0.5f),
@@ -149,13 +151,13 @@ fun KeyboardScreen(
                     KeyboardShortcutButton("Tab", modifier = Modifier.weight(1f), height = 34.dp) {
                         viewModel.sendKey(com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_TAB)
                     }
-                    KeyboardShortcutButton("Kopyala", modifier = Modifier.weight(1.3f), height = 34.dp) {
+                    KeyboardShortcutButton(stringResource(R.string.shortcut_copy), modifier = Modifier.weight(1.3f), height = 34.dp) {
                         viewModel.macroCopy()
                     }
-                    KeyboardShortcutButton("Yapıştır", modifier = Modifier.weight(1.3f), height = 34.dp) {
+                    KeyboardShortcutButton(stringResource(R.string.shortcut_paste), modifier = Modifier.weight(1.3f), height = 34.dp) {
                         viewModel.macroPaste()
                     }
-                    KeyboardShortcutButton("Geri Al", modifier = Modifier.weight(1.2f), height = 34.dp) {
+                    KeyboardShortcutButton(stringResource(R.string.shortcut_undo), modifier = Modifier.weight(1.2f), height = 34.dp) {
                         viewModel.macroUndo()
                     }
                     KeyboardShortcutButton("C+A+D", modifier = Modifier.weight(1.2f), height = 34.dp) {

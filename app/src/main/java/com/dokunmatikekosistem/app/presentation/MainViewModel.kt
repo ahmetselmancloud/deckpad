@@ -45,7 +45,7 @@ class MainViewModel @Inject constructor(
     private val _userSettings = MutableStateFlow(UserSettings())
     val userSettings: StateFlow<UserSettings> = _userSettings
 
-    private val _activeLayout = MutableStateFlow<KeyboardLayout>(TurkishQLayout())
+    private val _activeLayout = MutableStateFlow<KeyboardLayout>(EnglishUsLayout())
     val activeLayout: StateFlow<KeyboardLayout> = _activeLayout
 
     private val _modifierState = MutableStateFlow(KeyboardModifierState())
@@ -260,6 +260,13 @@ class MainViewModel @Inject constructor(
         _userSettings.value = _userSettings.value.copy(isTurkishLayout = isTurkish)
         settingsRepository?.let { repo ->
             viewModelScope.launch { repo.setTurkishLayout(isTurkish) }
+        }
+    }
+
+    fun setAppLanguage(languageCode: String) {
+        _userSettings.value = _userSettings.value.copy(appLanguage = languageCode)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setAppLanguage(languageCode) }
         }
     }
 

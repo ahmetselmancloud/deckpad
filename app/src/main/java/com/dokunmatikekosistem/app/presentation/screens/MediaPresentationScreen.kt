@@ -26,12 +26,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dokunmatikekosistem.app.R
 import com.dokunmatikekosistem.app.data.hid.HidConsumerReport
 import com.dokunmatikekosistem.app.data.hid.HidKeyboardReport
 import com.dokunmatikekosistem.app.data.hid.HidUsageCodes
@@ -103,7 +105,7 @@ private fun MediaControlsCard(
             verticalArrangement = Arrangement.spacedBy(if (isLandscape) 8.dp else 10.dp)
         ) {
             Text(
-                text = "MEDYA OYNATICI",
+                text = stringResource(R.string.media_player_title),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White.copy(alpha = 0.6f),
@@ -116,7 +118,7 @@ private fun MediaControlsCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 MediaButton(
-                    title = "◀ Önceki",
+                    title = stringResource(R.string.media_prev),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 42.dp else 46.dp
                 ) {
@@ -124,7 +126,7 @@ private fun MediaControlsCard(
                 }
 
                 MediaButton(
-                    title = "Oynat / Duraklat",
+                    title = stringResource(R.string.media_play_pause),
                     modifier = Modifier.weight(1.2f),
                     height = if (isLandscape) 42.dp else 46.dp,
                     isPrimary = true
@@ -133,7 +135,7 @@ private fun MediaControlsCard(
                 }
 
                 MediaButton(
-                    title = "Sonraki ▶",
+                    title = stringResource(R.string.media_next),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 42.dp else 46.dp
                 ) {
@@ -147,7 +149,7 @@ private fun MediaControlsCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 MediaButton(
-                    title = "Sesi Kıs -",
+                    title = stringResource(R.string.media_vol_down),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 38.dp else 42.dp
                 ) {
@@ -155,7 +157,7 @@ private fun MediaControlsCard(
                 }
 
                 MediaButton(
-                    title = "Sustur",
+                    title = stringResource(R.string.media_mute),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 38.dp else 42.dp
                 ) {
@@ -163,7 +165,7 @@ private fun MediaControlsCard(
                 }
 
                 MediaButton(
-                    title = "Sesi Aç +",
+                    title = stringResource(R.string.media_vol_up),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 38.dp else 42.dp
                 ) {
@@ -192,7 +194,7 @@ private fun PresentationControlsCard(
             verticalArrangement = Arrangement.spacedBy(if (isLandscape) 8.dp else 10.dp)
         ) {
             Text(
-                text = "SUNUM (SLAYT KONTROLÜ)",
+                text = stringResource(R.string.presentation_title),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White.copy(alpha = 0.6f),
@@ -205,7 +207,7 @@ private fun PresentationControlsCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 MediaButton(
-                    title = "◀  Önceki Slayt",
+                    title = stringResource(R.string.presentation_prev_slide),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 52.dp else 64.dp,
                     fontSize = if (isLandscape) 13.sp else 14.sp,
@@ -215,7 +217,7 @@ private fun PresentationControlsCard(
                 }
 
                 MediaButton(
-                    title = "Sonraki Slayt  ▶",
+                    title = stringResource(R.string.presentation_next_slide),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 52.dp else 64.dp,
                     fontSize = if (isLandscape) 13.sp else 14.sp,
@@ -232,7 +234,7 @@ private fun PresentationControlsCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 MediaButton(
-                    title = "Başlat (F5)",
+                    title = stringResource(R.string.presentation_start),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 36.dp else 42.dp,
                     fontSize = 10.5.sp
@@ -241,7 +243,7 @@ private fun PresentationControlsCard(
                 }
 
                 MediaButton(
-                    title = "Mevcut (⇧F5)",
+                    title = stringResource(R.string.presentation_from_current),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 36.dp else 42.dp,
                     fontSize = 10.5.sp
@@ -250,7 +252,7 @@ private fun PresentationControlsCard(
                 }
 
                 MediaButton(
-                    title = "Karart (B)",
+                    title = stringResource(R.string.presentation_black),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 36.dp else 42.dp,
                     fontSize = 10.5.sp
@@ -259,7 +261,7 @@ private fun PresentationControlsCard(
                 }
 
                 MediaButton(
-                    title = "Bitir (Esc)",
+                    title = stringResource(R.string.presentation_end),
                     modifier = Modifier.weight(1f),
                     height = if (isLandscape) 36.dp else 42.dp,
                     fontSize = 10.5.sp,

@@ -28,11 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dokunmatikekosistem.app.R
 import com.dokunmatikekosistem.app.data.hid.HidUsageCodes
 import com.dokunmatikekosistem.app.presentation.MainViewModel
 
@@ -77,7 +79,7 @@ fun NumpadScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "NUMPAD",
+                        text = stringResource(R.string.numpad_title),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White.copy(alpha = 0.6f),
@@ -86,7 +88,7 @@ fun NumpadScreen(
                         softWrap = false
                     )
                     Text(
-                        text = "Excel & Hesaplama",
+                        text = stringResource(R.string.numpad_subtitle),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = if (isLandscape) 10.sp else 11.sp,
@@ -127,7 +129,7 @@ fun NumpadScreen(
                     viewModel.sendKey(HidUsageCodes.KEYPAD_ASTERISK)
                 }
                 NumpadKey(
-                    label = "Sil",
+                    label = stringResource(R.string.numpad_del),
                     color = Color(0xFF3E2723),
                     textColor = Color(0xFFFF8A80),
                     fontSize = 15.sp,

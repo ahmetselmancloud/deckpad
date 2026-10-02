@@ -188,21 +188,30 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `activeLayout starts as Turkish Q`() {
+    fun `activeLayout starts as English US`() {
         val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
 
-        assertTrue(viewModel.activeLayout.value is TurkishQLayout)
+        assertTrue(viewModel.activeLayout.value is EnglishUsLayout)
     }
 
     @Test
-    fun `onLayoutToggleClicked switches from Turkish Q to English US and back`() {
+    fun `onLayoutToggleClicked switches from English US to Turkish Q and back`() {
         val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
 
         viewModel.onLayoutToggleClicked()
-        assertTrue(viewModel.activeLayout.value is EnglishUsLayout)
+        assertTrue(viewModel.activeLayout.value is TurkishQLayout)
 
         viewModel.onLayoutToggleClicked()
-        assertTrue(viewModel.activeLayout.value is TurkishQLayout)
+        assertTrue(viewModel.activeLayout.value is EnglishUsLayout)
+    }
+
+    @Test
+    fun `setAppLanguage updates userSettings`() {
+        val viewModel = MainViewModel(FakeHidManager(), FakeHaptics())
+        assertEquals("en", viewModel.userSettings.value.appLanguage)
+
+        viewModel.setAppLanguage("tr")
+        assertEquals("tr", viewModel.userSettings.value.appLanguage)
     }
 
     @Test

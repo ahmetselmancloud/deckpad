@@ -27,6 +27,7 @@ class SettingsRepository @Inject constructor(
         val KEY_SCROLL_SPEED = floatPreferencesKey("scroll_speed")
         val KEY_AUTO_RECONNECT = booleanPreferencesKey("auto_reconnect")
         val KEY_LAST_DEVICE_ADDRESS = stringPreferencesKey("last_connected_device_address")
+        val KEY_APP_LANGUAGE = stringPreferencesKey("app_language")
     }
 
     val userSettingsFlow: Flow<UserSettings> = dataStore.data
@@ -41,11 +42,12 @@ class SettingsRepository @Inject constructor(
             val threeTapName = prefs[KEY_THREE_FINGER_TAP] ?: TapAction.MIDDLE_CLICK.name
             val fourTapName = prefs[KEY_FOUR_FINGER_TAP] ?: TapAction.NOTIFICATION_CENTER.name
             val zoom = prefs[KEY_ZOOM_ENABLED] ?: true
-            val trLayout = prefs[KEY_TURKISH_LAYOUT] ?: true
+            val trLayout = prefs[KEY_TURKISH_LAYOUT] ?: false
             val cursor = prefs[KEY_CURSOR_SPEED] ?: 1.0f
             val scroll = prefs[KEY_SCROLL_SPEED] ?: 1.0f
             val autoRec = prefs[KEY_AUTO_RECONNECT] ?: true
             val lastAddr = prefs[KEY_LAST_DEVICE_ADDRESS]
+            val appLang = prefs[KEY_APP_LANGUAGE] ?: "en"
 
             UserSettings(
                 threeFingerTapAction = runCatching { TapAction.valueOf(threeTapName) }.getOrDefault(TapAction.MIDDLE_CLICK),
@@ -55,7 +57,8 @@ class SettingsRepository @Inject constructor(
                 cursorSpeed = cursor,
                 scrollSpeed = scroll,
                 autoReconnect = autoRec,
-                lastDeviceAddress = lastAddr
+                lastDeviceAddress = lastAddr,
+                appLanguage = appLang
             )
         }
 
@@ -108,6 +111,12 @@ class SettingsRepository @Inject constructor(
             } else {
                 prefs.remove(KEY_LAST_DEVICE_ADDRESS)
             }
+        }
+    }
+
+    suspend fun setAppLanguage(languageCode: String) {
+        dataStore.edit { prefs ->
+            prefs[KEY_APP_LANGUAGE] = languageCode
         }
     }
 }

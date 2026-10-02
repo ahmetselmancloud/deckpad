@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import com.dokunmatikekosistem.app.R
 import com.dokunmatikekosistem.app.domain.ConnectionState
@@ -19,6 +20,15 @@ const val HID_SERVICE_NOTIFICATION_ID = 1
  */
 object NotificationHelper {
 
+    @StringRes
+    fun titleResFor(state: ConnectionState): Int = when (state) {
+        ConnectionState.DISCONNECTED -> R.string.notif_disconnected
+        ConnectionState.REGISTERING -> R.string.notif_pairing
+        ConnectionState.REGISTERED -> R.string.notif_ready
+        ConnectionState.CONNECTED -> R.string.notif_connected
+        ConnectionState.ERROR -> R.string.notif_error
+    }
+
     fun titleFor(state: ConnectionState): String = when (state) {
         ConnectionState.DISCONNECTED -> "Bağlı değil"
         ConnectionState.REGISTERING -> "Eşleştiriliyor"
@@ -32,7 +42,7 @@ object NotificationHelper {
         val manager = context.getSystemService(NotificationManager::class.java)
         val channel = NotificationChannel(
             HID_SERVICE_NOTIFICATION_CHANNEL_ID,
-            "Bağlantı Durumu",
+            context.getString(R.string.notif_channel_name),
             NotificationManager.IMPORTANCE_LOW
         )
         manager.createNotificationChannel(channel)
@@ -40,8 +50,8 @@ object NotificationHelper {
 
     fun build(context: Context, state: ConnectionState): Notification =
         NotificationCompat.Builder(context, HID_SERVICE_NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Dokunmatik Ekosistem")
-            .setContentText(titleFor(state))
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText(context.getString(titleResFor(state)))
             .setSmallIcon(R.mipmap.ic_launcher)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
