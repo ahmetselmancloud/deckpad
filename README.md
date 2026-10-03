@@ -88,10 +88,10 @@ Unlike typical remote apps, **DeckPad requires NO companion server software, NO 
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/ahmetselmancloud/touchpad-ekosistem.git
+git clone https://github.com/ahmetselmancloud/deckpad.git
 
 # 2. Navigate to project root
-cd touchpad-ekosistem
+cd deckpad
 
 # 3. Build Debug APK
 ./gradlew assembleDebug
@@ -115,7 +115,7 @@ cd touchpad-ekosistem
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/ahmetselmancloud/touchpad-ekosistem/issues).
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/ahmetselmancloud/deckpad/issues).
 
 ---
 

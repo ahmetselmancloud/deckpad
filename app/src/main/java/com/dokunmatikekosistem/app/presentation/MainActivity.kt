@@ -796,7 +796,7 @@ private fun SettingsSheetContent(
                         onClick = {
                             val intent = Intent(
                                 Intent.ACTION_VIEW,
-                                android.net.Uri.parse("https://github.com/ahmetselmancloud/touchpad-ekosistem")
+                                android.net.Uri.parse("https://github.com/ahmetselmancloud/deckpad")
                             )
                             context.startActivity(intent)
                         },
