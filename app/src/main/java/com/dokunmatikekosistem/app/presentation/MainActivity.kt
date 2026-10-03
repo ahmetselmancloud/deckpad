@@ -335,6 +335,7 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                         onTurkishLayoutToggled = { viewModel.setTurkishLayout(it) },
                         onHapticsToggled = { viewModel.setHapticsEnabled(it) },
                         onReverseScrollToggled = { viewModel.setReverseScroll(it) },
+                        onTwoFingerNavToggled = { viewModel.setTwoFingerNav(it) },
                         onCursorSpeedChanged = { viewModel.setCursorSpeed(it) },
                         onScrollSpeedChanged = { viewModel.setScrollSpeed(it) },
                         onAutoReconnectToggled = { viewModel.setAutoReconnect(it) },
@@ -465,6 +466,7 @@ private fun SettingsSheetContent(
     onTurkishLayoutToggled: (Boolean) -> Unit,
     onHapticsToggled: (Boolean) -> Unit,
     onReverseScrollToggled: (Boolean) -> Unit,
+    onTwoFingerNavToggled: (Boolean) -> Unit,
     onCursorSpeedChanged: (Float) -> Unit,
     onScrollSpeedChanged: (Float) -> Unit,
     onAutoReconnectToggled: (Boolean) -> Unit,
@@ -625,6 +627,32 @@ private fun SettingsSheetContent(
             Switch(
                 checked = userSettings.reverseScroll,
                 onCheckedChange = onReverseScrollToggled
+            )
+        }
+
+        HorizontalDivider()
+
+        // Two-Finger Navigation Switch
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.settings_two_finger_nav_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(R.string.settings_two_finger_nav_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+            Switch(
+                checked = userSettings.twoFingerNavEnabled,
+                onCheckedChange = onTwoFingerNavToggled
             )
         }
 

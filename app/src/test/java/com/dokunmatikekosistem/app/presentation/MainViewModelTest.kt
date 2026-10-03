@@ -735,5 +735,47 @@ class MainViewModelTest {
             fake.allReports
         )
     }
+
+    @Test
+    fun `two finger swipe right triggers Alt plus Left Arrow and click haptic`() {
+        val fake = FakeHidManager()
+        val haptics = FakeHaptics()
+        val viewModel = MainViewModel(fake, haptics)
+
+        viewModel.onGesture(RecognizedGesture.TwoFingerSwipe(SwipeDirection.RIGHT))
+
+        assertEquals(listOf(HidKeyboardReport.MODIFIER_ALT to 0x50), fake.allKeyPresses)
+        assertEquals(true, fake.releaseKeyboardCalled)
+        assertEquals(1, haptics.clickCount)
+    }
+
+    @Test
+    fun `two finger swipe left triggers Alt plus Right Arrow and click haptic`() {
+        val fake = FakeHidManager()
+        val haptics = FakeHaptics()
+        val viewModel = MainViewModel(fake, haptics)
+
+        viewModel.onGesture(RecognizedGesture.TwoFingerSwipe(SwipeDirection.LEFT))
+
+        assertEquals(listOf(HidKeyboardReport.MODIFIER_ALT to 0x4F), fake.allKeyPresses)
+        assertEquals(true, fake.releaseKeyboardCalled)
+        assertEquals(1, haptics.clickCount)
+    }
+
+    @Test
+    fun `when twoFingerNavEnabled is false, two finger swipe does not trigger shortcut`() {
+        val fake = FakeHidManager()
+        val haptics = FakeHaptics()
+        val viewModel = MainViewModel(fake, haptics)
+
+        viewModel.setTwoFingerNav(false)
+        assertEquals(false, viewModel.userSettings.value.twoFingerNavEnabled)
+
+        viewModel.onGesture(RecognizedGesture.TwoFingerSwipe(SwipeDirection.RIGHT))
+        viewModel.onGesture(RecognizedGesture.TwoFingerSwipe(SwipeDirection.LEFT))
+
+        assertEquals(emptyList<Pair<Int, Int>>(), fake.allKeyPresses)
+        assertEquals(0, haptics.clickCount)
+    }
 }
 

@@ -95,11 +95,13 @@
     <string name="settings_layout_turkish">Türkçe Q Klavye</string>
     <string name="settings_layout_english">İngilizce US Klavye</string>
 
-    <!-- Haptics & Reverse Scroll -->
+    <!-- Haptics, Reverse Scroll & Navigation -->
     <string name="settings_haptics_title">Dokunsal Titreşim (Haptik)</string>
     <string name="settings_haptics_desc">Dokunma, tıklama ve tuş basımlarında hafif titreşim hissi</string>
     <string name="settings_reverse_scroll_title">Ters Kaydırma Yönü</string>
     <string name="settings_reverse_scroll_desc">İki parmakla dikey kaydırma yönünü tersine çevir (Doğal / macOS tarzı)</string>
+    <string name="settings_two_finger_nav_title">İki Parmakla Gezinme</string>
+    <string name="settings_two_finger_nav_desc">Tarayıcı ve dosya gezgininde geri/ileri gitmek için iki parmağınızı sağa/sola kaydırın</string>
 
     <!-- About & Support -->
     <string name="settings_about_title">Hakkında &amp; Destek</string>

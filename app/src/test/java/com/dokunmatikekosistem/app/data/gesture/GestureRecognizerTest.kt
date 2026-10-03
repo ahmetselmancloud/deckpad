@@ -475,6 +475,60 @@ class GestureRecognizerTest {
         // Baseline seeded or scroll emitted, never pinch
         assertTrue(result !is RecognizedGesture.PinchZoomStarted)
     }
+
+    @Test
+    fun `two fingers swiping right emits TwoFingerSwipe RIGHT on up`() {
+        val recognizer = GestureRecognizer(twoFingerNavEnabled = true)
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 200f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 200f, timeMs = 10))
+
+        // Swipe right by 80px horizontally with negligible vertical drift
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 140f, y = 202f, timeMs = 50))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 240f, y = 201f, timeMs = 60))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 180f, y = 203f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 280f, y = 202f, timeMs = 110))
+
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 180f, y = 203f, timeMs = 150))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 280f, y = 202f, timeMs = 160))
+
+        assertEquals(RecognizedGesture.TwoFingerSwipe(SwipeDirection.RIGHT), result)
+    }
+
+    @Test
+    fun `two fingers swiping left emits TwoFingerSwipe LEFT on up`() {
+        val recognizer = GestureRecognizer(twoFingerNavEnabled = true)
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 300f, y = 200f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 400f, y = 200f, timeMs = 10))
+
+        // Swipe left by 80px horizontally with negligible vertical drift
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 260f, y = 199f, timeMs = 50))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 360f, y = 198f, timeMs = 60))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 220f, y = 198f, timeMs = 100))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 320f, y = 197f, timeMs = 110))
+
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 220f, y = 198f, timeMs = 150))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 320f, y = 197f, timeMs = 160))
+
+        assertEquals(RecognizedGesture.TwoFingerSwipe(SwipeDirection.LEFT), result)
+    }
+
+    @Test
+    fun `when twoFingerNavEnabled is false, horizontal movement emits horizontal Scroll and no swipe`() {
+        val recognizer = GestureRecognizer(twoFingerNavEnabled = false)
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 200f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 200f, y = 200f, timeMs = 10))
+
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 130f, y = 200f, timeMs = 50))
+        recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 230f, y = 200f, timeMs = 60))
+        val scrollMove = recognizer.onEvent(RawTouchEvent.PointerMove(id = 0, x = 160f, y = 200f, timeMs = 70))
+
+        assertTrue(scrollMove is RecognizedGesture.Scroll)
+        assertEquals(1, (scrollMove as RecognizedGesture.Scroll).hDelta)
+
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 160f, y = 200f, timeMs = 100))
+        val upResult = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 260f, y = 200f, timeMs = 110))
+        assertNull(upResult)
+    }
 }
 
 

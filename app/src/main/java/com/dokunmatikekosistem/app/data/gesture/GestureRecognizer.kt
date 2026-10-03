@@ -39,6 +39,7 @@ sealed interface RecognizedGesture {
     object LeftClick : RecognizedGesture
     object RightClick : RecognizedGesture
     data class Scroll(val vDelta: Int, val hDelta: Int) : RecognizedGesture
+    data class TwoFingerSwipe(val direction: SwipeDirection) : RecognizedGesture
     object DragLockEngaged : RecognizedGesture
     data class DragMove(val dx: Int, val dy: Int) : RecognizedGesture
     object DragLockReleased : RecognizedGesture
@@ -73,7 +74,10 @@ private class ActivePointer(var lastX: Float, var lastY: Float, val downX: Float
  * Compose gesture cancellation) — otherwise a "stuck" pointer entry would
  * corrupt classification for the rest of this instance's lifetime.
  */
-class GestureRecognizer(var zoomEnabled: Boolean = true) {
+class GestureRecognizer(
+    var zoomEnabled: Boolean = true,
+    var twoFingerNavEnabled: Boolean = true
+) {
 
     private val active = mutableMapOf<Int, ActivePointer>()
     private var lastTapUpTimeMs: Long? = null
@@ -323,13 +327,20 @@ class GestureRecognizer(var zoomEnabled: Boolean = true) {
                     scrollResidualH = 0f
                 }
 
+                // If twoFingerNavEnabled and horizontal motion is clearly dominant, suppress scroll
+                if (twoFingerNavEnabled && abs(sessionFirstNetDx) > abs(sessionFirstNetDy) * 1.3f && abs(sessionFirstNetDx) > 30f) {
+                    return null
+                }
+
                 scrollResidualV += rawDy
                 scrollResidualH += rawDx
                 val vUnits = (scrollResidualV / SCROLL_PX_PER_UNIT).toInt()
-                val hUnits = (scrollResidualH / SCROLL_PX_PER_UNIT).toInt()
+                val hUnits = if (twoFingerNavEnabled) 0 else (scrollResidualH / SCROLL_PX_PER_UNIT).toInt()
                 if (vUnits == 0 && hUnits == 0) return null
                 scrollResidualV -= vUnits * SCROLL_PX_PER_UNIT
-                scrollResidualH -= hUnits * SCROLL_PX_PER_UNIT
+                if (!twoFingerNavEnabled) {
+                    scrollResidualH -= hUnits * SCROLL_PX_PER_UNIT
+                }
                 return RecognizedGesture.Scroll(vDelta = vUnits, hDelta = hUnits)
             }
             return null
@@ -406,6 +417,8 @@ class GestureRecognizer(var zoomEnabled: Boolean = true) {
             sessionMaxPointers == 3 && sessionAllTapsSoFar -> RecognizedGesture.ThreeFingerTap
             sessionMaxPointers == 3 && direction != null -> RecognizedGesture.ThreeFingerSwipe(direction)
             sessionMaxPointers == 2 && sessionAllTapsSoFar -> RecognizedGesture.RightClick
+            sessionMaxPointers == 2 && twoFingerNavEnabled && (direction == SwipeDirection.LEFT || direction == SwipeDirection.RIGHT) ->
+                RecognizedGesture.TwoFingerSwipe(direction)
             sessionMaxPointers == 1 && isTap -> {
                 lastTapUpTimeMs = event.timeMs
                 RecognizedGesture.LeftClick

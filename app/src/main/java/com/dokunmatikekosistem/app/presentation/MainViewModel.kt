@@ -170,6 +170,22 @@ class MainViewModel @Inject constructor(
             RecognizedGesture.DragLockReleased ->
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false)
 
+            is RecognizedGesture.TwoFingerSwipe -> {
+                if (_userSettings.value.twoFingerNavEnabled) {
+                    when (gesture.direction) {
+                        SwipeDirection.RIGHT -> {
+                            sendShortcut(HidKeyboardReport.MODIFIER_ALT, LEFT_ARROW_USAGE_CODE)
+                            triggerClickHaptic()
+                        }
+                        SwipeDirection.LEFT -> {
+                            sendShortcut(HidKeyboardReport.MODIFIER_ALT, RIGHT_ARROW_USAGE_CODE)
+                            triggerClickHaptic()
+                        }
+                        else -> {}
+                    }
+                }
+            }
+
             is RecognizedGesture.ThreeFingerSwipe -> when (gesture.direction) {
                 SwipeDirection.UP -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, TAB_USAGE_CODE)
                 SwipeDirection.DOWN -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, D_USAGE_CODE)
@@ -286,6 +302,13 @@ class MainViewModel @Inject constructor(
         _userSettings.value = _userSettings.value.copy(reverseScroll = enabled)
         settingsRepository?.let { repo ->
             viewModelScope.launch { repo.setReverseScroll(enabled) }
+        }
+    }
+
+    fun setTwoFingerNav(enabled: Boolean) {
+        _userSettings.value = _userSettings.value.copy(twoFingerNavEnabled = enabled)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setTwoFingerNav(enabled) }
         }
     }
 

@@ -42,7 +42,7 @@ fun TouchpadScreen(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier
 ) {
-    val zoomEnabled by viewModel.zoomEnabled.collectAsState()
+    val userSettings by viewModel.userSettings.collectAsState()
     val isFullscreen by viewModel.isFullscreen.collectAsState()
     val context = LocalContext.current
 
@@ -97,29 +97,37 @@ fun TouchpadScreen(
                 .clip(shape)
                 .background(bgColor)
                 .then(if (isFullscreen) Modifier.systemGestureExclusion() else Modifier.border(1.dp, Color(0xFF2E2E36), shape))
-                .pointerInput(zoomEnabled) {
-                    val recognizer = GestureRecognizer(zoomEnabled = zoomEnabled)
+                .pointerInput(userSettings.zoomEnabled, userSettings.twoFingerNavEnabled) {
+                    val recognizer = GestureRecognizer(
+                        zoomEnabled = userSettings.zoomEnabled,
+                        twoFingerNavEnabled = userSettings.twoFingerNavEnabled
+                    )
                     awaitEachGesture {
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            val timeMs = System.currentTimeMillis()
-                            for (change in event.changes) {
-                                val raw: RawTouchEvent? = when {
-                                    change.pressed && change.previousPressed.not() ->
-                                        RawTouchEvent.PointerDown(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                    change.pressed && change.previousPressed ->
-                                        RawTouchEvent.PointerMove(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                    !change.pressed && change.previousPressed ->
-                                        RawTouchEvent.PointerUp(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
-                                    else -> null
+                        try {
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val timeMs = System.currentTimeMillis()
+                                for (change in event.changes) {
+                                    val raw: RawTouchEvent? = when {
+                                        change.pressed && change.previousPressed.not() ->
+                                            RawTouchEvent.PointerDown(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
+                                        change.pressed && change.previousPressed ->
+                                            RawTouchEvent.PointerMove(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
+                                        !change.pressed && change.previousPressed ->
+                                            RawTouchEvent.PointerUp(change.id.value.toInt(), change.position.x, change.position.y, timeMs)
+                                        else -> null
+                                    }
+                                    if (raw != null) {
+                                        change.consume()
+                                        recognizer.zoomEnabled = userSettings.zoomEnabled
+                                        recognizer.twoFingerNavEnabled = userSettings.twoFingerNavEnabled
+                                        recognizer.onEvent(raw)?.let { viewModel.onGesture(it) }
+                                    }
                                 }
-                                if (raw != null) {
-                                    change.consume()
-                                    recognizer.zoomEnabled = zoomEnabled
-                                    recognizer.onEvent(raw)?.let { viewModel.onGesture(it) }
-                                }
+                                if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) break
                             }
-                            if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) break
+                        } finally {
+                            recognizer.reset()
                         }
                     }
                 }

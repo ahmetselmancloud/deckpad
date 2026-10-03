@@ -95,11 +95,13 @@
     <string name="settings_layout_turkish">Turkish Q Layout</string>
     <string name="settings_layout_english">English US Layout</string>
 
-    <!-- Haptics & Reverse Scroll -->
+    <!-- Haptics, Reverse Scroll & Navigation -->
     <string name="settings_haptics_title">Haptic Feedback</string>
     <string name="settings_haptics_desc">Vibrate on taps, clicks, and modifier toggles</string>
     <string name="settings_reverse_scroll_title">Reverse Scroll Direction</string>
     <string name="settings_reverse_scroll_desc">Invert two-finger vertical scrolling (Natural / macOS style)</string>
+    <string name="settings_two_finger_nav_title">Two-Finger Navigation</string>
+    <string name="settings_two_finger_nav_desc">Swipe two fingers left/right to navigate back/forward in browsers and file explorer</string>
 
     <!-- About & Support -->
     <string name="settings_about_title">About &amp; Support</string>

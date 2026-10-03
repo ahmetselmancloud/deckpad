@@ -14,5 +14,6 @@ data class UserSettings(
     val lastDeviceAddress: String? = null,
     val appLanguage: String = "en",
     val hapticsEnabled: Boolean = true,
-    val reverseScroll: Boolean = false
+    val reverseScroll: Boolean = false,
+    val twoFingerNavEnabled: Boolean = true
 )
