@@ -102,6 +102,10 @@
     <string name="settings_reverse_scroll_desc">İki parmakla dikey kaydırma yönünü tersine çevir (Doğal / macOS tarzı)</string>
     <string name="settings_two_finger_nav_title">İki Parmakla Gezinme</string>
     <string name="settings_two_finger_nav_desc">Tarayıcı ve dosya gezgininde geri/ileri gitmek için iki parmağınızı sağa/sola kaydırın</string>
+    <string name="settings_pointer_accel_title">İmleç İvmelenmesi</string>
+    <string name="settings_pointer_accel_desc">Hızlı kaydırmalarda imleci ivmelendir, yavaş kaydırmalarda piksel hassasiyeti sağla</string>
+    <string name="settings_tap_to_click_title">Dokunarak Tıklama</string>
+    <string name="settings_tap_to_click_desc">Sol tık için 1 parmakla, sağ tık için 2 parmakla dokunun</string>
 
     <!-- About & Support -->
     <string name="settings_about_title">Hakkında &amp; Destek</string>

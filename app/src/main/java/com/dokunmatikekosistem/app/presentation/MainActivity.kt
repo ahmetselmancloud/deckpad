@@ -336,6 +336,8 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                         onHapticsToggled = { viewModel.setHapticsEnabled(it) },
                         onReverseScrollToggled = { viewModel.setReverseScroll(it) },
                         onTwoFingerNavToggled = { viewModel.setTwoFingerNav(it) },
+                        onPointerAccelerationToggled = { viewModel.setPointerAcceleration(it) },
+                        onTapToClickToggled = { viewModel.setTapToClick(it) },
                         onCursorSpeedChanged = { viewModel.setCursorSpeed(it) },
                         onScrollSpeedChanged = { viewModel.setScrollSpeed(it) },
                         onAutoReconnectToggled = { viewModel.setAutoReconnect(it) },
@@ -467,6 +469,8 @@ private fun SettingsSheetContent(
     onHapticsToggled: (Boolean) -> Unit,
     onReverseScrollToggled: (Boolean) -> Unit,
     onTwoFingerNavToggled: (Boolean) -> Unit,
+    onPointerAccelerationToggled: (Boolean) -> Unit,
+    onTapToClickToggled: (Boolean) -> Unit,
     onCursorSpeedChanged: (Float) -> Unit,
     onScrollSpeedChanged: (Float) -> Unit,
     onAutoReconnectToggled: (Boolean) -> Unit,
@@ -653,6 +657,58 @@ private fun SettingsSheetContent(
             Switch(
                 checked = userSettings.twoFingerNavEnabled,
                 onCheckedChange = onTwoFingerNavToggled
+            )
+        }
+
+        HorizontalDivider()
+
+        // Pointer Acceleration Switch
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.settings_pointer_accel_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(R.string.settings_pointer_accel_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+            Switch(
+                checked = userSettings.pointerAcceleration,
+                onCheckedChange = onPointerAccelerationToggled
+            )
+        }
+
+        HorizontalDivider()
+
+        // Tap to Click Switch
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.settings_tap_to_click_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(R.string.settings_tap_to_click_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+            Switch(
+                checked = userSettings.tapToClickEnabled,
+                onCheckedChange = onTapToClickToggled
             )
         }
 
@@ -892,7 +948,7 @@ private fun SettingsSheetContent(
                         color = Color.White
                     )
                     Text(
-                        text = "v1.0.0",
+                        text = "v1.1.0",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold

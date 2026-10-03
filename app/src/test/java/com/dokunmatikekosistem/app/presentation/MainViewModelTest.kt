@@ -627,6 +627,29 @@ class MainViewModelTest {
     }
 
     @Test
+    fun `setPointerAcceleration updates userSettings and scales fast movements when enabled`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        assertEquals(false, viewModel.userSettings.value.pointerAcceleration)
+        viewModel.setPointerAcceleration(true)
+        assertEquals(true, viewModel.userSettings.value.pointerAcceleration)
+
+        viewModel.onGesture(RecognizedGesture.CursorMove(dx = 20, dy = 0))
+        // Distance is 20: accelMultiplier is 1.0 + (20/25) = 1.8 -> dx scaled to 36
+        val sentDx = fake.allReports.first().dx
+        org.junit.Assert.assertTrue("sentDx ($sentDx) should be accelerated beyond 20", sentDx > 20)
+    }
+
+    @Test
+    fun `setTapToClick updates userSettings`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+        assertEquals(true, viewModel.userSettings.value.tapToClickEnabled)
+        viewModel.setTapToClick(false)
+        assertEquals(false, viewModel.userSettings.value.tapToClickEnabled)
+    }
+
+    @Test
     fun `selectTab updates currentTab state`() {
         val fake = FakeHidManager()
         val viewModel = MainViewModel(fake, FakeHaptics())

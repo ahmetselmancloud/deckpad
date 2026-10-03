@@ -21,17 +21,32 @@ Unlike typical remote apps, **DeckPad requires NO companion server software, NO 
 
 ---
 
+## 📸 App Screenshots
+
+<p align="center">
+  <img src="docs/images/screenshot_touchpad.png" width="18%" alt="Touchpad Screen" />
+  <img src="docs/images/screenshot_numpad.png" width="18%" alt="Numpad Screen" />
+  <img src="docs/images/screenshot_media.png" width="18%" alt="Media & Presenter Screen" />
+  <img src="docs/images/screenshot_keyboard.png" width="18%" alt="Virtual Keyboard Screen" />
+  <img src="docs/images/screenshot_gesture_guide.png" width="18%" alt="Gesture Guide & Settings" />
+</p>
+
+---
+
 ## ✨ Features at a Glance
 
 ### 🖱️ 1. Advanced Multi-Touch Trackpad
 * **Zero-Latency Hardware Architecture:**
   * **Delta Coalescing & Off-Main-Thread Dispatch:** 120Hz/240Hz screen polling smoothly regulated with high-priority dedicated background thread to eliminate Bluetooth buffer bloat. Zero lag, zero accumulation even over hours of continuous usage.
-* **Precision Gestures:**
+  * **Lightweight R8 Minified Binary:** Optimized to ~2.1 MB footprint for ultra-fast load times and minimal memory consumption.
+* **Precision Gestures & Fine Controls:**
   * **1-Finger Move & Tap:** Ultra-smooth cursor control and left-click.
   * **Double Tap & Drag:** Seamless window dragging and text selection (Drag Lock).
   * **2-Finger Scrolling:** Smooth vertical and horizontal page navigation (with natural / reverse scroll toggle).
   * **2-Finger Navigation (Back / Forward):** Swipe left or right with two fingers to navigate backward (`Alt + Left Arrow`) or forward (`Alt + Right Arrow`) in web browsers and Windows File Explorer.
   * **2-Finger Pinch-to-Zoom:** Hardware-level Ctrl + Wheel zoom in and out.
+  * **Pointer Acceleration Toggle:** Switch between 1:1 hardware linear mapping and dynamic velocity acceleration (Windows Precision Touchpad style).
+  * **Tap-to-Click Toggle:** Enable or disable tap-based clicking to prevent accidental clicks while navigating.
   * **3-Finger Tap (Configurable):** Middle Click (open links in new tab), Windows Search (`Win + S`), Show Desktop (`Win + D`), or Action Center (`Win + N`).
   * **3-Finger Swipes:** Task View (`Win + Tab` swipe up), Show Desktop (`Win + D` swipe down), and Switch Apps (`Alt + Tab` / `Alt + Shift + Tab` swipe left/right).
   * **4-Finger Swipes:** Seamlessly slide between Windows virtual desktops (`Ctrl + Win + Left/Right`).

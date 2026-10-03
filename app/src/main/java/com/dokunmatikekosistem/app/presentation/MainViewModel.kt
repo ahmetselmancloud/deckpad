@@ -98,11 +98,19 @@ class MainViewModel @Inject constructor(
         when (gesture) {
             is RecognizedGesture.CursorMove -> {
                 val speed = _userSettings.value.cursorSpeed
-                if (speed == 1.0f) {
+                val accel = _userSettings.value.pointerAcceleration
+                val dist = kotlin.math.hypot(gesture.dx.toFloat(), gesture.dy.toFloat())
+                val accelMultiplier = if (accel && dist > 1.5f) {
+                    1.0f + (dist / 25.0f).coerceAtMost(1.2f)
+                } else {
+                    1.0f
+                }
+                val effectiveSpeed = speed * accelMultiplier
+                if (effectiveSpeed == 1.0f) {
                     hidManager.sendMouseReport(gesture.dx, gesture.dy, wheelDelta = 0, panDelta = 0, leftButtonPressed = false, rightButtonPressed = false)
                 } else {
-                    val totalDx = gesture.dx * speed + cursorResidualX
-                    val totalDy = gesture.dy * speed + cursorResidualY
+                    val totalDx = gesture.dx * effectiveSpeed + cursorResidualX
+                    val totalDy = gesture.dy * effectiveSpeed + cursorResidualY
                     val sendDx = kotlin.math.round(totalDx).toInt()
                     val sendDy = kotlin.math.round(totalDy).toInt()
                     cursorResidualX = totalDx - sendDx
@@ -305,6 +313,20 @@ class MainViewModel @Inject constructor(
         _userSettings.value = _userSettings.value.copy(twoFingerNavEnabled = enabled)
         settingsRepository?.let { repo ->
             viewModelScope.launch { repo.setTwoFingerNav(enabled) }
+        }
+    }
+
+    fun setPointerAcceleration(enabled: Boolean) {
+        _userSettings.value = _userSettings.value.copy(pointerAcceleration = enabled)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setPointerAcceleration(enabled) }
+        }
+    }
+
+    fun setTapToClick(enabled: Boolean) {
+        _userSettings.value = _userSettings.value.copy(tapToClickEnabled = enabled)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setTapToClick(enabled) }
         }
     }
 

@@ -97,10 +97,11 @@ fun TouchpadScreen(
                 .clip(shape)
                 .background(bgColor)
                 .then(if (isFullscreen) Modifier.systemGestureExclusion() else Modifier.border(1.dp, Color(0xFF2E2E36), shape))
-                .pointerInput(userSettings.zoomEnabled, userSettings.twoFingerNavEnabled) {
+                .pointerInput(userSettings.zoomEnabled, userSettings.twoFingerNavEnabled, userSettings.tapToClickEnabled) {
                     val recognizer = GestureRecognizer(
                         zoomEnabled = userSettings.zoomEnabled,
-                        twoFingerNavEnabled = userSettings.twoFingerNavEnabled
+                        twoFingerNavEnabled = userSettings.twoFingerNavEnabled,
+                        tapToClickEnabled = userSettings.tapToClickEnabled
                     )
                     awaitEachGesture {
                         try {
@@ -121,6 +122,7 @@ fun TouchpadScreen(
                                         change.consume()
                                         recognizer.zoomEnabled = userSettings.zoomEnabled
                                         recognizer.twoFingerNavEnabled = userSettings.twoFingerNavEnabled
+                                        recognizer.tapToClickEnabled = userSettings.tapToClickEnabled
                                         recognizer.onEvent(raw)?.let { viewModel.onGesture(it) }
                                     }
                                 }

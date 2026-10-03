@@ -529,6 +529,24 @@ class GestureRecognizerTest {
         val upResult = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 260f, y = 200f, timeMs = 110))
         assertNull(upResult)
     }
+
+    @Test
+    fun `when tapToClickEnabled is false, single finger tap returns null`() {
+        val recognizer = GestureRecognizer(tapToClickEnabled = false)
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 50))
+        assertNull(result)
+    }
+
+    @Test
+    fun `when tapToClickEnabled is false, two finger tap returns null`() {
+        val recognizer = GestureRecognizer(tapToClickEnabled = false)
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 150f, y = 100f, timeMs = 10))
+        recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 50))
+        val result = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 150f, y = 100f, timeMs = 60))
+        assertNull(result)
+    }
 }
 
 

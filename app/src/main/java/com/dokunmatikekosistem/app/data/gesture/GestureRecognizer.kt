@@ -76,7 +76,8 @@ private class ActivePointer(var lastX: Float, var lastY: Float, val downX: Float
  */
 class GestureRecognizer(
     var zoomEnabled: Boolean = true,
-    var twoFingerNavEnabled: Boolean = true
+    var twoFingerNavEnabled: Boolean = true,
+    var tapToClickEnabled: Boolean = true
 ) {
 
     private val active = mutableMapOf<Int, ActivePointer>()
@@ -416,12 +417,12 @@ class GestureRecognizer(
             sessionMaxPointers == 4 && direction != null -> RecognizedGesture.FourFingerSwipe(direction)
             sessionMaxPointers == 3 && sessionAllTapsSoFar -> RecognizedGesture.ThreeFingerTap
             sessionMaxPointers == 3 && direction != null -> RecognizedGesture.ThreeFingerSwipe(direction)
-            sessionMaxPointers == 2 && sessionAllTapsSoFar -> RecognizedGesture.RightClick
+            sessionMaxPointers == 2 && sessionAllTapsSoFar -> if (tapToClickEnabled) RecognizedGesture.RightClick else null
             sessionMaxPointers == 2 && twoFingerNavEnabled && (direction == SwipeDirection.LEFT || direction == SwipeDirection.RIGHT) ->
                 RecognizedGesture.TwoFingerSwipe(direction)
             sessionMaxPointers == 1 && isTap -> {
                 lastTapUpTimeMs = event.timeMs
-                RecognizedGesture.LeftClick
+                if (tapToClickEnabled) RecognizedGesture.LeftClick else null
             }
             else -> null
         }

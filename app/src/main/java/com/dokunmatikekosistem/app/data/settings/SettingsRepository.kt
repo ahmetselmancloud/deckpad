@@ -31,6 +31,8 @@ class SettingsRepository @Inject constructor(
         val KEY_HAPTICS_ENABLED = booleanPreferencesKey("haptics_enabled")
         val KEY_REVERSE_SCROLL = booleanPreferencesKey("reverse_scroll")
         val KEY_TWO_FINGER_NAV = booleanPreferencesKey("two_finger_nav")
+        val KEY_POINTER_ACCELERATION = booleanPreferencesKey("pointer_acceleration")
+        val KEY_TAP_TO_CLICK = booleanPreferencesKey("tap_to_click")
     }
 
     val userSettingsFlow: Flow<UserSettings> = dataStore.data
@@ -54,6 +56,8 @@ class SettingsRepository @Inject constructor(
             val haptics = prefs[KEY_HAPTICS_ENABLED] ?: true
             val revScroll = prefs[KEY_REVERSE_SCROLL] ?: false
             val twoFingerNav = prefs[KEY_TWO_FINGER_NAV] ?: true
+            val pointerAccel = prefs[KEY_POINTER_ACCELERATION] ?: false
+            val tapClick = prefs[KEY_TAP_TO_CLICK] ?: true
 
             UserSettings(
                 threeFingerTapAction = runCatching { TapAction.valueOf(threeTapName) }.getOrDefault(TapAction.MIDDLE_CLICK),
@@ -67,7 +71,9 @@ class SettingsRepository @Inject constructor(
                 appLanguage = appLang,
                 hapticsEnabled = haptics,
                 reverseScroll = revScroll,
-                twoFingerNavEnabled = twoFingerNav
+                twoFingerNavEnabled = twoFingerNav,
+                pointerAcceleration = pointerAccel,
+                tapToClickEnabled = tapClick
             )
         }
 
@@ -144,6 +150,18 @@ class SettingsRepository @Inject constructor(
     suspend fun setTwoFingerNav(enabled: Boolean) {
         dataStore.edit { prefs ->
             prefs[KEY_TWO_FINGER_NAV] = enabled
+        }
+    }
+
+    suspend fun setPointerAcceleration(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_POINTER_ACCELERATION] = enabled
+        }
+    }
+
+    suspend fun setTapToClick(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_TAP_TO_CLICK] = enabled
         }
     }
 }

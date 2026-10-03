@@ -102,6 +102,10 @@
     <string name="settings_reverse_scroll_desc">Invert two-finger vertical scrolling (Natural / macOS style)</string>
     <string name="settings_two_finger_nav_title">Two-Finger Navigation</string>
     <string name="settings_two_finger_nav_desc">Swipe two fingers left/right to navigate back/forward in browsers and file explorer</string>
+    <string name="settings_pointer_accel_title">Pointer Acceleration</string>
+    <string name="settings_pointer_accel_desc">Dynamically scale speed based on swipe velocity (Windows Precision style)</string>
+    <string name="settings_tap_to_click_title">Tap to Click</string>
+    <string name="settings_tap_to_click_desc">Tap with 1 finger for Left-Click and 2 fingers for Right-Click</string>
 
     <!-- About & Support -->
     <string name="settings_about_title">About &amp; Support</string>
