@@ -52,7 +52,7 @@ object NotificationHelper {
         NotificationCompat.Builder(context, HID_SERVICE_NOTIFICATION_CHANNEL_ID)
             .setContentTitle(context.getString(R.string.app_name))
             .setContentText(context.getString(titleResFor(state)))
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_stat_deckpad)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
