@@ -95,6 +95,12 @@
     <string name="settings_layout_turkish">Türkçe Q Klavye</string>
     <string name="settings_layout_english">İngilizce US Klavye</string>
 
+    <!-- Haptics & Reverse Scroll -->
+    <string name="settings_haptics_title">Dokunsal Titreşim (Haptik)</string>
+    <string name="settings_haptics_desc">Dokunma, tıklama ve tuş basımlarında hafif titreşim hissi</string>
+    <string name="settings_reverse_scroll_title">Ters Kaydırma Yönü</string>
+    <string name="settings_reverse_scroll_desc">İki parmakla dikey kaydırma yönünü tersine çevir (Doğal / macOS tarzı)</string>
+
     <!-- About & Support -->
     <string name="settings_about_title">Hakkında &amp; Destek</string>
     <string name="settings_about_desc">Windows bilgisayarlar için ücretsiz, açık kaynaklı Bluetooth HID uzaktan kontrol ekosistemi.</string>

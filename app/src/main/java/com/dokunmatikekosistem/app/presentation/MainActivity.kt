@@ -333,6 +333,8 @@ fun MainAppScreen(viewModel: MainViewModel, onConnectRequested: () -> Unit) {
                         onFourFingerActionSelected = { viewModel.setFourFingerTapAction(it) },
                         onZoomToggled = { viewModel.setZoomEnabled(it) },
                         onTurkishLayoutToggled = { viewModel.setTurkishLayout(it) },
+                        onHapticsToggled = { viewModel.setHapticsEnabled(it) },
+                        onReverseScrollToggled = { viewModel.setReverseScroll(it) },
                         onCursorSpeedChanged = { viewModel.setCursorSpeed(it) },
                         onScrollSpeedChanged = { viewModel.setScrollSpeed(it) },
                         onAutoReconnectToggled = { viewModel.setAutoReconnect(it) },
@@ -461,6 +463,8 @@ private fun SettingsSheetContent(
     onFourFingerActionSelected: (TapAction) -> Unit,
     onZoomToggled: (Boolean) -> Unit,
     onTurkishLayoutToggled: (Boolean) -> Unit,
+    onHapticsToggled: (Boolean) -> Unit,
+    onReverseScrollToggled: (Boolean) -> Unit,
     onCursorSpeedChanged: (Float) -> Unit,
     onScrollSpeedChanged: (Float) -> Unit,
     onAutoReconnectToggled: (Boolean) -> Unit,
@@ -600,6 +604,32 @@ private fun SettingsSheetContent(
 
         HorizontalDivider()
 
+        // Reverse Scroll Switch
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.settings_reverse_scroll_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(R.string.settings_reverse_scroll_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+            Switch(
+                checked = userSettings.reverseScroll,
+                onCheckedChange = onReverseScrollToggled
+            )
+        }
+
+        HorizontalDivider()
+
         // Auto-reconnect Switch
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -621,6 +651,32 @@ private fun SettingsSheetContent(
             Switch(
                 checked = userSettings.autoReconnect,
                 onCheckedChange = onAutoReconnectToggled
+            )
+        }
+
+        HorizontalDivider()
+
+        // Haptic Feedback Switch
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.settings_haptics_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(R.string.settings_haptics_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+            Switch(
+                checked = userSettings.hapticsEnabled,
+                onCheckedChange = onHapticsToggled
             )
         }
 

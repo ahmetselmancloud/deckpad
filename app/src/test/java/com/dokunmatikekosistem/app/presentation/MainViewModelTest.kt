@@ -688,5 +688,52 @@ class MainViewModelTest {
         assertEquals(listOf(com.dokunmatikekosistem.app.data.hid.HidKeyboardReport.MODIFIER_CTRL to com.dokunmatikekosistem.app.data.hid.HidUsageCodes.KEY_V), fake.allKeyPresses)
         assertEquals(1, haptics.clickCount)
     }
+
+    @Test
+    fun `setHapticsEnabled disables all haptic feedback when set to false`() {
+        val fake = FakeHidManager()
+        val haptics = FakeHaptics()
+        val viewModel = MainViewModel(fake, haptics)
+
+        assertEquals(true, viewModel.userSettings.value.hapticsEnabled)
+        viewModel.onGesture(RecognizedGesture.LeftClick)
+        assertEquals(1, haptics.clickCount)
+
+        viewModel.setHapticsEnabled(false)
+        assertEquals(false, viewModel.userSettings.value.hapticsEnabled)
+
+        viewModel.onGesture(RecognizedGesture.LeftClick)
+        viewModel.onGesture(RecognizedGesture.RightClick)
+        viewModel.onGesture(RecognizedGesture.DragLockEngaged)
+        viewModel.sendConsumer(com.dokunmatikekosistem.app.data.hid.HidConsumerReport.VOLUME_INCREMENT)
+        viewModel.macroCopy()
+
+        // Haptic click count must remain 1 (no new haptic triggers fired)
+        assertEquals(1, haptics.clickCount)
+        assertEquals(0, haptics.dragLockEngagedCount)
+    }
+
+    @Test
+    fun `setReverseScroll inverts vertical scroll direction`() {
+        val fake = FakeHidManager()
+        val viewModel = MainViewModel(fake, FakeHaptics())
+
+        assertEquals(false, viewModel.userSettings.value.reverseScroll)
+        viewModel.onGesture(RecognizedGesture.Scroll(vDelta = 5, hDelta = 2))
+        assertEquals(
+            listOf(FakeMouseReport(0, 0, wheelDelta = 5, panDelta = 2, leftButtonPressed = false, rightButtonPressed = false)),
+            fake.allReports
+        )
+
+        viewModel.setReverseScroll(true)
+        assertEquals(true, viewModel.userSettings.value.reverseScroll)
+
+        fake.allReports.clear()
+        viewModel.onGesture(RecognizedGesture.Scroll(vDelta = 5, hDelta = 2))
+        assertEquals(
+            listOf(FakeMouseReport(0, 0, wheelDelta = -5, panDelta = 2, leftButtonPressed = false, rightButtonPressed = false)),
+            fake.allReports
+        )
+    }
 }
 

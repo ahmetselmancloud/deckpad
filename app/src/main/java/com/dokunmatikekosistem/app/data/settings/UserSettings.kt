@@ -12,5 +12,7 @@ data class UserSettings(
     val scrollSpeed: Float = 1.0f,
     val autoReconnect: Boolean = true,
     val lastDeviceAddress: String? = null,
-    val appLanguage: String = "en"
+    val appLanguage: String = "en",
+    val hapticsEnabled: Boolean = true,
+    val reverseScroll: Boolean = false
 )

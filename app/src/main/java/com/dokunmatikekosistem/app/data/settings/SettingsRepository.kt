@@ -28,6 +28,8 @@ class SettingsRepository @Inject constructor(
         val KEY_AUTO_RECONNECT = booleanPreferencesKey("auto_reconnect")
         val KEY_LAST_DEVICE_ADDRESS = stringPreferencesKey("last_connected_device_address")
         val KEY_APP_LANGUAGE = stringPreferencesKey("app_language")
+        val KEY_HAPTICS_ENABLED = booleanPreferencesKey("haptics_enabled")
+        val KEY_REVERSE_SCROLL = booleanPreferencesKey("reverse_scroll")
     }
 
     val userSettingsFlow: Flow<UserSettings> = dataStore.data
@@ -48,6 +50,8 @@ class SettingsRepository @Inject constructor(
             val autoRec = prefs[KEY_AUTO_RECONNECT] ?: true
             val lastAddr = prefs[KEY_LAST_DEVICE_ADDRESS]
             val appLang = prefs[KEY_APP_LANGUAGE] ?: "en"
+            val haptics = prefs[KEY_HAPTICS_ENABLED] ?: true
+            val revScroll = prefs[KEY_REVERSE_SCROLL] ?: false
 
             UserSettings(
                 threeFingerTapAction = runCatching { TapAction.valueOf(threeTapName) }.getOrDefault(TapAction.MIDDLE_CLICK),
@@ -58,7 +62,9 @@ class SettingsRepository @Inject constructor(
                 scrollSpeed = scroll,
                 autoReconnect = autoRec,
                 lastDeviceAddress = lastAddr,
-                appLanguage = appLang
+                appLanguage = appLang,
+                hapticsEnabled = haptics,
+                reverseScroll = revScroll
             )
         }
 
@@ -117,6 +123,18 @@ class SettingsRepository @Inject constructor(
     suspend fun setAppLanguage(languageCode: String) {
         dataStore.edit { prefs ->
             prefs[KEY_APP_LANGUAGE] = languageCode
+        }
+    }
+
+    suspend fun setHapticsEnabled(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_HAPTICS_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setReverseScroll(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_REVERSE_SCROLL] = enabled
         }
     }
 }

@@ -116,22 +116,25 @@ class MainViewModel @Inject constructor(
             RecognizedGesture.LeftClick -> {
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = true, rightButtonPressed = false)
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false)
-                haptics.click()
+                triggerClickHaptic()
             }
 
             RecognizedGesture.RightClick -> {
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = true)
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false)
-                haptics.click()
+                triggerClickHaptic()
             }
 
             is RecognizedGesture.Scroll -> {
                 val speed = _userSettings.value.scrollSpeed
+                val directionMultiplier = if (_userSettings.value.reverseScroll) -1 else 1
+                val baseV = gesture.vDelta * directionMultiplier
+                val baseH = gesture.hDelta
                 if (speed == 1.0f) {
-                    hidManager.sendMouseReport(0, 0, wheelDelta = gesture.vDelta, panDelta = gesture.hDelta, leftButtonPressed = false, rightButtonPressed = false)
+                    hidManager.sendMouseReport(0, 0, wheelDelta = baseV, panDelta = baseH, leftButtonPressed = false, rightButtonPressed = false)
                 } else {
-                    val totalV = gesture.vDelta * speed + scrollResidualV
-                    val totalH = gesture.hDelta * speed + scrollResidualH
+                    val totalV = baseV * speed + scrollResidualV
+                    val totalH = baseH * speed + scrollResidualH
                     val sendV = kotlin.math.round(totalV).toInt()
                     val sendH = kotlin.math.round(totalH).toInt()
                     scrollResidualV = totalV - sendV
@@ -144,7 +147,7 @@ class MainViewModel @Inject constructor(
 
             RecognizedGesture.DragLockEngaged -> {
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = true, rightButtonPressed = false)
-                haptics.dragLockEngaged()
+                triggerDragLockHaptic()
             }
 
             is RecognizedGesture.DragMove -> {
@@ -203,7 +206,7 @@ class MainViewModel @Inject constructor(
             TapAction.MIDDLE_CLICK -> {
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false, middleButtonPressed = true)
                 hidManager.sendMouseReport(0, 0, 0, 0, leftButtonPressed = false, rightButtonPressed = false, middleButtonPressed = false)
-                haptics.click()
+                triggerClickHaptic()
             }
             TapAction.WINDOWS_SEARCH -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, S_USAGE_CODE)
             TapAction.SHOW_DESKTOP -> sendShortcut(HidKeyboardReport.MODIFIER_WIN, D_USAGE_CODE)
@@ -272,6 +275,20 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun setHapticsEnabled(enabled: Boolean) {
+        _userSettings.value = _userSettings.value.copy(hapticsEnabled = enabled)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setHapticsEnabled(enabled) }
+        }
+    }
+
+    fun setReverseScroll(enabled: Boolean) {
+        _userSettings.value = _userSettings.value.copy(reverseScroll = enabled)
+        settingsRepository?.let { repo ->
+            viewModelScope.launch { repo.setReverseScroll(enabled) }
+        }
+    }
+
     fun onLayoutToggleClicked() {
         val nextIsTurkish = _activeLayout.value !is TurkishQLayout
         setTurkishLayout(nextIsTurkish)
@@ -336,7 +353,7 @@ class MainViewModel @Inject constructor(
         } else {
             // İlk basış: Win kombinasyon modu (Win+D, Win+E, Win+R vb.) için aktif et
             _modifierState.value = _modifierState.value.copy(winActive = true)
-            haptics.click()
+            triggerClickHaptic()
         }
     }
 
@@ -357,12 +374,12 @@ class MainViewModel @Inject constructor(
             kotlinx.coroutines.delay(50L)
             hidManager.releaseKeyboardReport()
         }
-        haptics.click()
+        triggerClickHaptic()
     }
 
     fun sendConsumer(usageCode: Int) {
         hidManager.sendConsumerReport(usageCode)
-        haptics.click()
+        triggerClickHaptic()
     }
 
     // Macro actions
@@ -377,12 +394,24 @@ class MainViewModel @Inject constructor(
     private fun sendShortcutWithHaptics(modifierBits: Int, usageCode: Int) {
         hidManager.sendKeyboardReport(modifierBits, usageCode)
         hidManager.releaseKeyboardReport()
-        haptics.click()
+        triggerClickHaptic()
     }
 
     private fun sendShortcut(modifierBits: Int, usageCode: Int) {
         hidManager.sendKeyboardReport(modifierBits, usageCode)
         hidManager.releaseKeyboardReport()
+    }
+
+    private fun triggerClickHaptic() {
+        if (_userSettings.value.hapticsEnabled) {
+            haptics.click()
+        }
+    }
+
+    private fun triggerDragLockHaptic() {
+        if (_userSettings.value.hapticsEnabled) {
+            haptics.dragLockEngaged()
+        }
     }
 }
 

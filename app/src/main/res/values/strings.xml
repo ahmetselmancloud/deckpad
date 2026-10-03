@@ -95,6 +95,12 @@
     <string name="settings_layout_turkish">Turkish Q Layout</string>
     <string name="settings_layout_english">English US Layout</string>
 
+    <!-- Haptics & Reverse Scroll -->
+    <string name="settings_haptics_title">Haptic Feedback</string>
+    <string name="settings_haptics_desc">Vibrate on taps, clicks, and modifier toggles</string>
+    <string name="settings_reverse_scroll_title">Reverse Scroll Direction</string>
+    <string name="settings_reverse_scroll_desc">Invert two-finger vertical scrolling (Natural / macOS style)</string>
+
     <!-- About & Support -->
     <string name="settings_about_title">About &amp; Support</string>
     <string name="settings_about_desc">Free, open-source Bluetooth HID remote ecosystem for Windows PCs.</string>
