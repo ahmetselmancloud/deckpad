@@ -834,6 +834,40 @@ private fun SettingsSheetContent(
 
         HorizontalDivider()
 
+        // Gesture Guide Section
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp),
+            color = Color(0xFF1E1E26),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2E2E38))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.settings_gesture_guide_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = stringResource(R.string.settings_gesture_guide_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+
+                GestureGuideItem("👆 " + stringResource(R.string.gesture_1_finger_title), stringResource(R.string.gesture_1_finger_desc))
+                GestureGuideItem("✌️ " + stringResource(R.string.gesture_2_fingers_title), stringResource(R.string.gesture_2_fingers_desc))
+                GestureGuideItem("🖐️ " + stringResource(R.string.gesture_3_fingers_title), stringResource(R.string.gesture_3_fingers_desc))
+                GestureGuideItem("✋ " + stringResource(R.string.gesture_4_fingers_title), stringResource(R.string.gesture_4_fingers_desc))
+            }
+        }
+
+        HorizontalDivider()
+
         // About & Support Section
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -916,5 +950,30 @@ private fun SettingsSheetContent(
         ) {
             Text(stringResource(R.string.action_close))
         }
+    }
+}
+
+@Composable
+private fun GestureGuideItem(title: String, desc: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color(0xFF262632))
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = title,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = desc,
+            fontSize = 11.sp,
+            color = Color.White.copy(alpha = 0.85f),
+            lineHeight = 15.sp
+        )
     }
 }

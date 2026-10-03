@@ -173,14 +173,10 @@ class MainViewModel @Inject constructor(
             is RecognizedGesture.TwoFingerSwipe -> {
                 if (_userSettings.value.twoFingerNavEnabled) {
                     when (gesture.direction) {
-                        SwipeDirection.RIGHT -> {
+                        SwipeDirection.RIGHT ->
                             sendShortcut(HidKeyboardReport.MODIFIER_ALT, LEFT_ARROW_USAGE_CODE)
-                            triggerClickHaptic()
-                        }
-                        SwipeDirection.LEFT -> {
+                        SwipeDirection.LEFT ->
                             sendShortcut(HidKeyboardReport.MODIFIER_ALT, RIGHT_ARROW_USAGE_CODE)
-                            triggerClickHaptic()
-                        }
                         else -> {}
                     }
                 }
@@ -423,6 +419,7 @@ class MainViewModel @Inject constructor(
     private fun sendShortcut(modifierBits: Int, usageCode: Int) {
         hidManager.sendKeyboardReport(modifierBits, usageCode)
         hidManager.releaseKeyboardReport()
+        triggerClickHaptic()
     }
 
     private fun triggerClickHaptic() {

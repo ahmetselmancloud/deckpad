@@ -116,4 +116,16 @@
     <string name="notif_ready">Ready, waiting for connection</string>
     <string name="notif_connected">Connected</string>
     <string name="notif_error">Error</string>
+
+    <!-- Gesture Guide -->
+    <string name="settings_gesture_guide_title">Touchpad Gesture Guide</string>
+    <string name="settings_gesture_guide_desc">Quick reference for all multi-touch precision gestures</string>
+    <string name="gesture_1_finger_title">1 Finger</string>
+    <string name="gesture_1_finger_desc">Move cursor, tap for Left-Click, double-tap &amp; hold to Drag (Drag Lock)</string>
+    <string name="gesture_2_fingers_title">2 Fingers</string>
+    <string name="gesture_2_fingers_desc">Tap for Right-Click, scroll vertically/horizontally, swipe left/right for Back/Forward, pinch to Zoom</string>
+    <string name="gesture_3_fingers_title">3 Fingers</string>
+    <string name="gesture_3_fingers_desc">Swipe Up: Task View (Win+Tab)\nSwipe Down: Show Desktop (Win+D)\nSwipe Left/Right: Switch Apps (Alt+Tab)\nTap: Windows Search / Middle Click</string>
+    <string name="gesture_4_fingers_title">4 Fingers</string>
+    <string name="gesture_4_fingers_desc">Swipe Left/Right: Switch Virtual Desktops (Ctrl+Win+Arrows)\nTap: Notification Center (Win+N)</string>
 </resources>

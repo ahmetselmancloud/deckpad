@@ -116,4 +116,16 @@
     <string name="notif_ready">Kayıtlı, bağlantı bekleniyor</string>
     <string name="notif_connected">Bağlı</string>
     <string name="notif_error">Hata</string>
+
+    <!-- Gesture Guide -->
+    <string name="settings_gesture_guide_title">Dokunmatik Jest Rehberi</string>
+    <string name="settings_gesture_guide_desc">Tüm çoklu dokunma hareketlerinin kısayol kılavuzu</string>
+    <string name="gesture_1_finger_title">1 Parmak</string>
+    <string name="gesture_1_finger_desc">İmleç hareketi, dokunarak Sol Tık, çift dokunup sürükleyerek Taşıma (Drag Lock)</string>
+    <string name="gesture_2_fingers_title">2 Parmak</string>
+    <string name="gesture_2_fingers_desc">Dokunarak Sağ Tık, dikey/yatay kaydırma, sağa/sola çekerek Geri/İleri gitme, parmak açıp kapatarak Yakınlaştırma (Pinch to Zoom)</string>
+    <string name="gesture_3_fingers_title">3 Parmak</string>
+    <string name="gesture_3_fingers_desc">Yukarı: Görev Görünümü (Win+Tab)\nAşağı: Masaüstünü Göster (Win+D)\nSağa/Sola: Uygulama Değiştir (Alt+Tab)\nDokunma: Windows Arama / Orta Tık</string>
+    <string name="gesture_4_fingers_title">4 Parmak</string>
+    <string name="gesture_4_fingers_desc">Sağa/Sola: Sanal Masaüstleri Arasında Geçiş (Ctrl+Win+Ok)\nDokunma: Bildirim Merkezi (Win+N)</string>
 </resources>

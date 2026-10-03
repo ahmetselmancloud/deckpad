@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" width="120" height="120" alt="DeckPad Logo" style="border-radius: 24px;" />
+</p>
+
 # 📱 DeckPad — Zero-Latency PC Remote Ecosystem
 
 <p align="center">
@@ -20,15 +24,19 @@ Unlike typical remote apps, **DeckPad requires NO companion server software, NO 
 ## ✨ Features at a Glance
 
 ### 🖱️ 1. Advanced Multi-Touch Trackpad
+* **Zero-Latency Hardware Architecture:**
+  * **Delta Coalescing & Off-Main-Thread Dispatch:** 120Hz/240Hz screen polling smoothly regulated with high-priority dedicated background thread to eliminate Bluetooth buffer bloat. Zero lag, zero accumulation even over hours of continuous usage.
 * **Precision Gestures:**
   * **1-Finger Move & Tap:** Ultra-smooth cursor control and left-click.
   * **Double Tap & Drag:** Seamless window dragging and text selection (Drag Lock).
-  * **2-Finger Scrolling:** Smooth vertical and horizontal page navigation.
+  * **2-Finger Scrolling:** Smooth vertical and horizontal page navigation (with natural / reverse scroll toggle).
+  * **2-Finger Navigation (Back / Forward):** Swipe left or right with two fingers to navigate backward (`Alt + Left Arrow`) or forward (`Alt + Right Arrow`) in web browsers and Windows File Explorer.
   * **2-Finger Pinch-to-Zoom:** Hardware-level Ctrl + Wheel zoom in and out.
   * **3-Finger Tap (Configurable):** Middle Click (open links in new tab), Windows Search (`Win + S`), Show Desktop (`Win + D`), or Action Center (`Win + N`).
   * **3-Finger Swipes:** Task View (`Win + Tab` swipe up), Show Desktop (`Win + D` swipe down), and Switch Apps (`Alt + Tab` / `Alt + Shift + Tab` swipe left/right).
   * **4-Finger Swipes:** Seamlessly slide between Windows virtual desktops (`Ctrl + Win + Left/Right`).
   * **4-Finger Tap:** Quick Notification & Action Center toggle (`Win + N`).
+* **Tactile Haptic Engine:** Instant vibration feedback on clicks, taps, and multi-finger gestures.
 * **Distraction-Free Fullscreen Mode:** Hide top bars and system UI with wake lock protection for uninterrupted touchpad control.
 
 ### 🔢 2. Productivity Numpad
