@@ -12,3 +12,5 @@ local.properties
 /.worktrees
 *.apk
 *.aab
+*.jks
+*.keystore

@@ -19,3 +19,15 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Preserve line numbers for release crash reporting
+-keepattributes SourceFile,LineNumberTable
+
+# Preserve DataStore preference models and enums
+-keepclassmembers enum com.dokunmatikekosistem.app.** { *; }
+-keep class com.dokunmatikekosistem.app.data.settings.** { *; }
+
+# Keep ViewModel public constructors for Hilt
+-keepclassmembers class * extends androidx.lifecycle.ViewModel {
+    public <init>(...);
+}
