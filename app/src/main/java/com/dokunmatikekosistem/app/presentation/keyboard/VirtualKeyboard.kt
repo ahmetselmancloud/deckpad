@@ -37,14 +37,52 @@ import com.dokunmatikekosistem.app.domain.ShiftState
 fun VirtualKeyboard(
     layout: KeyboardLayout,
     modifierState: KeyboardModifierState,
+    isSymbolMode: Boolean,
+    onToggleSymbolMode: () -> Unit,
     onKeyTyped: (Char) -> Unit,
     onShiftClicked: () -> Unit,
-    onCapsLockClicked: () -> Unit,
     onCtrlClicked: () -> Unit,
     onAltClicked: () -> Unit,
     onWinClicked: () -> Unit,
     onWinLongClicked: () -> Unit = {},
-    onCtrlAltDelClicked: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (isSymbolMode) {
+        SymbolKeyboard(
+            modifierState = modifierState,
+            onToggleSymbolMode = onToggleSymbolMode,
+            onKeyTyped = onKeyTyped,
+            onCtrlClicked = onCtrlClicked,
+            onAltClicked = onAltClicked,
+            modifier = modifier
+        )
+    } else {
+        AlphaKeyboard(
+            layout = layout,
+            modifierState = modifierState,
+            onToggleSymbolMode = onToggleSymbolMode,
+            onKeyTyped = onKeyTyped,
+            onShiftClicked = onShiftClicked,
+            onCtrlClicked = onCtrlClicked,
+            onAltClicked = onAltClicked,
+            onWinClicked = onWinClicked,
+            onWinLongClicked = onWinLongClicked,
+            modifier = modifier
+        )
+    }
+}
+
+@Composable
+private fun AlphaKeyboard(
+    layout: KeyboardLayout,
+    modifierState: KeyboardModifierState,
+    onToggleSymbolMode: () -> Unit,
+    onKeyTyped: (Char) -> Unit,
+    onShiftClicked: () -> Unit,
+    onCtrlClicked: () -> Unit,
+    onAltClicked: () -> Unit,
+    onWinClicked: () -> Unit,
+    onWinLongClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val upper = modifierState.isUpperCaseEffective()
@@ -124,16 +162,16 @@ fun VirtualKeyboard(
             }
         }
 
-        // --- Row 3: Shift + Bottom letters (z x c v b n m ö ç) + Sil (Backspace) ---
-        // Letters have exact same 1.0f width as Row 1 and Row 2! Shift and Sil balance the row!
+        // --- Row 3: Shift / CAPS + Bottom letters + Delete ---
         val sideKeyWeight = ((maxRowUnits - row3.size.toFloat()) / 2f).coerceAtLeast(1.2f)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
         ) {
+            val shiftLabel = if (modifierState.shiftState == ShiftState.Locked) "CAPS" else "Shift"
             KeyButton(
-                label = "Shift",
+                label = shiftLabel,
                 weight = sideKeyWeight,
                 isPrimary = modifierState.shiftState != ShiftState.Off,
                 fontSize = 13.sp,
@@ -157,7 +195,7 @@ fun VirtualKeyboard(
             )
         }
 
-        // --- Row 4: Modifiers, Space, Enter ---
+        // --- Row 4: ?123, Ctrl, Alt, Space, Enter, Win (6 keys!) ---
         val isTwelve = maxRowUnits >= 11.5f
         Row(
             modifier = Modifier
@@ -165,11 +203,12 @@ fun VirtualKeyboard(
                 .weight(1f)
         ) {
             KeyButton(
-                label = "Caps",
-                weight = if (isTwelve) 1.2f else 1.1f,
-                isPrimary = modifierState.capsLockActive,
-                fontSize = 12.sp,
-                onClick = onCapsLockClicked
+                label = "?123",
+                weight = if (isTwelve) 1.4f else 1.2f,
+                fontSize = 13.sp,
+                backgroundColor = Color(0xFF2E2E3C),
+                textColor = MaterialTheme.colorScheme.primary,
+                onClick = onToggleSymbolMode
             )
             KeyButton(
                 label = "Ctrl",
@@ -187,7 +226,7 @@ fun VirtualKeyboard(
             )
             KeyButton(
                 label = stringResource(R.string.key_space),
-                weight = if (isTwelve) 4.8f else 3.9f,
+                weight = if (isTwelve) 4.6f else 3.8f,
                 fontSize = 13.sp,
                 onClick = { onKeyTyped(' ') }
             )
@@ -205,6 +244,152 @@ fun VirtualKeyboard(
                 fontSize = 12.sp,
                 onClick = onWinClicked,
                 onLongClick = onWinLongClicked
+            )
+        }
+    }
+}
+
+@Composable
+private fun SymbolKeyboard(
+    modifierState: KeyboardModifierState,
+    onToggleSymbolMode: () -> Unit,
+    onKeyTyped: (Char) -> Unit,
+    onCtrlClicked: () -> Unit,
+    onAltClicked: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val symRow0 = listOf('1', '2', '3', '4', '5', '6', '7', '8', '9', '0')
+    val symRow1 = listOf('@', '#', '$', '%', '&', '-', '+', '(', ')', '/')
+    val symRow2 = listOf('*', '"', '\'', ':', ';', '!', '?', '\\', '~', '|')
+    val symRow3 = listOf('<', '>', '[', ']', '{', '}', '=', '_')
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp, vertical = 2.dp)
+    ) {
+        // --- Row 0: Digits (1 2 3 4 5 6 7 8 9 0) ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            for (char in symRow0) {
+                KeyButton(
+                    label = char.toString(),
+                    weight = 1.0f,
+                    onClick = { onKeyTyped(char) }
+                )
+            }
+        }
+
+        // --- Row 1: @ # $ % & - + ( ) / ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            for (char in symRow1) {
+                KeyButton(
+                    label = char.toString(),
+                    weight = 1.0f,
+                    fontSize = 16.sp,
+                    onClick = { onKeyTyped(char) }
+                )
+            }
+        }
+
+        // --- Row 2: * " ' : ; ! ? \ ~ | ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            for (char in symRow2) {
+                KeyButton(
+                    label = char.toString(),
+                    weight = 1.0f,
+                    fontSize = 16.sp,
+                    onClick = { onKeyTyped(char) }
+                )
+            }
+        }
+
+        // --- Row 3: < > [ ] { } = _ + Delete (Backspace) ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            for (char in symRow3) {
+                KeyButton(
+                    label = char.toString(),
+                    weight = 1.0f,
+                    fontSize = 16.sp,
+                    onClick = { onKeyTyped(char) }
+                )
+            }
+            KeyButton(
+                label = stringResource(R.string.key_delete),
+                weight = 2.0f,
+                fontSize = 13.sp,
+                backgroundColor = Color(0xFF382024),
+                textColor = Color(0xFFFF8A80),
+                onClick = { onKeyTyped('\b') }
+            )
+        }
+
+        // --- Row 4: ABC, Ctrl, Alt, Comma, Space, Dot, Enter ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            KeyButton(
+                label = "ABC",
+                weight = 1.4f,
+                fontSize = 13.sp,
+                isPrimary = true,
+                onClick = onToggleSymbolMode
+            )
+            KeyButton(
+                label = "Ctrl",
+                weight = 1.0f,
+                isPrimary = modifierState.ctrlActive,
+                fontSize = 12.sp,
+                onClick = onCtrlClicked
+            )
+            KeyButton(
+                label = "Alt",
+                weight = 1.0f,
+                isPrimary = modifierState.altActive,
+                fontSize = 12.sp,
+                onClick = onAltClicked
+            )
+            KeyButton(
+                label = ",",
+                weight = 1.0f,
+                fontSize = 17.sp,
+                onClick = { onKeyTyped(',') }
+            )
+            KeyButton(
+                label = stringResource(R.string.key_space),
+                weight = 3.0f,
+                fontSize = 13.sp,
+                onClick = { onKeyTyped(' ') }
+            )
+            KeyButton(
+                label = ".",
+                weight = 1.0f,
+                fontSize = 17.sp,
+                onClick = { onKeyTyped('.') }
+            )
+            KeyButton(
+                label = "Enter",
+                weight = 1.6f,
+                isPrimary = true,
+                fontSize = 13.sp,
+                onClick = { onKeyTyped('\n') }
             )
         }
     }

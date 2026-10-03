@@ -24,11 +24,12 @@ Unlike typical remote apps, **DeckPad requires NO companion server software, NO 
 ## 📸 App Screenshots
 
 <p align="center">
-  <img src="docs/images/screenshot_touchpad.png" width="18%" alt="Touchpad Screen" />
-  <img src="docs/images/screenshot_numpad.png" width="18%" alt="Numpad Screen" />
-  <img src="docs/images/screenshot_media.png" width="18%" alt="Media & Presenter Screen" />
-  <img src="docs/images/screenshot_keyboard.png" width="18%" alt="Virtual Keyboard Screen" />
-  <img src="docs/images/screenshot_gesture_guide.png" width="18%" alt="Gesture Guide & Settings" />
+  <img src="docs/images/screenshot_touchpad.png" width="16%" alt="Touchpad Screen" />
+  <img src="docs/images/screenshot_numpad.png" width="16%" alt="Numpad Screen" />
+  <img src="docs/images/screenshot_media.png" width="16%" alt="Media & Presenter Screen" />
+  <img src="docs/images/screenshot_keyboard.png" width="16%" alt="Virtual Keyboard Screen" />
+  <img src="docs/images/screenshot_keyboard_symbols.png" width="16%" alt="Virtual Keyboard Symbols Screen" />
+  <img src="docs/images/screenshot_gesture_guide.png" width="16%" alt="Gesture Guide & Settings" />
 </p>
 
 ---
@@ -67,9 +68,10 @@ Unlike typical remote apps, **DeckPad requires NO companion server software, NO 
 
 ### ⌨️ 4. Virtual PC Keyboard
 * **Dual Layout Support:** One-tap instantaneous switching between **English (US)** and **Turkish (Q)** keyboard layouts. Defaults to English US.
+* **Full Punctuation & Special Symbols (`?123`):** Dedicated symbol mode containing all standard punctuation and symbols (`@`, `#`, `$`, `%`, `&`, `*`, `(`, `)`, `[`, `]`, `{`, `}`, `_`, `-`, `+`, `=`, `/`, `\`, `|`, `~`, `^`, `<`, `>`, `"`, `'`, `:`, `;`, `!`, `?`, `,`, `.`) with native Windows AltGr / Shift scancode mapping.
+* **Spacious 6-Key Bottom Row:** Ergonomic spacing (`[?123] [Ctrl] [Alt] [Space] [Enter] [Win]`) eliminating key crowding on mobile screens.
 * **Smart Modifier Management:**
-  * `Shift`: One-shot single tap & double-tap lock.
-  * `CapsLock`: Hardware toggle state.
+  * `Shift`: One-shot single tap & double-tap lock (Caps Lock).
   * Sticky `Ctrl`, `Alt`, and `Win` keys for smooth shortcut combinations.
   * **Dual-Action Windows Key:** Single tap prepares combinations (`Win + D`, `Win + E`, `Win + R`); double tap or long press triggers the native Windows Start Menu.
 * **PC Shortcut Bar:** Instant access to `Esc`, `Tab`, `Ctrl + C` (Copy), `Ctrl + V` (Paste), `Ctrl + Z` (Undo), and `Ctrl + Alt + Del`.

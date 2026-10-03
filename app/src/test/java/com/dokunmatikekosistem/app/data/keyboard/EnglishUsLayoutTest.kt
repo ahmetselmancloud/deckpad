@@ -50,4 +50,16 @@ class EnglishUsLayoutTest {
     fun `shiftedChar uppercases a regular letter`() {
         assertEquals('A', layout.shiftedChar('a'))
     }
+
+    @Test
+    fun `symbols produce correct HID chords on english layout`() {
+        assertEquals(HidKeyChord(modifierBits = 0, usageCode = 0x37), layout.mapChar('.'))
+        assertEquals(HidKeyChord(modifierBits = 0, usageCode = 0x36), layout.mapChar(','))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_SHIFT, usageCode = 0x38), layout.mapChar('?'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_SHIFT, usageCode = 0x1E), layout.mapChar('!'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_SHIFT, usageCode = 0x1F), layout.mapChar('@'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_SHIFT, usageCode = 0x20), layout.mapChar('#'))
+        assertEquals(HidKeyChord(modifierBits = 0, usageCode = 0x2F), layout.mapChar('['))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_SHIFT, usageCode = 0x2F), layout.mapChar('{'))
+    }
 }

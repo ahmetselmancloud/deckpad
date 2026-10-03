@@ -60,6 +60,13 @@ class MainViewModel @Inject constructor(
     private val _isFullscreen = MutableStateFlow(false)
     val isFullscreen: StateFlow<Boolean> = _isFullscreen
 
+    private val _isSymbolMode = MutableStateFlow(false)
+    val isSymbolMode: StateFlow<Boolean> = _isSymbolMode
+
+    fun onToggleSymbolMode() {
+        _isSymbolMode.value = !_isSymbolMode.value
+    }
+
     fun selectTab(tab: AppTab) {
         _currentTab.value = tab
     }

@@ -41,6 +41,7 @@ fun KeyboardScreen(
 ) {
     val activeLayout by viewModel.activeLayout.collectAsState()
     val modifierState by viewModel.modifierState.collectAsState()
+    val isSymbolMode by viewModel.isSymbolMode.collectAsState()
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -176,14 +177,14 @@ fun KeyboardScreen(
                 VirtualKeyboard(
                     layout = activeLayout,
                     modifierState = modifierState,
+                    isSymbolMode = isSymbolMode,
+                    onToggleSymbolMode = { viewModel.onToggleSymbolMode() },
                     onKeyTyped = { viewModel.onKeyTyped(it) },
                     onShiftClicked = { viewModel.onShiftClicked() },
-                    onCapsLockClicked = { viewModel.onCapsLockClicked() },
                     onCtrlClicked = { viewModel.onCtrlClicked() },
                     onAltClicked = { viewModel.onAltClicked() },
                     onWinClicked = { viewModel.onWinClicked() },
                     onWinLongClicked = { viewModel.onWinLongClicked() },
-                    onCtrlAltDelClicked = { viewModel.onCtrlAltDelClicked() },
                     modifier = Modifier.fillMaxSize()
                 )
             }

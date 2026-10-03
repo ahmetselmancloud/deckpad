@@ -115,4 +115,27 @@ class TurkishQLayoutTest {
     fun `shiftedChar falls back to english uppercasing for regular letters`() {
         assertEquals('Q', layout.shiftedChar('q'))
     }
+
+    @Test
+    fun `punctuation symbols map to standard turkish Q physical keys`() {
+        assertEquals(HidKeyChord(modifierBits = 0, usageCode = 0x38), layout.mapChar('.'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_SHIFT, usageCode = 0x38), layout.mapChar(':'))
+        assertEquals(HidKeyChord(modifierBits = 0, usageCode = 0x31), layout.mapChar(','))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_SHIFT, usageCode = 0x31), layout.mapChar(';'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_SHIFT, usageCode = 0x2D), layout.mapChar('?'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_SHIFT, usageCode = 0x1E), layout.mapChar('!'))
+    }
+
+    @Test
+    fun `altgr symbols map to correct usage codes and modifier`() {
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_ALT_GR, usageCode = 0x14), layout.mapChar('@'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_ALT_GR, usageCode = 0x20), layout.mapChar('#'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_ALT_GR, usageCode = 0x21), layout.mapChar('$'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_ALT_GR, usageCode = 0x24), layout.mapChar('{'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_ALT_GR, usageCode = 0x25), layout.mapChar('['))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_ALT_GR, usageCode = 0x26), layout.mapChar(']'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_ALT_GR, usageCode = 0x27), layout.mapChar('}'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_ALT_GR, usageCode = 0x2D), layout.mapChar('\\'))
+        assertEquals(HidKeyChord(modifierBits = HidKeyboardReport.MODIFIER_ALT_GR, usageCode = 0x2E), layout.mapChar('|'))
+    }
 }

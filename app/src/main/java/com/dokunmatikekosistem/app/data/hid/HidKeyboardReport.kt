@@ -8,6 +8,7 @@ object HidKeyboardReport {
     const val MODIFIER_SHIFT = 0x02
     const val MODIFIER_ALT = 0x04
     const val MODIFIER_WIN = 0x08
+    const val MODIFIER_ALT_GR = 0x40
 
     fun build(chord: HidKeyChord): ByteArray = byteArrayOf(
         chord.modifierBits.toByte(),

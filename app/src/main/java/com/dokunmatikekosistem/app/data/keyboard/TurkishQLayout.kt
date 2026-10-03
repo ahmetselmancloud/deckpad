@@ -31,9 +31,45 @@ class TurkishQLayout : KeyboardLayout {
         'ı' to 0x0C, 'I' to 0x0C
     )
 
+    private val turkishSymbols: Map<Char, HidKeyChord> = mapOf(
+        '.' to HidKeyChord(0, 0x38),
+        ':' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x38),
+        ',' to HidKeyChord(0, 0x31),
+        ';' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x31),
+        '!' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x1E),
+        '\'' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x1F),
+        '^' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x20),
+        '+' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x21),
+        '%' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x22),
+        '&' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x23),
+        '/' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x24),
+        '(' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x25),
+        ')' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x26),
+        '=' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x27),
+        '*' to HidKeyChord(0, 0x2D),
+        '?' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x2D),
+        '-' to HidKeyChord(0, 0x2E),
+        '_' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x2E),
+        '"' to HidKeyChord(0, 0x35),
+        '<' to HidKeyChord(0, 0x64),
+        '>' to HidKeyChord(HidKeyboardReport.MODIFIER_SHIFT, 0x64),
+        '@' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x14),
+        '#' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x20),
+        '$' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x21),
+        '{' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x24),
+        '[' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x25),
+        ']' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x26),
+        '}' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x27),
+        '\\' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x2D),
+        '|' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x2E),
+        '~' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x30),
+        '`' to HidKeyChord(HidKeyboardReport.MODIFIER_ALT_GR, 0x31)
+    )
+
     private val turkishUppercase = setOf('Ğ', 'Ü', 'Ş', 'İ', 'Ö', 'Ç', 'I')
 
     override fun mapChar(char: Char): HidKeyChord? {
+        turkishSymbols[char]?.let { return it }
         // 'i'/'I' are looked up here too (dotted/dotless split), which shadows
         // EnglishUsLayout's plain a-z mapping for those two characters specifically.
         turkishUsage[char]?.let { usage ->

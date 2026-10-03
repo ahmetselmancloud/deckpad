@@ -239,7 +239,7 @@ class MainViewModelTest {
         val fake = FakeHidManager()
         val viewModel = MainViewModel(fake, FakeHaptics())
 
-        viewModel.onKeyTyped('#')
+        viewModel.onKeyTyped('§')
 
         assertEquals(emptyList<Pair<Int, Int>>(), fake.allKeyPresses)
         assertEquals(false, fake.releaseKeyboardCalled)
@@ -398,7 +398,7 @@ class MainViewModelTest {
         val viewModel = MainViewModel(fake, FakeHaptics())
 
         viewModel.onCtrlClicked()
-        viewModel.onKeyTyped('#')
+        viewModel.onKeyTyped('§')
 
         assertEquals(true, viewModel.modifierState.value.ctrlActive)
     }
