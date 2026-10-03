@@ -129,7 +129,11 @@ fun TouchpadScreen(
                                 if (event.type == PointerEventType.Release && event.changes.all { !it.pressed }) break
                             }
                         } finally {
-                            recognizer.reset()
+                            // Only reset if the gesture was cancelled abnormally with stuck pointers.
+                            // Normal release preserves inter-tap timing (lastTapUpTimeMs) for tap-to-drag.
+                            if (recognizer.hasActivePointers) {
+                                recognizer.reset()
+                            }
                         }
                     }
                 }

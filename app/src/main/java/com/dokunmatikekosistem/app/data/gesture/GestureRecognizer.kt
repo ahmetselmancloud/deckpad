@@ -7,7 +7,7 @@ import kotlin.math.roundToInt
 private const val TAP_MAX_MOVEMENT_PX = 10f
 private const val TAP_MAX_DURATION_MS = 200L
 private const val TWO_FINGER_DOWN_WINDOW_MS = 150L
-private const val DRAG_LOCK_TAP_GAP_MS = 300L
+private const val DRAG_LOCK_TAP_GAP_MS = 350L
 private const val DRAG_LOCK_HOLD_MS = 150L
 private const val SCROLL_PX_PER_UNIT = 24f
 private const val SWIPE_MIN_DISTANCE_PX = 60f
@@ -125,6 +125,9 @@ class GestureRecognizer(
         dragLockEngagedSent = false
         resetSession()
     }
+
+    /** Returns true if there are still active tracked pointers touching the surface. */
+    val hasActivePointers: Boolean get() = active.isNotEmpty()
 
     fun onEvent(event: RawTouchEvent): RecognizedGesture? {
         return when (event) {

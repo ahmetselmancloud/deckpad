@@ -1,6 +1,7 @@
 package com.dokunmatikekosistem.app.data.gesture
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -109,6 +110,28 @@ class GestureRecognizerTest {
         assertEquals(RecognizedGesture.DragMove(dx = 20, dy = 0), moved)
         val released = recognizer.onEvent(RawTouchEvent.PointerUp(id = 1, x = 140f, y = 100f, timeMs = 500))
         assertEquals(RecognizedGesture.DragLockReleased, released)
+    }
+
+    @Test
+    fun `normal finger release leaves hasActivePointers false and preserves tap for drag lock`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        val firstClick = recognizer.onEvent(RawTouchEvent.PointerUp(id = 0, x = 100f, y = 100f, timeMs = 80))
+        assertEquals(RecognizedGesture.LeftClick, firstClick)
+        assertFalse(recognizer.hasActivePointers)
+
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 1, x = 100f, y = 100f, timeMs = 200))
+        val engaged = recognizer.onEvent(RawTouchEvent.PointerMove(id = 1, x = 120f, y = 100f, timeMs = 360))
+        assertEquals(RecognizedGesture.DragLockEngaged, engaged)
+    }
+
+    @Test
+    fun `abnormal cancellation resets active pointers and clears drag lock candidate`() {
+        val recognizer = GestureRecognizer()
+        recognizer.onEvent(RawTouchEvent.PointerDown(id = 0, x = 100f, y = 100f, timeMs = 0))
+        assertTrue(recognizer.hasActivePointers)
+        recognizer.reset()
+        assertFalse(recognizer.hasActivePointers)
     }
 
     @Test
