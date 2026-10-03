@@ -11,12 +11,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,6 +43,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -458,6 +465,7 @@ private fun TopActionButtons(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SettingsSheetContent(
     userSettings: UserSettings,
@@ -479,533 +487,440 @@ private fun SettingsSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = 20.dp)
             .padding(bottom = 32.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-        Text(
-            text = stringResource(R.string.settings_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-
-        HorizontalDivider()
-
-        // Language Selector
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        // Top Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = stringResource(R.string.settings_language_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                text = stringResource(R.string.settings_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
-            Text(
-                text = stringResource(R.string.settings_language_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onLanguageSelected("en") }
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+            FilledTonalButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(8.dp)
             ) {
-                RadioButton(
-                    selected = userSettings.appLanguage == "en",
-                    onClick = { onLanguageSelected("en") }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.settings_lang_en),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onLanguageSelected("tr") }
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = userSettings.appLanguage == "tr",
-                    onClick = { onLanguageSelected("tr") }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.settings_lang_tr),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text(stringResource(R.string.action_close))
             }
         }
 
-        HorizontalDivider()
-
-        // Cursor Speed Slider
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_cursor_speed),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "${"%.2f".format(userSettings.cursorSpeed)}x",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            Text(
-                text = stringResource(R.string.settings_cursor_speed_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            Slider(
+        // Section 1: Touchpad & Cursor
+        SettingsCard(title = stringResource(R.string.settings_section_touchpad)) {
+            // Cursor Speed
+            SettingsSliderRow(
+                title = stringResource(R.string.settings_cursor_speed),
+                desc = stringResource(R.string.settings_cursor_speed_desc),
                 value = userSettings.cursorSpeed,
-                onValueChange = onCursorSpeedChanged,
-                valueRange = 0.5f..2.5f,
-                steps = 7
+                onValueChange = onCursorSpeedChanged
             )
-        }
 
-        HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
-        // Scroll Speed Slider
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_scroll_speed),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "${"%.2f".format(userSettings.scrollSpeed)}x",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            Text(
-                text = stringResource(R.string.settings_scroll_speed_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            Slider(
+            // Scroll Speed
+            SettingsSliderRow(
+                title = stringResource(R.string.settings_scroll_speed),
+                desc = stringResource(R.string.settings_scroll_speed_desc),
                 value = userSettings.scrollSpeed,
-                onValueChange = onScrollSpeedChanged,
-                valueRange = 0.5f..2.5f,
-                steps = 7
+                onValueChange = onScrollSpeedChanged
             )
-        }
 
-        HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
-        // Reverse Scroll Switch
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.settings_reverse_scroll_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(R.string.settings_reverse_scroll_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-            Switch(
-                checked = userSettings.reverseScroll,
-                onCheckedChange = onReverseScrollToggled
-            )
-        }
-
-        HorizontalDivider()
-
-        // Two-Finger Navigation Switch
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.settings_two_finger_nav_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(R.string.settings_two_finger_nav_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-            Switch(
-                checked = userSettings.twoFingerNavEnabled,
-                onCheckedChange = onTwoFingerNavToggled
-            )
-        }
-
-        HorizontalDivider()
-
-        // Pointer Acceleration Switch
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.settings_pointer_accel_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(R.string.settings_pointer_accel_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-            Switch(
+            // Pointer Acceleration
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_pointer_accel_title),
+                desc = stringResource(R.string.settings_pointer_accel_desc),
                 checked = userSettings.pointerAcceleration,
                 onCheckedChange = onPointerAccelerationToggled
             )
-        }
 
-        HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
-        // Tap to Click Switch
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.settings_tap_to_click_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(R.string.settings_tap_to_click_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-            Switch(
+            // Tap to Click
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_tap_to_click_title),
+                desc = stringResource(R.string.settings_tap_to_click_desc),
                 checked = userSettings.tapToClickEnabled,
                 onCheckedChange = onTapToClickToggled
             )
-        }
 
-        HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
-        // Auto-reconnect Switch
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.settings_auto_reconnect),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(R.string.settings_auto_reconnect_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-            Switch(
-                checked = userSettings.autoReconnect,
-                onCheckedChange = onAutoReconnectToggled
+            // Two-Finger Navigation
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_two_finger_nav_title),
+                desc = stringResource(R.string.settings_two_finger_nav_desc),
+                checked = userSettings.twoFingerNavEnabled,
+                onCheckedChange = onTwoFingerNavToggled
             )
-        }
 
-        HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
-        // Haptic Feedback Switch
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.settings_haptics_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(R.string.settings_haptics_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-            Switch(
-                checked = userSettings.hapticsEnabled,
-                onCheckedChange = onHapticsToggled
+            // Reverse Scroll
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_reverse_scroll_title),
+                desc = stringResource(R.string.settings_reverse_scroll_desc),
+                checked = userSettings.reverseScroll,
+                onCheckedChange = onReverseScrollToggled
             )
-        }
 
-        HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
-        // 3 Finger Tap Section
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.settings_three_finger),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = stringResource(R.string.settings_three_finger_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            TapAction.entries.forEach { action ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onThreeFingerActionSelected(action) }
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = userSettings.threeFingerTapAction == action,
-                        onClick = { onThreeFingerActionSelected(action) }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(action.titleRes),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        }
-
-        HorizontalDivider()
-
-        // 4 Finger Tap Section
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.settings_four_finger),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = stringResource(R.string.settings_four_finger_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            TapAction.entries.forEach { action ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onFourFingerActionSelected(action) }
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = userSettings.fourFingerTapAction == action,
-                        onClick = { onFourFingerActionSelected(action) }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(action.titleRes),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        }
-
-        HorizontalDivider()
-
-        // Zoom Toggle
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.settings_zoom_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(R.string.settings_zoom_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-            }
-            Switch(
+            // Pinch-to-Zoom
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_zoom_title),
+                desc = stringResource(R.string.settings_zoom_desc),
                 checked = userSettings.zoomEnabled,
                 onCheckedChange = onZoomToggled
             )
         }
 
-        HorizontalDivider()
-
-        // Layout Toggle
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+        // Section 2: Multi-Finger Gestures
+        SettingsCard(title = stringResource(R.string.settings_section_gestures)) {
+            // 3-Finger Tap Action
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = stringResource(R.string.settings_keyboard_layout),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    text = stringResource(R.string.settings_three_finger),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = if (userSettings.isTurkishLayout) stringResource(R.string.settings_layout_turkish) else stringResource(R.string.settings_layout_english),
+                    text = stringResource(R.string.settings_three_finger_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                ) {
+                    TapAction.entries.forEach { action ->
+                        val selected = userSettings.threeFingerTapAction == action
+                        FilterChip(
+                            selected = selected,
+                            onClick = { onThreeFingerActionSelected(action) },
+                            label = { Text(stringResource(action.titleRes), fontSize = 11.sp) }
+                        )
+                    }
+                }
             }
-            Button(
-                onClick = { onTurkishLayoutToggled(!userSettings.isTurkishLayout) },
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(if (userSettings.isTurkishLayout) "TR Q" else "EN US")
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+            // 4-Finger Tap Action
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = stringResource(R.string.settings_four_finger),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = stringResource(R.string.settings_four_finger_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                ) {
+                    TapAction.entries.forEach { action ->
+                        val selected = userSettings.fourFingerTapAction == action
+                        FilterChip(
+                            selected = selected,
+                            onClick = { onFourFingerActionSelected(action) },
+                            label = { Text(stringResource(action.titleRes), fontSize = 11.sp) }
+                        )
+                    }
+                }
             }
         }
 
-        HorizontalDivider()
+        // Section 3: System & Input Preferences
+        SettingsCard(title = stringResource(R.string.settings_section_system)) {
+            // Language Selection
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_language_title),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_language_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    FilterChip(
+                        selected = userSettings.appLanguage == "en",
+                        onClick = { onLanguageSelected("en") },
+                        label = { Text("EN", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                    )
+                    FilterChip(
+                        selected = userSettings.appLanguage == "tr",
+                        onClick = { onLanguageSelected("tr") },
+                        label = { Text("TR", fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                    )
+                }
+            }
 
-        // Gesture Guide Section
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp),
-            color = Color(0xFF1E1E26),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2E2E38))
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+            // Physical Keyboard Layout
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_keyboard_layout),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = if (userSettings.isTurkishLayout) stringResource(R.string.settings_layout_turkish) else stringResource(R.string.settings_layout_english),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                FilledTonalButton(
+                    onClick = { onTurkishLayoutToggled(!userSettings.isTurkishLayout) },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(if (userSettings.isTurkishLayout) "TR Q" else "EN US", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+            // Auto Reconnect
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_auto_reconnect),
+                desc = stringResource(R.string.settings_auto_reconnect_desc),
+                checked = userSettings.autoReconnect,
+                onCheckedChange = onAutoReconnectToggled
+            )
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+            // Haptic Feedback
+            SettingsSwitchRow(
+                title = stringResource(R.string.settings_haptics_title),
+                desc = stringResource(R.string.settings_haptics_desc),
+                checked = userSettings.hapticsEnabled,
+                onCheckedChange = onHapticsToggled
+            )
+        }
+
+        // Section 4: Gesture Guide
+        SettingsCard(title = stringResource(R.string.settings_gesture_guide_title)) {
+            Text(
+                text = stringResource(R.string.settings_gesture_guide_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            GestureGuideItem("👆 " + stringResource(R.string.gesture_1_finger_title), stringResource(R.string.gesture_1_finger_desc))
+            GestureGuideItem("✌️ " + stringResource(R.string.gesture_2_fingers_title), stringResource(R.string.gesture_2_fingers_desc))
+            GestureGuideItem("🖐️ " + stringResource(R.string.gesture_3_fingers_title), stringResource(R.string.gesture_3_fingers_desc))
+            GestureGuideItem("✋ " + stringResource(R.string.gesture_4_fingers_title), stringResource(R.string.gesture_4_fingers_desc))
+        }
+
+        // Section 5: About & Support
+        SettingsCard(title = stringResource(R.string.settings_about_title)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.settings_gesture_guide_title),
+                    text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Text(
-                    text = stringResource(R.string.settings_gesture_guide_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-
-                GestureGuideItem("👆 " + stringResource(R.string.gesture_1_finger_title), stringResource(R.string.gesture_1_finger_desc))
-                GestureGuideItem("✌️ " + stringResource(R.string.gesture_2_fingers_title), stringResource(R.string.gesture_2_fingers_desc))
-                GestureGuideItem("🖐️ " + stringResource(R.string.gesture_3_fingers_title), stringResource(R.string.gesture_3_fingers_desc))
-                GestureGuideItem("✋ " + stringResource(R.string.gesture_4_fingers_title), stringResource(R.string.gesture_4_fingers_desc))
-            }
-        }
-
-        HorizontalDivider()
-
-        // About & Support Section
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp),
-            color = Color(0xFF1E1E26)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                 ) {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
                     Text(
                         text = "v1.1.0",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
-                Text(
-                    text = stringResource(R.string.settings_about_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.7f),
-                    lineHeight = 16.sp
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                val context = LocalContext.current
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            }
+            Text(
+                text = stringResource(R.string.settings_about_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 16.sp
+            )
+            val context = LocalContext.current
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            android.net.Uri.parse("https://github.com/ahmetselmancloud/deckpad")
+                        )
+                        context.startActivity(intent)
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                android.net.Uri.parse("https://github.com/ahmetselmancloud/deckpad")
-                            )
-                            context.startActivity(intent)
-                        },
-                        shape = RoundedCornerShape(6.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(stringResource(R.string.settings_github), fontSize = 12.sp)
-                    }
-                    Button(
-                        onClick = {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                android.net.Uri.parse("https://buymeacoffee.com/ahmetselman")
-                            )
-                            context.startActivity(intent)
-                        },
-                        shape = RoundedCornerShape(6.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF813F)),
-                        modifier = Modifier.weight(1.3f)
-                    ) {
-                        Text(stringResource(R.string.settings_coffee), fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                    }
+                    Text(stringResource(R.string.settings_github), fontSize = 12.sp)
+                }
+                Button(
+                    onClick = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            android.net.Uri.parse("https://buymeacoffee.com/ahmetselman")
+                        )
+                        context.startActivity(intent)
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF813F)),
+                    modifier = Modifier.weight(1.3f)
+                ) {
+                    Text(stringResource(R.string.settings_coffee), fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
+    }
+}
 
-        Button(
-            onClick = onDismiss,
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.fillMaxWidth()
+@Composable
+private fun SettingsCard(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+        )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
         ) {
-            Text(stringResource(R.string.action_close))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                content = content
+            )
         }
+    }
+}
+
+@Composable
+private fun SettingsSwitchRow(
+    title: String,
+    desc: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 12.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = desc,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 15.sp
+            )
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+    }
+}
+
+@Composable
+private fun SettingsSliderRow(
+    title: String,
+    desc: String,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float> = 0.5f..2.5f,
+    steps: Int = 7
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "${"%.2f".format(value)}x",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        Text(
+            text = desc,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = valueRange,
+            steps = steps
+        )
     }
 }
 
@@ -1014,9 +929,14 @@ private fun GestureGuideItem(title: String, desc: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFF262632))
-            .padding(horizontal = 10.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                RoundedCornerShape(10.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Text(
             text = title,
@@ -1024,11 +944,11 @@ private fun GestureGuideItem(title: String, desc: String) {
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.primary
         )
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = desc,
             fontSize = 11.sp,
-            color = Color.White.copy(alpha = 0.85f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
             lineHeight = 15.sp
         )
     }

@@ -66,6 +66,11 @@
     <string name="settings_lang_en">English (İngilizce)</string>
     <string name="settings_lang_tr">Türkçe</string>
 
+    <!-- Section Headers -->
+    <string name="settings_section_touchpad">İmleç ve Kaydırma</string>
+    <string name="settings_section_gestures">Çok Parmaklı Dokunma Eylemleri</string>
+    <string name="settings_section_system">Sistem ve Giriş Tercihleri</string>
+
     <!-- Cursor & Scroll -->
     <string name="settings_cursor_speed">İmleç Hızı</string>
     <string name="settings_cursor_speed_desc">Fare imlecinin ekrandaki hareket hızı ve hassasiyeti</string>

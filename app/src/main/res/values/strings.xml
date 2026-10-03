@@ -66,6 +66,11 @@
     <string name="settings_lang_en">English (Default)</string>
     <string name="settings_lang_tr">Türkçe (Turkish)</string>
 
+    <!-- Section Headers -->
+    <string name="settings_section_touchpad">Touchpad &amp; Cursor</string>
+    <string name="settings_section_gestures">Multi-Finger Tap Actions</string>
+    <string name="settings_section_system">System &amp; Input Preferences</string>
+
     <!-- Cursor & Scroll -->
     <string name="settings_cursor_speed">Cursor Speed</string>
     <string name="settings_cursor_speed_desc">Speed and sensitivity of mouse pointer</string>
