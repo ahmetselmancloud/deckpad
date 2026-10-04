@@ -132,7 +132,8 @@ fun TouchpadScreen(
                             // Only reset if the gesture was cancelled abnormally with stuck pointers.
                             // Normal release preserves inter-tap timing (lastTapUpTimeMs) for tap-to-drag.
                             if (recognizer.hasActivePointers) {
-                                recognizer.reset()
+                                recognizer.reset().forEach { viewModel.onGesture(it) }
+                                viewModel.releaseAll()
                             }
                         }
                     }

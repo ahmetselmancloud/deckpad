@@ -117,13 +117,21 @@ class GestureRecognizer(
     private var pinchSeedPointerId: Int? = null
     private var pinchPartnerSeen = false
 
-    /** Clears all tracked pointer/session/drag-lock state. Safe to call at any time. */
-    fun reset() {
+    /** Clears all tracked pointer/session/drag-lock state and returns cleanup gestures for held states. */
+    fun reset(): List<RecognizedGesture> {
+        val cleanup = mutableListOf<RecognizedGesture>()
+        if (dragLockEngagedSent) {
+            cleanup.add(RecognizedGesture.DragLockReleased)
+        }
+        if (pinchEngaged) {
+            cleanup.add(RecognizedGesture.PinchZoomEnded)
+        }
         active.clear()
         lastTapUpTimeMs = null
         dragLockPointerId = null
         dragLockEngagedSent = false
         resetSession()
+        return cleanup
     }
 
     /** Returns true if there are still active tracked pointers touching the surface. */

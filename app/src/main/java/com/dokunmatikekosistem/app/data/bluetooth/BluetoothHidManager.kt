@@ -46,31 +46,40 @@ class BluetoothHidManager @Inject constructor(
     private val hidHandler = Handler(hidThread.looper)
 
     private val mouseLock = Any()
-    private var pendingDx = 0
-    private var pendingDy = 0
-    private var pendingWheel = 0
-    private var pendingPan = 0
-    private var lastSendUptimeMs = 0L
-    private var isFlushScheduled = false
-    private val MIN_REPORT_INTERVAL_MS = 10L // ~100Hz max rate matches Bluetooth HID connection interval
+    private val coalescer = MouseReportCoalescer(minReportIntervalMs = 10L)
 
     private val flushRunnable = Runnable {
         val device = connectedDevice ?: return@Runnable
-        val sendReport = ByteArray(5)
+        val now = SystemClock.uptimeMillis()
+        val reports: List<CoalescedMouseReport>
         synchronized(mouseLock) {
-            isFlushScheduled = false
-            if (pendingDx == 0 && pendingDy == 0 && pendingWheel == 0 && pendingPan == 0) return@Runnable
-            com.dokunmatikekosistem.app.data.hid.HidMouseReport.buildInto(
-                sendReport, pendingDx, pendingDy, pendingWheel, pendingPan,
-                leftButtonPressed = false, rightButtonPressed = false, middleButtonPressed = false
-            )
-            pendingDx = 0
-            pendingDy = 0
-            pendingWheel = 0
-            pendingPan = 0
-            lastSendUptimeMs = SystemClock.uptimeMillis()
+            reports = coalescer.onFlush(now)
         }
-        hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.MOUSE_REPORT_ID.toInt(), sendReport)
+        if (reports.isNotEmpty()) {
+            hidHandler.post {
+                for (report in reports) {
+                    val rawReport = ByteArray(5)
+                    com.dokunmatikekosistem.app.data.hid.HidMouseReport.buildInto(
+                        rawReport,
+                        report.dx,
+                        report.dy,
+                        report.wheel,
+                        report.pan,
+                        report.leftButton,
+                        report.rightButton,
+                        report.middleButton
+                    )
+                    val sent = hidDevice?.sendReport(
+                        device,
+                        com.dokunmatikekosistem.app.data.hid.HidDescriptor.MOUSE_REPORT_ID.toInt(),
+                        rawReport
+                    )
+                    if (sent == true) {
+                        _reportsSent.value = _reportsSent.value + 1
+                    }
+                }
+            }
+        }
     }
 
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
@@ -80,6 +89,7 @@ class BluetoothHidManager @Inject constructor(
     override val reportsSent: StateFlow<Int> = _reportsSent
 
     private var hidDevice: BluetoothHidDevice? = null
+    @Volatile
     private var connectedDevice: BluetoothDevice? = null
 
     private val sdpSettings = BluetoothHidDeviceAppSdpSettings(
@@ -111,6 +121,7 @@ class BluetoothHidManager @Inject constructor(
                 }
                 BluetoothProfile.STATE_CONNECTING -> ConnectionState.REGISTERING
                 else -> {
+                    releaseAll()
                     scheduleAutoReconnect()
                     ConnectionState.DISCONNECTED
                 }
@@ -190,6 +201,7 @@ class BluetoothHidManager @Inject constructor(
 
                     override fun onServiceDisconnected(profile: Int) {
                         Log.d(TAG, "onServiceDisconnected: profile=$profile")
+                        releaseAll()
                         hidDevice = null
                         connectedDevice = null
                         _connectionState.value = ConnectionState.DISCONNECTED
@@ -217,71 +229,52 @@ class BluetoothHidManager @Inject constructor(
         middleButtonPressed: Boolean
     ) {
         val device = connectedDevice ?: return
-        val isButtonClick = leftButtonPressed || rightButtonPressed || middleButtonPressed
-
-        if (isButtonClick) {
-            // Immediate dispatch for button clicks: cancel pending flush, merge pending deltas, send instantly
-            val report = ByteArray(5)
-            synchronized(mouseLock) {
-                if (isFlushScheduled) {
-                    hidHandler.removeCallbacks(flushRunnable)
-                    isFlushScheduled = false
-                }
-                val sendDx = pendingDx + dx
-                val sendDy = pendingDy + dy
-                val sendWheel = pendingWheel + wheelDelta
-                val sendPan = pendingPan + panDelta
-                pendingDx = 0
-                pendingDy = 0
-                pendingWheel = 0
-                pendingPan = 0
-                lastSendUptimeMs = SystemClock.uptimeMillis()
-                com.dokunmatikekosistem.app.data.hid.HidMouseReport.buildInto(
-                    report, sendDx, sendDy, sendWheel, sendPan,
-                    leftButtonPressed, rightButtonPressed, middleButtonPressed
-                )
-            }
-            hidHandler.post {
-                val sent = hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.MOUSE_REPORT_ID.toInt(), report)
-                if (sent == true) {
-                    _reportsSent.value = _reportsSent.value + 1
-                }
-            }
-            return
-        }
-
-        // Relative move / scroll: Coalesce deltas and throttle to ~100Hz max to eliminate buffer bloat
         val now = SystemClock.uptimeMillis()
-        var reportToSend: ByteArray? = null
+        val decision: CoalesceDecision
 
         synchronized(mouseLock) {
-            pendingDx += dx
-            pendingDy += dy
-            pendingWheel += wheelDelta
-            pendingPan += panDelta
+            decision = coalescer.onEvent(
+                dx = dx,
+                dy = dy,
+                wheel = wheelDelta,
+                pan = panDelta,
+                leftButton = leftButtonPressed,
+                rightButton = rightButtonPressed,
+                middleButton = middleButtonPressed,
+                nowMs = now
+            )
 
-            val elapsed = now - lastSendUptimeMs
-            if (elapsed >= MIN_REPORT_INTERVAL_MS && !isFlushScheduled) {
-                reportToSend = ByteArray(5)
-                com.dokunmatikekosistem.app.data.hid.HidMouseReport.buildInto(
-                    reportToSend!!, pendingDx, pendingDy, pendingWheel, pendingPan,
-                    leftButtonPressed = false, rightButtonPressed = false, middleButtonPressed = false
-                )
-                pendingDx = 0
-                pendingDy = 0
-                pendingWheel = 0
-                pendingPan = 0
-                lastSendUptimeMs = now
-            } else if (!isFlushScheduled) {
-                isFlushScheduled = true
-                val delayMs = (MIN_REPORT_INTERVAL_MS - elapsed).coerceAtLeast(1L)
+            if (decision.cancelPendingFlush) {
+                hidHandler.removeCallbacks(flushRunnable)
+            }
+            decision.scheduleDelayMs?.let { delayMs ->
                 hidHandler.postDelayed(flushRunnable, delayMs)
             }
         }
 
-        reportToSend?.let { report ->
+        if (decision.reportsToSend.isNotEmpty()) {
             hidHandler.post {
-                hidDevice?.sendReport(device, com.dokunmatikekosistem.app.data.hid.HidDescriptor.MOUSE_REPORT_ID.toInt(), report)
+                for (report in decision.reportsToSend) {
+                    val rawReport = ByteArray(5)
+                    com.dokunmatikekosistem.app.data.hid.HidMouseReport.buildInto(
+                        rawReport,
+                        report.dx,
+                        report.dy,
+                        report.wheel,
+                        report.pan,
+                        report.leftButton,
+                        report.rightButton,
+                        report.middleButton
+                    )
+                    val sent = hidDevice?.sendReport(
+                        device,
+                        com.dokunmatikekosistem.app.data.hid.HidDescriptor.MOUSE_REPORT_ID.toInt(),
+                        rawReport
+                    )
+                    if (sent == true) {
+                        _reportsSent.value = _reportsSent.value + 1
+                    }
+                }
             }
         }
     }
@@ -312,6 +305,46 @@ class BluetoothHidManager @Inject constructor(
         }
     }
 
+    override fun releaseAll() {
+        val device = connectedDevice
+        val now = SystemClock.uptimeMillis()
+        val reports: List<CoalescedMouseReport>
+        synchronized(mouseLock) {
+            hidHandler.removeCallbacks(flushRunnable)
+            reports = coalescer.forceReleaseAll(now)
+        }
+        hidHandler.post {
+            if (device != null && reports.isNotEmpty()) {
+                for (report in reports) {
+                    val rawReport = ByteArray(5)
+                    com.dokunmatikekosistem.app.data.hid.HidMouseReport.buildInto(
+                        rawReport,
+                        report.dx,
+                        report.dy,
+                        report.wheel,
+                        report.pan,
+                        report.leftButton,
+                        report.rightButton,
+                        report.middleButton
+                    )
+                    hidDevice?.sendReport(
+                        device,
+                        com.dokunmatikekosistem.app.data.hid.HidDescriptor.MOUSE_REPORT_ID.toInt(),
+                        rawReport
+                    )
+                }
+            }
+            if (device != null) {
+                val kbdRelease = com.dokunmatikekosistem.app.data.hid.HidKeyboardReport.release()
+                hidDevice?.sendReport(
+                    device,
+                    com.dokunmatikekosistem.app.data.hid.HidDescriptor.KEYBOARD_REPORT_ID.toInt(),
+                    kbdRelease
+                )
+            }
+        }
+    }
+
     override fun sendConsumerReport(usageCode: Int) {
         val device = connectedDevice ?: run {
             Log.w(TAG, "sendConsumerReport: connectedDevice is null, report dropped")
@@ -320,15 +353,16 @@ class BluetoothHidManager @Inject constructor(
         val pressReport = com.dokunmatikekosistem.app.data.hid.HidConsumerReport.build(usageCode)
         val releaseReport = com.dokunmatikekosistem.app.data.hid.HidConsumerReport.release()
         val reportId = com.dokunmatikekosistem.app.data.hid.HidDescriptor.CONSUMER_REPORT_ID.toInt()
-        val sent = hidDevice?.sendReport(device, reportId, pressReport)
-        Log.d(TAG, "sendConsumerReport: press sent=$sent reportId=$reportId usage=0x${usageCode.toString(16)}")
-        scope.launch {
-            delay(70L)
+        hidHandler.post {
+            val sent = hidDevice?.sendReport(device, reportId, pressReport)
+            Log.d(TAG, "sendConsumerReport: press sent=$sent reportId=$reportId usage=0x${usageCode.toString(16)}")
+            if (sent == true) {
+                _reportsSent.value = _reportsSent.value + 1
+            }
+        }
+        hidHandler.postDelayed({
             val relSent = hidDevice?.sendReport(device, reportId, releaseReport)
             Log.d(TAG, "sendConsumerReport: release sent=$relSent")
-        }
-        if (sent == true) {
-            _reportsSent.value = _reportsSent.value + 1
-        }
+        }, 70L)
     }
 }

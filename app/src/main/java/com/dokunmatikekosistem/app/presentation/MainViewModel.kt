@@ -97,6 +97,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun releaseAll() {
+        hidManager.releaseAll()
+    }
+
     fun onConnectClicked() {
         hidManager.register()
     }

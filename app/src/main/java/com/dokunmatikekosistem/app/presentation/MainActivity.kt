@@ -151,6 +151,11 @@ class MainActivity : ComponentActivity() {
         }
         requestDiscoverable.launch(discoverableIntent)
     }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.releaseAll()
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

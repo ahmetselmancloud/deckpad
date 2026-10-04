@@ -65,6 +65,12 @@ private class FakeHidManager : HidManager {
         allConsumerPresses.add(usageCode)
         reportsSent.value = reportsSent.value + 1
     }
+
+    var releaseAllCalled = false
+
+    override fun releaseAll() {
+        releaseAllCalled = true
+    }
 }
 
 private class FakeHaptics : Haptics {
@@ -799,6 +805,16 @@ class MainViewModelTest {
 
         assertEquals(emptyList<Pair<Int, Int>>(), fake.allKeyPresses)
         assertEquals(0, haptics.clickCount)
+    }
+
+    @Test
+    fun `releaseAll delegates to hidManager releaseAll`() {
+        val fake = FakeHidManager()
+        val haptics = FakeHaptics()
+        val viewModel = MainViewModel(fake, haptics)
+
+        viewModel.releaseAll()
+        assertEquals(true, fake.releaseAllCalled)
     }
 }
 
