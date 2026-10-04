@@ -77,16 +77,22 @@ class MouseReportCoalescer(
         val buttonChanged = (leftButton != lastLeft || rightButton != lastRight || middleButton != lastMiddle)
 
         if (buttonChanged) {
-            // Immediate dispatch: include all pending deltas plus the new deltas
-            val totalDx = pendingDx + dx
-            val totalDy = pendingDy + dy
-            val totalWheel = pendingWheel + wheel
-            val totalPan = pendingPan + pan
+            val reports = mutableListOf<CoalescedMouseReport>()
 
-            pendingDx = 0
-            pendingDy = 0
-            pendingWheel = 0
-            pendingPan = 0
+            // 1. If there were pending movements prior to this button change, dispatch them
+            // with the OLD button state so the cursor arrives at the target coordinate before
+            // the click/release is registered.
+            if (hasPendingData) {
+                reports.addAll(splitIntoReports(pendingDx, pendingDy, pendingWheel, pendingPan, lastLeft, lastRight, lastMiddle))
+                pendingDx = 0
+                pendingDy = 0
+                pendingWheel = 0
+                pendingPan = 0
+            }
+
+            // 2. Dispatch the button transition with the NEW event's deltas and NEW button state
+            reports.addAll(splitIntoReports(dx, dy, wheel, pan, leftButton, rightButton, middleButton))
+
             lastLeft = leftButton
             lastRight = rightButton
             lastMiddle = middleButton
@@ -95,7 +101,6 @@ class MouseReportCoalescer(
             val cancelFlush = isFlushScheduled
             isFlushScheduled = false
 
-            val reports = splitIntoReports(totalDx, totalDy, totalWheel, totalPan, leftButton, rightButton, middleButton)
             return CoalesceDecision(
                 reportsToSend = reports,
                 scheduleDelayMs = null,

@@ -40,7 +40,7 @@ class MouseReportCoalescerTest {
     }
 
     @Test
-    fun `button press cancels any pending flush and merges deltas`() {
+    fun `button press cancels pending flush and dispatches pending deltas with old button state first`() {
         // Baseline event at t=1000 (sends immediately, sets lastSendUptimeMs=1000)
         coalescer.onEvent(1, 1, leftButton = false, nowMs = 1000L)
 
@@ -52,12 +52,18 @@ class MouseReportCoalescerTest {
         // Click down arrives before flush timer
         val clickDecision = coalescer.onEvent(2, 3, leftButton = true, nowMs = 1004L)
         assertTrue(clickDecision.cancelPendingFlush)
-        assertEquals(1, clickDecision.reportsToSend.size)
-        // Deltas 5+2=7 and 5+3=8 merged into the click report!
-        val report = clickDecision.reportsToSend.first()
-        assertTrue(report.leftButton)
-        assertEquals(7, report.dx)
-        assertEquals(8, report.dy)
+        // Must emit 2 reports: 1st moves cursor to target position with button UP, 2nd presses button DOWN!
+        assertEquals(2, clickDecision.reportsToSend.size)
+
+        val moveReport = clickDecision.reportsToSend[0]
+        assertFalse(moveReport.leftButton)
+        assertEquals(5, moveReport.dx)
+        assertEquals(5, moveReport.dy)
+
+        val pressReport = clickDecision.reportsToSend[1]
+        assertTrue(pressReport.leftButton)
+        assertEquals(2, pressReport.dx)
+        assertEquals(3, pressReport.dy)
     }
 
     @Test
@@ -122,6 +128,32 @@ class MouseReportCoalescerTest {
         val up = coalescer.onEvent(0, 0, leftButton = false, nowMs = 1050L)
         assertEquals(1, up.reportsToSend.size)
         assertFalse(up.reportsToSend.first().leftButton)
+    }
+
+    @Test
+    fun `drag release with pending movement finishes drag before releasing button`() {
+        // Drag lock engaged at t=1000
+        coalescer.onEvent(0, 0, leftButton = true, nowMs = 1000L)
+
+        // Drag move at t=1002 (<10ms, gets buffered in pending)
+        val move = coalescer.onEvent(15, 25, leftButton = true, nowMs = 1002L)
+        assertEquals(0, move.reportsToSend.size)
+
+        // Release at t=1004
+        val release = coalescer.onEvent(0, 0, leftButton = false, nowMs = 1004L)
+        assertEquals(2, release.reportsToSend.size)
+
+        // Report 1 finishes drag with leftButton = true
+        val dragFinish = release.reportsToSend[0]
+        assertTrue(dragFinish.leftButton)
+        assertEquals(15, dragFinish.dx)
+        assertEquals(25, dragFinish.dy)
+
+        // Report 2 releases left button at final spot
+        val dropReport = release.reportsToSend[1]
+        assertFalse(dropReport.leftButton)
+        assertEquals(0, dropReport.dx)
+        assertEquals(0, dropReport.dy)
     }
 
     @Test
