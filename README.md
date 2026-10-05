@@ -1,15 +1,17 @@
 <p align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" width="120" height="120" alt="DeckPad Logo" style="border-radius: 24px;" />
+  <img src="docs/images/deckpad_logo.png" width="128" height="128" alt="DeckPad Logo" style="border-radius: 28px;" />
 </p>
 
 # 📱 DeckPad — Zero-Latency PC Remote Ecosystem
 
 <p align="center">
+  <a href="https://github.com/ahmetselmancloud/deckpad/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Release%20APK%20(v1.2.0)-7F52FF?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
+  </a>
   <img src="https://img.shields.io/badge/Kotlin-2.2.20-7F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/Jetpack%20Compose-BOM%202024.09.00-4285F4.svg?style=for-the-badge&logo=android&logoColor=white" alt="Jetpack Compose" />
   <img src="https://img.shields.io/badge/Platform-Android%209.0%2B%20(API%2028%2B)-3DDC84.svg?style=for-the-badge&logo=android&logoColor=white" alt="Platform" />
   <img src="https://img.shields.io/badge/Protocol-Bluetooth%20HID-0082FC.svg?style=for-the-badge&logo=bluetooth&logoColor=white" alt="Bluetooth HID" />
-  <img src="https://img.shields.io/badge/Architecture-Clean%20%2B%20MVVM%20%2B%20UDF-FF6F00.svg?style=for-the-badge" alt="Architecture" />
   <img src="https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge" alt="License" />
 </p>
 
@@ -109,7 +111,11 @@ Unlike typical remote apps, **DeckPad requires NO companion server software, NO 
 * **Device:** Android phone or tablet running **Android 9.0 (Pie / API 28)** or higher with Bluetooth HID device profile enabled by the manufacturer (standard on Samsung, Google Pixel, Xiaomi, OnePlus, etc.).
 * **Target PC:** Windows 10 or Windows 11 with built-in or USB Bluetooth.
 
-### Building from Source
+### 📥 Direct APK Download
+You can download the pre-compiled, signed **Release APK** directly from GitHub Releases:
+* 🚀 **[Download DeckPad-v1.2.0.apk](https://github.com/ahmetselmancloud/deckpad/releases/latest/download/DeckPad-v1.2.0.apk)** (~2.2 MB, R8 minified, signed release)
+
+### 🛠️ Building from Source
 
 ```bash
 # 1. Clone the repository
