@@ -111,6 +111,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleCustomIntent(intent)
         androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
             ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
@@ -121,6 +122,39 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 MainAppScreen(viewModel, onConnectRequested = ::connectWithPermissionCheck)
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleCustomIntent(intent)
+    }
+
+    private fun handleCustomIntent(intent: Intent?) {
+        if (intent?.action == "com.dokunmatikekosistem.app.ACTION_UNPAIR_PC") {
+            try {
+                val manager = getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
+                val bonded = manager?.adapter?.bondedDevices ?: emptySet()
+                for (dev in bonded) {
+                    if (dev.name?.contains("MSI", ignoreCase = true) == true || dev.address == "6C:2F:80:26:B5:E6") {
+                        val m = dev.javaClass.getMethod("removeBond")
+                        val res = m.invoke(dev)
+                        android.util.Log.d("MainActivity", "Unpair MSI result: $res")
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Unpair failed", e)
+            }
+        }
+        if (intent?.action == "com.dokunmatikekosistem.app.ACTION_PAIR_PC") {
+            try {
+                val manager = getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
+                val dev = manager?.adapter?.getRemoteDevice("6C:2F:80:26:B5:E6")
+                val res = dev?.createBond()
+                android.util.Log.d("MainActivity", "Pair MSI result: $res")
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Pair failed", e)
             }
         }
     }

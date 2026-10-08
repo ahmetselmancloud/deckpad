@@ -96,9 +96,13 @@ class BluetoothHidManager @Inject constructor(
         com.dokunmatikekosistem.app.data.hid.HidDescriptor.DESCRIPTOR
     )
 
+    @Volatile
+    private var isAppRegistered = false
+
     private val callback = object : BluetoothHidDevice.Callback() {
         override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
             Log.d(TAG, "onAppStatusChanged: registered=$registered pluggedDevice=$pluggedDevice")
+            isAppRegistered = registered
             _connectionState.value = if (registered) ConnectionState.REGISTERED else ConnectionState.ERROR
             if (registered) {
                 tryConnectBondedHost(pluggedDevice)
@@ -140,6 +144,7 @@ class BluetoothHidManager @Inject constructor(
 
                 val target = pluggedDevice
                     ?: bondedDevices.firstOrNull { it.address == settings?.lastDeviceAddress }
+                    ?: bondedDevices.firstOrNull { it.address.equals("6C:2F:80:26:B5:E6", ignoreCase = true) || it.name?.contains("MSI", ignoreCase = true) == true }
                     ?: bondedDevices.firstOrNull { dev ->
                         dev.bluetoothClass?.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.COMPUTER
                     }
@@ -168,6 +173,11 @@ class BluetoothHidManager @Inject constructor(
     }
 
     override fun register() {
+        if (isAppRegistered && hidDevice != null) {
+            Log.d(TAG, "register() called but app is already registered with HID proxy. Triggering host connect...")
+            tryConnectBondedHost(null)
+            return
+        }
         if (!shouldAttemptRegister(_connectionState.value)) {
             Log.d(TAG, "register() ignored, already ${_connectionState.value}")
             return
@@ -176,6 +186,28 @@ class BluetoothHidManager @Inject constructor(
         _connectionState.value = ConnectionState.REGISTERING
         val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val executor = Executor { command -> command.run() }
+
+        val currentProxy = hidDevice
+        if (currentProxy != null) {
+            try {
+                try {
+                    currentProxy.unregisterApp()
+                } catch (e: Exception) {
+                    Log.w(TAG, "unregisterApp prior to re-register failed", e)
+                }
+                val registerRequested = currentProxy.registerApp(sdpSettings, null, null, executor, callback)
+                Log.d(TAG, "registerApp() on existing proxy called, requested=$registerRequested")
+                if (registerRequested != true) {
+                    _connectionState.value = ConnectionState.ERROR
+                }
+                return
+            } catch (e: SecurityException) {
+                Log.e(TAG, "registerApp() threw SecurityException", e)
+                _connectionState.value = ConnectionState.ERROR
+                return
+            }
+        }
+
         try {
             val proxyRequested = manager.adapter.getProfileProxy(
                 context,
@@ -184,8 +216,18 @@ class BluetoothHidManager @Inject constructor(
                         Log.d(TAG, "onServiceConnected: profile=$profile proxy=$proxy")
                         hidDevice = proxy as BluetoothHidDevice
                         try {
-                            val registerRequested = hidDevice?.registerApp(sdpSettings, null, null, executor, callback)
+                            var registerRequested = hidDevice?.registerApp(sdpSettings, null, null, executor, callback)
                             Log.d(TAG, "registerApp() called, requested=$registerRequested")
+                            if (registerRequested != true) {
+                                Log.w(TAG, "registerApp() returned false, attempting unregister and retry...")
+                                try {
+                                    hidDevice?.unregisterApp()
+                                    registerRequested = hidDevice?.registerApp(sdpSettings, null, null, executor, callback)
+                                    Log.d(TAG, "registerApp() retry result=$registerRequested")
+                                } catch (e: Exception) {
+                                    Log.w(TAG, "registerApp() retry threw exception", e)
+                                }
+                            }
                             if (registerRequested != true) {
                                 _connectionState.value = ConnectionState.ERROR
                             }
@@ -198,6 +240,7 @@ class BluetoothHidManager @Inject constructor(
                     override fun onServiceDisconnected(profile: Int) {
                         Log.d(TAG, "onServiceDisconnected: profile=$profile")
                         releaseAll()
+                        isAppRegistered = false
                         hidDevice = null
                         connectedDevice = null
                         _connectionState.value = ConnectionState.DISCONNECTED
