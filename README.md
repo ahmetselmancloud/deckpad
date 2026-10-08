@@ -2,11 +2,11 @@
   <img src="docs/images/deckpad_logo.png" width="128" height="128" alt="DeckPad Logo" style="border-radius: 28px;" />
 </p>
 
-# 📱 DeckPad — Zero-Latency PC Remote Ecosystem
+# 📱 DeckPad — Ultra-Low Latency PC Remote Ecosystem
 
 <p align="center">
   <a href="https://github.com/ahmetselmancloud/deckpad/releases/latest">
-    <img src="https://img.shields.io/badge/Download-Release%20APK%20(v1.2.0)-7F52FF?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
+    <img src="https://img.shields.io/badge/Download-Release%20APK%20(v1.2.1)-7F52FF?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
   </a>
   <img src="https://img.shields.io/badge/Kotlin-2.2.20-7F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/Jetpack%20Compose-BOM%202024.09.00-4285F4.svg?style=for-the-badge&logo=android&logoColor=white" alt="Jetpack Compose" />
@@ -17,7 +17,7 @@
 
 ---
 
-**DeckPad** turns your Android smartphone or tablet into a high-precision, zero-latency **Multi-Touch Trackpad**, an **Accounting/Excel Numpad**, a **Media & PowerPoint Presentation Clicker**, and a **Virtual PC Keyboard** for Windows PCs and laptops.
+**DeckPad** turns your Android smartphone or tablet into a high-precision, ultra-low latency **Multi-Touch Trackpad**, an **Accounting/Excel Numpad**, a **Media & PowerPoint Presentation Clicker**, and a **Virtual PC Keyboard** for Windows PCs and laptops.
 
 Unlike typical remote apps, **DeckPad requires NO companion server software, NO drivers, and NO third-party background daemons on your computer.** It communicates directly at the hardware layer via the native **Bluetooth Human Interface Device (HID)** standard profile.
 
@@ -39,7 +39,7 @@ Unlike typical remote apps, **DeckPad requires NO companion server software, NO 
 ## ✨ Features at a Glance
 
 ### 🖱️ 1. Advanced Multi-Touch Trackpad
-* **Zero-Latency Hardware Architecture:**
+* **Ultra-Low Latency Hardware Architecture (~10ms):**
   * **Delta Coalescing & Off-Main-Thread Dispatch:** 120Hz/240Hz screen polling smoothly regulated with high-priority dedicated background thread to eliminate Bluetooth buffer bloat. Zero lag, zero accumulation even over hours of continuous usage.
   * **Lightweight R8 Minified Binary:** Optimized to ~2.1 MB footprint for ultra-fast load times and minimal memory consumption.
 * **Precision Gestures & Fine Controls:**
@@ -113,7 +113,7 @@ Unlike typical remote apps, **DeckPad requires NO companion server software, NO 
 
 ### 📥 Direct APK Download
 You can download the pre-compiled, signed **Release APK** directly from GitHub Releases:
-* 🚀 **[Download DeckPad-v1.2.0.apk](https://github.com/ahmetselmancloud/deckpad/releases/latest/download/DeckPad-v1.2.0.apk)** (~2.2 MB, R8 minified, signed release)
+* 🚀 **[Download DeckPad-v1.2.1.apk](https://github.com/ahmetselmancloud/deckpad/releases/latest/download/DeckPad-v1.2.1.apk)** (~2.3 MB, R8 minified, signed release)
 
 ### 🛠️ Building from Source
 
